@@ -23,12 +23,13 @@ import { LibraryListProvider } from "./views/LibraryListView";
 import { ProfilesView } from "./views/ProfilesView";
 import { HelpView } from "./views/helpView";
 import IFSBrowser from "./views/ifsBrowser";
+import SPLFBrowser from "./views/splfBrowser";
 import ObjectBrowser from "./views/objectBrowser";
 
 export async function activate(context: ExtensionContext): Promise<CodeForIBMi> {
   // Use the console to output diagnostic information (console.log) and errors (console.error)
   // This line of code will only be executed once when your extension is activated
-  console.log(`Congratulations, your extension "code-for-ibmi" is now active!`);
+  console.log(`Congratulations, your extension "code-for-ibmi-w" is now active!`);
 
   await loadAllofExtension(context);
 
@@ -40,6 +41,7 @@ export async function activate(context: ExtensionContext): Promise<CodeForIBMi> 
   };
 
   new IFSBrowser(context);
+  new SPLFBrowser(context);
   new ObjectBrowser(context);
 
   context.subscriptions.push(

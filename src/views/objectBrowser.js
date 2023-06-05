@@ -629,6 +629,159 @@ module.exports = class ObjectBrowser {
         }
       }),
 
+      vscode.commands.registerCommand(`Hawkeye_Pathfinder.searchSourceFiles`, async (node) => {
+        if (!node) {
+          const connection = getInstance().getConnection();
+          await vscode.window.showInputBox({
+            prompt: `Enter LIB/SPF/member.ext to search. See the help for DSPSCNSRC for selectable input values`,
+            title: `Search source file`,
+            validateInput: (input) => {
+              input = input.trim();
+              const path = input.split(`/`);
+              let checkPath;
+              if (path.length > 3) {
+                return `Please enter value in form LIB/SPF/member.ext`
+              } else if (path.length > 2) {                 // Check member
+                let checkMember = path[2].replace(/[*]/g, ``).split(`.`);
+                checkMember[0] = checkMember[0] !== `` ? checkMember[0] : `a`;
+                checkPath = path[0] + `/` + path[1] + `/` + checkMember[0] + `.` + (checkMember.length > 1 ? checkMember[1] : ``);
+              } else if (path.length > 1) {                 // Check filename
+                checkPath = input + (path[path.length - 1] === `` ? `a` : ``) + `/a.b`;
+              } else {                                      // Check library
+                checkPath = input + (path[path.length - 1] === `` ? `a` : ``) + `/a/a.a`;
+              }
+              if (checkPath) {
+                try {
+                  connection.parserMemberPath(checkPath);
+                } catch (e) {
+                  return e;
+                }
+              }
+            }
+          }).then(async input => {
+            if (input) {
+              const path = input.trim().toUpperCase().split(`/`);
+              let member;
+              if (path.length < 3 || path[2] === ``) {
+                member = [`*`, `*`];
+              } else if (!path[2].includes(`.`)) {
+                member = [path[2], `*`];
+              } else {
+                member = path[2].split(`.`);
+              }
+              if (path.length = 1 || path[1] === ``) {path[1] = `*`}
+              node = new SPF(undefined, {protected: true}, { library: path[0], name: path[1], text: undefined, attribute: undefined }, member[0], member[1]);
+            }
+          })
+        };
+        // Hawkeye-Pathfinder
+        if (node) {
+          /** @type {ConnectionConfiguration.Parameters} */
+          const config = getInstance().getConfig();
+          const content = getInstance().getContent();
+
+          const path = node.path.split(`/`);
+
+          if (path[1] !== ` `) {
+            const aspText = ((config.sourceASP && config.sourceASP.length > 0) ? `(in ASP ${config.sourceASP}` : ``);
+
+            let searchTerm = await vscode.window.showInputBox({
+              prompt: `Use command DSPSCNSRC to search ${node.path}.\n `
+            });
+
+            if (searchTerm) {
+              try {
+                let members = [];
+
+                await vscode.window.withProgress({
+                  location: vscode.ProgressLocation.Notification,
+                  title: `Searching`,
+                }, async progress => {
+                  progress.report({
+                    message: `Fetching member list for ${node.path}.`
+                  });
+                  members = await content.getMemberList(path[0], path[1], node.memberFilter);
+                  
+                  if (members.length > 0) {
+                    // NOTE: if more messages are added, lower the timeout interval
+                    const timeoutInternal = 9000;
+                    const searchMessages = [
+                      `Using Hawkeye Pathfinder's DSPSCNSRC to search source members`,
+                      `'${searchTerm}' in ${node.path}.`,
+                      `This is taking a while because there are ${members.length} members. Searching '${searchTerm}' in ${node.path} still.`,
+                      `What's so special about '${searchTerm}' anyway?`,
+                      `Still searching '${searchTerm}' in ${node.path}...`,
+                      `While you wait, why not make some tea?`,
+                      `Wow. This really is taking a while. Let's hope you get the result you want.`,
+                      `Why was six afraid of seven?`,
+                      `How does one end up with ${members.length} members?`,
+                      `'${searchTerm}' in ${node.path}.`,
+                    ];
+
+                    let currentMessage = 0;
+                    const messageTimeout = setInterval(() => {
+                      if (currentMessage < searchMessages.length) {
+                        progress.report({
+                          message: searchMessages[currentMessage]
+                        });
+                        currentMessage++;
+                      } else {
+                        clearInterval(messageTimeout);
+                      }
+                    }, timeoutInternal);
+                    // Hawkeye-Pathfinder-DSPSCNSRC
+                    // returns results member name with member type as extension
+                    let results = await Search.HwksearchMembers(getInstance(), path[0], path[1], `${node.memberFilter || `*`}.${node.memberTypeFilter||`*`}`, searchTerm, node.filter);
+
+                    // Filter search result by member type filter.
+                    if (results.length > 0 && node.memberTypeFilter) {
+                      const patternExt = new RegExp(`^` + node.memberTypeFilter.replace(/[*]/g, `.*`).replace(/[$]/g, `\\$`) + `$`);
+                      results = results.filter(result => {
+                        const resultPath = result.path.split(`/`);
+                        const resultName = resultPath[resultPath.length - 1].split(`.`)[0];
+                        const member = members.find(member => member.name === resultName);
+                        return (member && patternExt.test(member.extension));
+                      })
+                    }
+
+                    if (results.length > 0) {
+                      const objectNamesLower = GlobalConfiguration.get(`ObjectBrowser.showNamesInLowercase`);
+
+                      results.forEach(result => {
+                        if (objectNamesLower === true) {
+                          result.path = result.path.toLowerCase();
+                        }
+                      });
+
+                      results = results.sort((a, b) => {
+                        return a.path.localeCompare(b.path);
+                      });
+
+                      setSearchResults(searchTerm, results);
+
+                    } else {
+                      vscode.window.showInformationMessage(`No results found searching for '${searchTerm}' in HAWKEYE/DSPSCNSRC ${node.path}.`);
+                    }
+
+                  } else {
+                    vscode.window.showErrorMessage(`No members to search.`);
+                  }
+
+                });
+
+              } catch (e) {
+                vscode.window.showErrorMessage(`Error searching source members: ` + e);
+              }
+            }
+          } else {
+            vscode.window.showErrorMessage(`Cannot search listings using nothing for the file name}.`);
+          }
+
+        } else {
+          //Running from command.
+        }
+      }),
+
       vscode.commands.registerCommand(`code-for-ibmi.createLibrary`, async () => {
         /** @type {ConnectionConfiguration.Parameters} */
         const config = getInstance().getConfig();
@@ -996,17 +1149,21 @@ module.exports = class ObjectBrowser {
 
           filter = config.objectFilters.find(filter => filter.name === obj.filter);
           let objects = await content.getObjectList(filter, objectSortOrder);
-          if (objectNamesLower === true) {
-            objects = objects.map(object => {
-              object.name = object.name.toLocaleLowerCase();
-              object.type = object.type.toLocaleLowerCase();
-              object.attribute = object.attribute.toLocaleLowerCase();
-              return object;
-            })
-          };
-          items.push(...objects.map(object =>
-            object.attribute.toLocaleUpperCase() === `*PHY` ? new SPF(element, filter, object) : new ILEObject(element, filter, object)
-          ));
+          if (objects.length === 0) {
+            items.push(...objects.map(object => new SPF(element, filter, {library:``, name: ``, text: `** Empty **`})  ));
+          } else {
+            if (objectNamesLower === true) {
+              objects = objects.map(object => {
+                object.name = object.name.toLocaleLowerCase();
+                object.type = object.type.toLocaleLowerCase();
+                object.attribute = object.attribute.toLocaleLowerCase();
+                return object;
+              })
+            };
+            items.push(...objects.map(object =>
+              object.attribute.toLocaleUpperCase() === `*PHY` ? new SPF(element, filter, object) : new ILEObject(element, filter, object)
+            ));
+          }
           break;
 
         case `SPF`:
