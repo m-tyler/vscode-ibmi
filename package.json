@@ -13,12 +13,21 @@
 		"as400"
 	],
 	"author": {
+<<<<<<< HEAD
 		"name": "mtyler forked project from Halcyon Tech Ltd",
 		"url": "https://github.com/m-tyler/"
 	},
 	"publisher": "halcyontechltd",
 	"repository": {
 		"url": "https://github.com/m-tyler/vscode-ibmi"
+=======
+		"name": "Halcyon Tech Ltd",
+		"url": "https://github.com/halcyon-tech/"
+	},
+	"publisher": "halcyontechltd",
+	"repository": {
+		"url": "https://github.com/halcyon-tech/vscode-ibmi"
+>>>>>>> UserSplfs
 	},
 	"license": "MIT",
 	"engines": {
@@ -1094,6 +1103,7 @@
 				"icon": "$(search)"
 			},
 			{
+<<<<<<< HEAD
 				"command": "Hawkeye_Pathfinder.searchSourceFiles",
 				"enablement": "code-for-ibmi:connected",
 				"title": "Scan Source Files - Hawkeye",
@@ -1101,6 +1111,8 @@
 				"icon": "$(search-fuzzy)"
 			},
 			{
+=======
+>>>>>>> UserSplfs
 				"command": "code-for-ibmi.searchSpooledFiles",
 				"enablement": "code-for-ibmi:connected",
 				"title": "Search Spooled Files",
@@ -1455,14 +1467,22 @@
 				"category": "IBM i"
 			},
 			{
+<<<<<<< HEAD
 				"command": "code-for-ibmi.addUserSpooledFileList",
+=======
+				"command": "code-for-ibmi.addUserSpooledFileFilter",
+>>>>>>> UserSplfs
 				"title": "add Spooled File",
 				"category": "IBM i",
 				"enablement": "code-for-ibmi:connected == true",
 				"icon": "$(add)"
 			},
 			{
+<<<<<<< HEAD
 				"command": "code-for-ibmi.deleteUserSpooledFileList",
+=======
+				"command": "code-for-ibmi.deleteUserSpooledFileFilter",
+>>>>>>> UserSplfs
 				"title": "Delete user",
 				"category": "IBM i",
 				"enablement": "code-for-ibmi:connected == true",
@@ -1476,7 +1496,11 @@
 				"icon": "$(delete)"
 			},
 			{
+<<<<<<< HEAD
 				"command": "code-for-ibmi.sortUserSpooledFileList",
+=======
+				"command": "code-for-ibmi.sortUserSpooledFileFilter",
+>>>>>>> UserSplfs
 				"title": "Sort spooled files",
 				"category": "IBM i",
 				"enablement": "code-for-ibmi:connected == true",
@@ -1926,7 +1950,11 @@
 					"when": "view == searchView"
 				},
 				{
+<<<<<<< HEAD
 					"command": "code-for-ibmi.addUserSpooledFileList",
+=======
+					"command": "code-for-ibmi.addUserSpooledFileFilter",
+>>>>>>> UserSplfs
 					"group": "navigation",
 					"when": "view == splfBrowser"
 				},
@@ -1936,7 +1964,11 @@
 					"when": "view == splfBrowser"
 				},
 				{
+<<<<<<< HEAD
 					"command": "code-for-ibmi.sortUserSpooledFileList",
+=======
+					"command": "code-for-ibmi.sortUserSpooledFileFilter",
+>>>>>>> UserSplfs
 					"group": "navigation",
 					"when": "view == splfBrowser"
 				}
@@ -2330,7 +2362,11 @@
 					"group": "4_splfuser@1"
 				},
 				{
+<<<<<<< HEAD
 					"command": "code-for-ibmi.deleteUserSpooledFileList",
+=======
+					"command": "code-for-ibmi.deleteUserSpooledFileFilter",
+>>>>>>> UserSplfs
 					"when": "view == splfBrowser && viewItem =~ /^splfuser.*$/",
 					"group": "5_splfuser@1"
 				},

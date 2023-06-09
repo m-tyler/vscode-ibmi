@@ -46,7 +46,34 @@ Maintain your RPGLE, CL, COBOL, C/CPP on IBM i right from Visual Studio Code. Ed
 ![https://marketplace.visualstudio.com/items?itemName=HalcyonTechLtd.code-for-ibmi](https://img.shields.io/visual-studio-marketplace/i/HalcyonTechLtd.code-for-ibmi?style=flat-square) 
 ![](https://img.shields.io/visual-studio-marketplace/r/HalcyonTechLtd.code-for-ibmi?style=flat-square) 
 
+<<<<<<< HEAD
 * Aldon project filter example 
   <img src="./aldon-filter.png" align="left">
 * Hawkeye cross reference filter example 
   <img src="./hawkeye-filter.png" align="left">
+=======
+---
+
+### Building from source
+
+1. This project requires VS Code and Node.js.
+2. fork & clone repo
+3. `npm i`
+4. 'Run Extension' from vscode debug.
+
+---
+
+### Contributors
+
+<a href="https://github.com/halcyon-tech/vscode-ibmi/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=halcyon-tech/vscode-ibmi" />
+</a>
+
+(Made with [contrib.rocks](https://contrib.rocks)).
+
+View [our "contributing" page](CONTRIBUTING.md) for our contribution guidelines and a full list of contributors.  🕶️
+
+I contain 
+- new content view for User Spooled Files.
+
+>>>>>>> UserSplfs

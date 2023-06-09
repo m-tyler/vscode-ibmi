@@ -585,7 +585,7 @@ export default class IBMiContent {
    * @param remotePath 
    * @return an array of IFSFile
    */
-  async getFileList(remotePath: string, sort: SortOptions = { order: "name" }, onListError?:(errors:string[]) => void): Promise<IFSFile[]> {
+  async getFileList(remotePath: string, sort: SortOptions = { order: "name" }, onListError?: (errors: string[]) => void): Promise<IFSFile[]> {
     sort.order = sort.order === '?' ? 'name' : sort.order;
     const { 'stat': STAT } = this.ibmi.remoteFeatures;
     const { 'sort': SORT } = this.ibmi.remoteFeatures;
@@ -689,7 +689,7 @@ export default class IBMiContent {
     return undefined;
   }
 
-  async objectResolve(object: string, libraries: string[]): Promise<string|undefined> {
+  async objectResolve(object: string, libraries: string[]): Promise<string | undefined> {
     const command = `for f in ${libraries.map(lib => `/QSYS.LIB/${lib.toUpperCase()}.LIB/${object.toUpperCase()}.*`).join(` `)}; do if [ -f $f ] || [ -d $f ]; then echo $f; break; fi; done`;
 
     const result = await this.ibmi.sendCommand({
@@ -730,7 +730,7 @@ export default class IBMiContent {
   * @param sortOrder
   * @returns an array of IBMiSplfUser 
   */
-  async getUserSpooledFileList(user: string, sort: SortOptions = { order: "date" }, splfName?: string): Promise<IBMiSpooledFile[]> {
+  async getUserSpooledFileFilter(user: string, sort: SortOptions = { order: "date" }, splfName?: string): Promise<IBMiSpooledFile[]> {
     sort.order = sort.order === '?' ? 'name' : sort.order;
     user = user.toUpperCase();
 
@@ -774,10 +774,33 @@ from table (QSYS2.SPOOLED_FILE_INFO(USER_NAME => '${user}') ) QE where FILE_AVAI
       } as IBMiSpooledFile))
       .sort(sorter);
   }
-
   /**
   * @param filter
   * @returns an array of IBMiSplfUser 
+  */
+  // async saveUserSpooledFileFiltertoFS(filter: string, userSplfList: Promise<IBMiSpooledFile[]>) {
+  async saveUserSpooledFileFiltertoFS(filter: string, content: string) {
+
+    const client = this.ibmi.client;
+    const tempRmt = this.getTempRemote(filter);
+    const tmpobj = await tmpFile();
+    // const content = JSON.stringify(userSplfList);
+
+    try {
+      await writeFileAsync(tmpobj, content, `utf8`);
+
+      await client.putFile(tmpobj, tempRmt);
+
+      return tempRmt;
+    } catch (error) {
+      console.log(`Failed saving list of spooled files to search through: ` + error);
+      return undefined;
+    }
+  }
+
+  /**
+  * @param user
+  * @returns a string that is the quantity of spooled files owned by user
   */
   async getUserSpooledFileCount(user: string): Promise<String> {
     user = user.toUpperCase();
@@ -796,8 +819,8 @@ from table (QSYS2.SPOOLED_FILE_INFO(USER_NAME => '${user}') ) QE where FILE_AVAI
     return String(results[0].USER_SPLF_COUNT);
   }
   /**
-  * @param filter
-  * @returns an string for user profile text 
+  * @param user
+  * @returns a string for user profile text 
   */
   async getUserProfileText(user: string): Promise<string | undefined> {
     user = user.toUpperCase();
@@ -882,7 +905,7 @@ from table (QSYS2.SPOOLED_FILE_INFO(USER_NAME => '${user}') ) QE where FILE_AVAI
   /**
   * Download the contents of a source member
   */
-  async downloadSpooledFileContent(uriPath: string, name: string, qualified_job_name: string, splf_number: string, fileExtension: string) {
+  async downloadSpooledFileContent(uriPath: string, name: string, qualified_job_name: string, splf_number: string, fileExtension: string, additionalPath? :string) {
     name = name.toUpperCase();
     qualified_job_name = qualified_job_name.toUpperCase();
 
@@ -890,7 +913,7 @@ from table (QSYS2.SPOOLED_FILE_INFO(USER_NAME => '${user}') ) QE where FILE_AVAI
     const tmpobj = await tmpFile();
 
     const tmpName = path.basename(tempRmt);
-    const tmpFolder = path.dirname(tempRmt);
+    const tmpFolder = path.dirname(tempRmt) + (additionalPath? `/${additionalPath}`:``);
 
     // const path = homeDirectory +(folder !== undefined ? '/'+folder :'');
     const client = this.ibmi.client;
