@@ -388,13 +388,16 @@ export default class IBMiContent {
    * @param sortOrder
    * @returns an array of IBMiFile 
    */
-  async getObjectList(filters: { library: string; object?: string; types?: string[]; }, sortOrder?: `name` | `type`): Promise<IBMiFile[]> {
+  async getObjectList(filters: { library: string; object?: string; types?: string[]; member?: string; memberType?: string; }, sortOrder?: `name` | `type`): Promise<IBMiFile[]> {
     const library = filters.library.toUpperCase();
     const object = (filters.object && filters.object !== `*` ? filters.object.toUpperCase() : `*ALL`);
     const sourceFilesOnly = (filters.types && filters.types.includes(`*SRCPF`));
+    const member = (filters.member ? filters.member.toUpperCase() : filters.member);
+    const mbrtype = (filters.memberType ? filters.memberType.toUpperCase() : filters.memberType);
 
     const tempLib = this.config.tempLibrary;
     const tempName = Tools.makeid();
+    var objQuery;
 
     if (sourceFilesOnly) {
       objQuery = `create or replace table ${tempLib}.${tempName} (PHLIB,PHFILE,PHFILA,PHDTAT,PHTXT) as (select PHLIB,PHFILE,PHFILA,PHDTAT,PHTXT from table ( ILEDITOR.VSC_getSourceFileListCustom (IN_SRCF => '${object}' ,IN_MBR => '${member}', IN_LIB => '${library}' ,IN_MBR_TYPE => '${mbrtype}' ) )) with data on replace delete rows`;
