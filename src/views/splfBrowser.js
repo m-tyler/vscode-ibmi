@@ -70,8 +70,8 @@ module.exports = class SPLFBrowser {
         const connection = getInstance().getConnection();
 
         let newUserSplfs;
-        let usersSpooledFile = [];
 
+        let usersSpooledFile = [];
         if (config.usersSpooledFile) {
           usersSpooledFile = config.usersSpooledFile;
         }
@@ -206,6 +206,7 @@ module.exports = class SPLFBrowser {
 
               const objects = await content.getUserSpooledFileFilter(node.user, node.sort, node.name);
               let commands = ``;
+              let commandsNum = 0;
               objects.forEach(async function (object) {
                 commands += (deleteCount >= 0?`\n`:``)+`DLTSPLF FILE(${object.name}) JOB(${object.qualified_job_name}) SPLNBR(${object.number})`;
                 deleteCount += 1;
@@ -213,9 +214,13 @@ module.exports = class SPLFBrowser {
               // objects.forEach(async function (object) {
               try {
                 await connection.runCommand({
+                  // command: `DLTSPLF FILE(${object.name}) JOB(${object.qualified_job_name}) SPLNBR(${object.number})`
                   command: `${commands}`
                   , environment: `ile`
                 });
+
+                // vscode.window.showInformationMessage(`Deleted ${object.name}, ${object.qualified_job_name}.`);
+                // deleteCount += 1;
 
               } catch (e) {
                 vscode.window.showErrorMessage(`Error deleting user spooled file! ${e}`);
@@ -325,6 +330,8 @@ module.exports = class SPLFBrowser {
                 , environment: `ile`
               });
               if (GlobalConfiguration.get(`autoRefresh`)) this.refresh();
+              // vscode.window.showInformationMessage(`${node.path} was copied to ${newName}.`);
+              // vscode.window.showInformationMessage(`${Tools.escapePath(node.path)} was copied to ${Tools.escapePath(newName)}.`);
 
             } catch (e) {
               vscode.window.showErrorMessage(`Error copying ${node.path}! ${e}`);
@@ -383,7 +390,6 @@ module.exports = class SPLFBrowser {
                   `How does one end up with ${splfnum} spooled files.  Ever heared of cleaning up?`,
                   `'${searchTerm}' in ${node.path}.`,
                 ];
-
                 let currentMessage = 0;
                 const messageTimeout = setInterval(() => {
                   if (currentMessage < searchMessages.length) {
@@ -395,7 +401,6 @@ module.exports = class SPLFBrowser {
                     clearInterval(messageTimeout);
                   }
                 }, timeoutInternal);
-
                 let results = await Search.searchUserSpooledFiles(getInstance(), searchTerm, searchPath);
 
                 if (results.length > 0) {
@@ -444,6 +449,7 @@ module.exports = class SPLFBrowser {
           const splfContent = await contentApi.downloadSpooledFileContent(node.path, node.name, node.qualified_job_name, node.number, fileExtension);
           const tmpExt = path.extname(node.path);
           const fileName = path.basename(node.path, tmpExt);
+          // let localFilepath = os.homedir() +`\\` +extraFolder +`\\` +fileName +`.`+fileExtension; //FUTURE: in case we let user pick another download loc
           let localFilepath = os.homedir() +`\\` +fileName +`.`+fileExtension;
           localFilepath = await vscode.window.showSaveDialog({ defaultUri: vscode.Uri.file(localFilepath) });
 

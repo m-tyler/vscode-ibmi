@@ -691,7 +691,7 @@ export default class IBMiContent {
     return undefined;
   }
 
-  async objectResolve(object: string, libraries: string[]): Promise<string | undefined> {
+  async objectResolve(object: string, libraries: string[]): Promise<string|undefined> {
     const command = `for f in ${libraries.map(lib => `/QSYS.LIB/${lib.toUpperCase()}.LIB/${object.toUpperCase()}.*`).join(` `)}; do if [ -f $f ] || [ -d $f ]; then echo $f; break; fi; done`;
 
     const result = await this.ibmi.sendCommand({

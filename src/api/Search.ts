@@ -84,33 +84,37 @@ export namespace Search {
     }
   }
 
-  export async function searchUserSpooledFiles(instance: Instance, searchTerm: string, user: string, splfName?: string): Promise<Result[]> {
+  export async function searchUserSpooledFiles(instance: Instance, searchTerm: string, filter: string, splfName?: string): Promise<Result[]> {
     const connection = instance.getConnection();
     const config = instance.getConfig();
     const content = instance.getContent();
 
     if (connection && config && content) {
-      const objects = await content.getUserSpooledFileFilter(user);
-      const basicSpooledFileList = objects.map(obj => ({
-        user: obj.user
-        ,queue: obj.queue
-        ,qjob:obj.qualified_job_name
-        ,name: obj.name
-        ,number: obj.number
-      }));
-      const largeString = JSON.stringify(basicSpooledFileList);
-      // let result[];
-      const sqlStatement = `with USER_SPOOLED_FILES (SFUSER, OUTQ, QJOB, SFILE, SFILE_NUMBER) as (`
-        +`select * from JSON_Table( '${largeString}' ,'lax $'`
-        +`columns( "user" char(10) ,"queue" char(10) ,"qjob" char(28) ,"name" char(10) ,"number" int )) as SPLF`
-        +`)`
-        +`,ALL_USER_SPOOLED_FILE_DATA (SFUSER, OUTQ, QJOB, SFILE, SFILE_NUMBER, SPOOL_DATA, ORDINAL_POSITION) as ( `
-              +`select SFUSER, OUTQ, QJOB, SFILE, SFILE_NUMBER, SPOOLED_DATA, SD.ORDINAL_POSITION `
-               +`from USER_SPOOLED_FILES `
-              +`,table (SYSTOOLS.SPOOLED_FILE_DATA(JOB_NAME => QJOB, SPOOLED_FILE_NAME => SFILE, SPOOLED_FILE_NUMBER => SFILE_NUMBER)) SD )`
-          +`select trim(SFUSER)||'/'||trim(OUTQ)||'/'||trim(SFILE)||'~'||replace(trim(QJOB),'/','~')||'~'||trim(SFILE_NUMBER)||'.splf'||':'||char(ORDINAL_POSITION)||':'||varchar(trim(SPOOL_DATA),132) SEARCH_RESULT `
-            +`from ALL_USER_SPOOLED_FILE_DATA AMD `
-            +`where upper(SPOOL_DATA) like upper('%${sanitizeSearchTerm(searchTerm)}%')`;
+      const objects = await content.getUserSpooledFileFilter(filter);
+      const searchSplfList = objects.map(o => ({
+        user: o.user,
+        queue: o.queue,
+        qjob: o.qualified_job_name,
+        name: o.name,
+        number: o.number
+      
+      })); // no error
+
+      const largeString = JSON.stringify(searchSplfList);
+      const sqlStatement = `with USER_SPOOLED_FILES (SFUSER, OUTQ, QJOB, SFILE, SFILE_NUMBER) as (
+        select "user", "queue", "qjob", "name", "number" from JSON_Table(
+        '${largeString}' 
+        ,'lax $'
+        COLUMNS( "user" char(10) ,"queue" char(10) ,"qjob" char(28) ,"name" char(10) ,"number" int 
+        )) as SPLF
+        )
+        ,ALL_USER_SPOOLED_FILE_DATA (SFUSER, OUTQ, QJOB, SFILE, SFILE_NUMBER, SPOOL_DATA, ORDINAL_POSITION) as (
+              select SFUSER, OUTQ, QJOB, SFILE, SFILE_NUMBER, SPOOLED_DATA, SD.ORDINAL_POSITION
+                from USER_SPOOLED_FILES
+                ,table (SYSTOOLS.SPOOLED_FILE_DATA(JOB_NAME => QJOB, SPOOLED_FILE_NAME => SFILE, SPOOLED_FILE_NUMBER => SFILE_NUMBER)) SD )
+          select trim(SFUSER)||'/'||trim(OUTQ)||'/'||trim(SFILE)||'~'||replace(trim(QJOB),'/','~')||'~'||trim(SFILE_NUMBER)||'.splf'||':'||char(ORDINAL_POSITION)||':'||varchar(trim(SPOOL_DATA),132) SEARCH_RESULT
+            from ALL_USER_SPOOLED_FILE_DATA AMD
+            where upper(SPOOL_DATA) like upper('%${sanitizeSearchTerm(searchTerm)}%')`;
       const rows = await content.runSQL(sqlStatement);
       var resultString = rows.map(function(elem){ return elem.SEARCH_RESULT; }).join("\n");
       var result = {
@@ -119,10 +123,10 @@ export namespace Search {
         stderr: ``,
         command: ``
       } as CommandResult;
-      // }
       if (!result.stderr) {
-        // path: "/${user}/QEZJOBLOG/QPJOBLOG~D000D2034A~[JOBUSER]~849412~1.splf" <- path should be like this
-        return parseGrepOutput(result.stdout || '', user,
+        // path: "/${user}/QEZJOBLOG/QPJOBLOG~D000D2034A~[USERPROFILE]~849412~1.splf" <- path should be like this
+        // NOTE: Path issue with part names with underscores in them.  Need a different job separator token or can we use more sub parts to the path??
+        return parseGrepOutput(result.stdout || '', filter,
           path => connection.sysNameInLocal(path)); // TODO: add the scheme context of spooledfile_readonly: to path
       }
       else {
