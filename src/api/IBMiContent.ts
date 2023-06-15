@@ -476,7 +476,7 @@ export default class IBMiContent {
 
     if (this.config.enableSQL) {
 
-      const mbrQuery = `\n select MBMXRL,MBASP,MBFILE,MBNAME,MBSEU2,MBMTXT,MBNRCD,CREATED,CHANGED from table (ILEDITOR.VSC_getMemberListCustom(IN_LIB => '${library}' 
+      const mbrQuery = `\n select MBMXRL,MBASP,MBFILE,MBNAME,MBSEU2,MBMTXT,MBNRCD,CREATED,CHANGED,USERCONTENT from table (ILEDITOR.VSC_getMemberListCustom(IN_LIB => '${library}' 
       ${sourceFile ? `,IN_SRCF => '${sourceFile}'` : ""}
       ${member ? `,IN_MBR =>  '${member}'` : ""} 
       ${memberExt ? `,IN_MBR_TYPE => '${memberExt}'` : ""} ))`;
@@ -572,7 +572,8 @@ export default class IBMiContent {
       text: `${result.MBMTXT || ``}${sourceFile === `*ALL` ? ` (${result.MBFILE})` : ``}`.trim(),
       lines: Number(result.MBNRCD),
       created: new Date(result.CREATED ? Number(result.CREATED) : 0),
-      changed: new Date(result.CHANGED ? Number(result.CHANGED) : 0)
+      changed: new Date(result.CHANGED ? Number(result.CHANGED) : 0),
+      usercontent: result.USERCONTENT
     } as IBMiMember)).sort(sorter);
 
     if (sort.ascending === false) {
