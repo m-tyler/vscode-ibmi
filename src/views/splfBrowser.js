@@ -211,7 +211,7 @@ module.exports = class SPLFBrowser {
                 commands += (deleteCount >= 0 ? `\n` : ``) + `DLTSPLF FILE(${object.name}) JOB(${object.qualified_job_name}) SPLNBR(${object.number})`;
                 deleteCount += 1;
               });
-              let commands_fewer = []``;
+              let commands_fewer = [];
               try {
                 for (let index = 0; index < commands.length;) {
                   commands_fewer = commands.split(index, index + 20);
