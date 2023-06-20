@@ -6,13 +6,13 @@ const path = require(`path`);
 
 const writeFileAsync = util.promisify(fs.writeFile);
 
-// const FiltersUI = require(`../webviews/filters`);
-
-let { setSearchResults } = require(`../instantiate`);
+// let { setSearchResults } = require(`../instantiate`);
+const { setSearchResults } = require(`../instantiate`);
 const { GlobalConfiguration, ConnectionConfiguration } = require(`../api/Configuration`);
 const { Search } = require(`../api/Search`);
 const { getSpooledFileUri } = require(`../filesystems/qsys/SplfFs`);
-// const { Tools } = require(`../api/Tools`);
+const { Tools } = require(`../api/Tools`);
+const { ExtendedIBMiContent } = require(`../filesystems/qsys/extendedContent`);
 
 function getInstance() {
   const { instance } = (require(`../instantiate`));
@@ -193,38 +193,40 @@ module.exports = class SPLFBrowser {
       vscode.commands.registerCommand(`code-for-ibmi.deleteNamedSpooledFiles`, async (node) => {
         if (node) {
           //Running from right click
+          let deleteBatch = 0;
           let deleteCount = 0;
           let deletionConfirmed = false;
+          let fewercommands = ``;
           let result = await vscode.window.showWarningMessage(`Are you sure you want to delete ALL spooled files named ${node.name} for user ${node.user}?`, `Yes`, `Cancel`);
-
+          
           if (result === `Yes`) {
             deletionConfirmed = true;
-
+            const connection = getInstance().getConnection();
+            const content = getInstance().getContent();
+            const TempFileName = Tools.makeid();
+            const TempMbrName = Tools.makeid();
+            const asp = ``;
+            const tempLib = content.config.tempLibrary;
+            
             if (deletionConfirmed) {
-              const connection = getInstance().getConnection();
-              const content = getInstance().getContent();
 
               const objects = await content.getUserSpooledFileFilter(node.user, node.sort, node.name);
-              let commands = ``;
-              let commandsNum = 0;
-              objects.forEach(async function (object) {
-                commands += (deleteCount >= 0 ? `\n` : ``) + `DLTSPLF FILE(${object.name}) JOB(${object.qualified_job_name}) SPLNBR(${object.number})`;
-                deleteCount += 1;
-              });
-              let commands_fewer = [];
               try {
-                for (let index = 0; index < commands.length;) {
-                  commands_fewer = commands.split(index, index + 20);
-                  index += 20;
-                }
+                let commands = objects.map(o => (
+                  `DLTSPLF FILE(${o.name}) JOB(${o.qualified_job_name}) SPLNBR(${o.number})`              
+                )); 
+                let dltCmdSrc = `// BCHJOB  JOB(DLTSPLFS) JOBQ(*JOBD)\n` +commands.join(`\n`) +`\n// ENDBCHJOB`;
                 await connection.runCommand({
-                  command: `${commands}`
-                  , environment: `ile`
+                  command: `CRTSRCPF FILE(${tempLib}/${TempFileName}) MBR(${TempMbrName}) RCDLEN(112)`
+                  ,environment: `ile`
                 });
-
-                // vscode.window.showInformationMessage(`Deleted ${object.name}, ${object.qualified_job_name}.`);
-                // deleteCount += 1;
-
+                await content.uploadMemberContent(asp, tempLib, TempFileName, TempMbrName, dltCmdSrc)
+                let dltCommands = `SBMDBJOB FILE(${tempLib}/${TempFileName}) MBR(${TempMbrName}) JOBQ(QUSRNOMAX)`;
+                await connection.runCommand({
+                  command: dltCommands
+                  ,environment: `ile`
+                });
+                
               } catch (e) {
                 vscode.window.showErrorMessage(`Error deleting user spooled file! ${e}`);
               }
@@ -234,8 +236,12 @@ module.exports = class SPLFBrowser {
               vscode.window.showInformationMessage(`Deletion canceled.`);
             }
             if (deleteCount > 0) {
-              if (GlobalConfiguration.get(`autoRefresh`)) this.refresh();
+              // if (GlobalConfiguration.get(`autoRefresh`)) this.refresh();
               vscode.window.showInformationMessage(`Deleted ${deleteCount} spooled files.`);
+              await connection.runCommand({
+                command: `DLTF FILE(${tempLib}/${TempFileName}) `
+                ,environment: `ile`
+              });
             }
 
           }
