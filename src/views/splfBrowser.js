@@ -307,41 +307,61 @@ module.exports = class SPLFBrowser {
       }),
       vscode.commands.registerCommand(`code-for-ibmi.copySpooledFile`, async (node) => {
         /** @type {ConnectionConfiguration.Parameters} */
-        throw new Error("code-for-ibmi.copySpooledFile not implemented.");
-        const config = getInstance().getConfig();
-        const homeDirectory = config.homeDirectory;
-
+        // const content = getInstance().getContent();
+        // const TempCpyFileName = Tools.makeid();
+        // const TempSrcFileName = Tools.makeid();
+        // const TempSrcMbrName = Tools.makeid();
+        // const tempLib = content.config.tempLibrary;
+        // const asp = ``;
+        let newName =``;
+        
         if (node) {
           //Running from right click
-
-          let newName = await vscode.window.showInputBox({
-            prompt: `Name of new spooled file name`,
-            value: node.name
-          });
+          
+          // let newName = await vscode.window.showInputBox({
+          //   prompt: `Name of new spooled file name`,
+          //   value: node.name
+          // });
 
           if (newName) {
-            const connection = getInstance().getConnection();
-
-            try {
-              let a =`CRTPF FILE(ILEDITOR/DBF133) RCDLEN(133)`;
-              let b =`CPYSPLF FILE(QPDSPDTA) TOFILE(ILEDITOR/DBF133) JOB(045057/QSYSOPR/D000DOPWM1) SPLNBR(3) CTLCHAR(*FCFC)`;
-              let c =`CPYSPLF FILE(QPDSPDTA) TOFILE(ILEDITOR/DBF133) JOB(045057/QSYSOPR/D000DOPWM1) SPLNBR(3) CTLCHAR(*FCFC)`;
-              await connection.runCommand({
-                command: `DUPSPLF FILE(${node.name}) JOB(${node.qualified_job_name}) SPLNBR(${node.number}) NEWSPLF(${newName})`
-                , environment: `ile`
-              });
-              if (GlobalConfiguration.get(`autoRefresh`)) this.refresh();
-              // vscode.window.showInformationMessage(`${node.path} was copied to ${newName}.`);
-              // vscode.window.showInformationMessage(`${Tools.escapePath(node.path)} was copied to ${Tools.escapePath(newName)}.`);
-
-            } catch (e) {
-              vscode.window.showErrorMessage(`Error copying ${node.path}! ${e}`);
-            }
+            // const connection = getInstance().getConnection();
+            
+            // try {
+            //   let cpyCmdSrc = `// BCHJOB  JOB(CPYSPLF) JOBQ(*JOBD)\n` 
+            //           +  `\nCRTPF FILE(${tempLib}/${TempCpyFileName}) MBR(*FILE) RCDLEN(382)`
+            //           +  `\nCPYSPLF TOFILE(${tempLib}/${TempCpyFileName}) FILE(${node.name}) JOB(${node.qualified_job_name}) SPLNBR(${node.number}) CTLCHAR(*FCFC)`
+            //           +  `\nCPYF FROMFILE(${tempLib}/${TempCpyFileName}) TOFILE(*PRINT) OUTFMT(*CHAR)`
+            //           +  `\n// ENDBCHJOB`;
+            //   await connection.runCommand({
+            //     command: `CRTSRCPF FILE(${tempLib}/${TempSrcFileName}) MBR(${TempSrcMbrName}) RCDLEN(120)`
+            //     ,environment: `ile`
+            //   });
+            //   await content.uploadMemberContent(asp, tempLib, TempSrcFileName, TempSrcMbrName, cpyCmdSrc)
+            //   let cpyCommands = `SBMDBJOB FILE(${tempLib}/${TempSrcFileName}) MBR(${TempSrcMbrName}) JOBQ(QUSRNOMAX)`;
+            //   const commandResult = await connection.runCommand({
+            //     command: cpyCommands
+            //     ,environment: `ile`
+            //   });
+            //   // await connection.runCommand({
+            //   //   command: ``
+            //   //         +  `\nCRTPF FILE(${tempLib}/${TempFileName}) MBR(*FILE) RCDLEN(382)`
+            //   //         +  `\nCPYSPLF TOFILE(${tempLib}/${TempFileName}) FILE(${node.name}) JOB(${node.qualified_job_name}) SPLNBR(${node.number}) CTLCHAR(*FCFC)`
+            //   //         +  `\nCPYF FROMFILE(${tempLib}/${TempFileName}) TOFILE(*PRINT) OUTFMT(*CHAR)`
+            //   //   ,environment: `ile`
+            //   // });
+            //   if (GlobalConfiguration.get(`autoRefresh`)) this.refresh();
+            //   // vscode.window.showInformationMessage(`${node.path} was copied to ${newName}.`);
+            //   // vscode.window.showInformationMessage(`${Tools.escapePath(node.path)} was copied to ${Tools.escapePath(newName)}.`);
+              
+            // } catch (e) {
+            //   vscode.window.showErrorMessage(`Error copying ${node.path}! ${e}`);
+            // }
           }
-
+              
         } else {
           //Running from command
           console.log(this);
+          throw new Error(`code-for-ibmi.copySpooledFile not implemented.`);
         }
       }),
       vscode.commands.registerCommand(`code-for-ibmi.searchSpooledFiles`, async (node) => {
@@ -432,14 +452,14 @@ module.exports = class SPLFBrowser {
 
         if (node) {
           let fileExtension = await vscode.window.showInputBox({
-            prompt: `Type of file to create, TXT, PDF, HTML`,
+            prompt: `Type of file to create, TXT, PDF`,
             value: `TXT`
           });
           if (!fileExtension) { return }
           fileExtension = fileExtension.toLowerCase()
           switch (fileExtension) {
           case `pdf`:
-          case `html`:
+          // case `html`:
           case `txt`:
             fileExtension.toLowerCase();
             break;
