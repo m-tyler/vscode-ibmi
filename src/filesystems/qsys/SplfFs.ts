@@ -60,8 +60,7 @@ export class SplfFS implements vscode.FileSystemProvider {
     instance.onEvent("connected", () => this.updateSpooledFileSupport());
     instance.onEvent("disconnected", () => this.updateSpooledFileSupport());
   }
-
-
+ 
 
   private updateSpooledFileSupport() {
 
@@ -95,7 +94,6 @@ export class SplfFS implements vscode.FileSystemProvider {
       // const qualified_job_name = lfilename;
       const splf_number = lfilename[4].replace(`.splf`, ``);
       const name = lfilename[0];
-
 
       const spooledFileContent = await contentApi.downloadSpooledFileContent(uri.path, name, qualified_job_name, splf_number, `txt`);
       if (spooledFileContent !== undefined) {
