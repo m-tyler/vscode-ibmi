@@ -580,8 +580,8 @@ module.exports = class SPLFBrowser {
     const splfNum = await content.getUserSpooledFileCount(item.name);
     const userText = await content.getUserProfileText(item.name);
     item.tooltip = ``
-      .concat(`${userText ? `\nUser Text:\t\t\t ${userText}` : ``}`)
-      .concat(`${splfNum  ? `\nSpooled Fiile Count:${splfNum}` : ``}`)
+      .concat(`${userText ? `\nUser Text:\t\t\t  ${userText}` : ``}`)
+      .concat(`${splfNum  ? `\nSpooled Fiile Count:  ${splfNum}` : ``}`)
     return item;
   }
 }
