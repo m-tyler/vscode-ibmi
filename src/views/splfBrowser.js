@@ -617,7 +617,7 @@ class SPLF extends vscode.TreeItem {
     this.description = ` - ` + this.status + ` - Pages: ` + this.total_pages;
     this.iconPath = new vscode.ThemeIcon(icon);
     this.protected = parent.protected;
-    this.contextValue = `spooledfile`;
+    this.contextValue = `spooledfile${this.protected ? `_readonly` : ``}`;
     this.resourceUri = getSpooledFileUri(object, parent.protected ? { readonly: true } : undefined);
     this.path = this.resourceUri.path;
     this.tooltip = ``
