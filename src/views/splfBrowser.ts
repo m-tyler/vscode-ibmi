@@ -370,7 +370,8 @@ export default class SPLFBrowser implements vscode.TreeDataProvider<any> {
                     clearInterval(messageTimeout);
                   }
                 }, timeoutInternal);
-                let results = await Search.searchUserSpooledFiles(getInstance(), searchTerm, searchUser, searchName);
+                let results = await Search.searchUserSpooledFiles_2(getInstance(), searchTerm, searchUser, searchName);
+                // let results = await Search.searchUserSpooledFiles(getInstance(), searchTerm, searchUser, searchName);
 
                 if (results.length > 0) {
                   const objectNamesLower = GlobalConfiguration.get(`ObjectBrowser.showNamesInLowercase`);

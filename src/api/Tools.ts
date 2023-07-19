@@ -209,4 +209,12 @@ export namespace Tools {
       .digest("hex")
       .toLowerCase();
   }
+
+  export function sliceUp(arr: any[], size: number): any[] {
+    const result = [];
+    for (let i = 0; i < arr.length; i += size) {
+      result.push(arr.slice(i, i + size));
+    }
+    return result;
+  }
 }
