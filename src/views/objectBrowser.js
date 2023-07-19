@@ -669,7 +669,7 @@ module.exports = class ObjectBrowser {
               } else {
                 member = path[2].split(`.`);
               }
-              if (path.length = 1 || path[1] === ``) {path[1] = `*`}
+              if (path.length < 2 || path[1] === ``) {path[1] = `*`}
               node = new SPF(undefined, {protected: true}, { library: path[0], name: path[1], text: undefined, attribute: undefined }, member[0], member[1]);
             }
           })
