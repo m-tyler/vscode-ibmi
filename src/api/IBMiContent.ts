@@ -268,7 +268,7 @@ export default class IBMiContent {
     } else {
       const tempRmt = this.getTempRemote(Tools.qualifyPath(library, file, member));
       await this.ibmi.remoteCommand(
-        `QSYS/CPYTOIMPF FROMFILE(${library}/${file} ${member}) ` +
+        `WCPYTOIMPF FROMFILE(${library}/${file} ${member}) ` +
         `TOSTMF('${tempRmt}') ` +
         `MBROPT(*REPLACE) STMFCCSID(1208) RCDDLM(*CRLF) DTAFMT(*DLM) RMVBLANK(*TRAILING) ADDCOLNAM(*SQL) FLDDLM(',') DECPNT(*PERIOD)`
       );
