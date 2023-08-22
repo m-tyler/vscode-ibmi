@@ -433,6 +433,7 @@ export default class IBMiContent {
           attribute: String(object.PHFILA),
           text: String(object.PHTXT),
           count: Number(object.PHNOMB),
+          recordLength: Number(object.PHMXRL),
         } as IBMiFile))
         .sort((a, b) => a.library.localeCompare(b.library) || a.name.localeCompare(b.name));
     } else {
@@ -721,7 +722,7 @@ export default class IBMiContent {
   }
 
   async streamfileResolve(names: string[], directories: string[]): Promise<string | undefined> {
-    const command = `for f in ${directories.flatMap(dir => names.map(name => path.posix.join(dir, name))).join(` `)}; do if [ -f $f ]; then echo $f; break; fi; done`;
+    const command = `for f in ${directories.flatMap(dir => names.map(name => `"${path.posix.join(dir, name)}"`)).join(` `)}; do if [ -f "$f" ]; then echo $f; break; fi; done`;
 
     const result = await this.ibmi.sendCommand({
       command,
