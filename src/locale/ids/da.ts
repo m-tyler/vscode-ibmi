@@ -181,4 +181,45 @@ export const da: Locale = {
   'ProfilesView.loadCommandProfile.errorMessage': `Fejl ved at hente bibliotekslisten fra kommando: {0}`,
   'ProfilesView.setToDefault.infoMessage': `Nulstil til standard`,
   'ProfilesView.setToDefault.detail': `Dette vil nulstille bibliotekslisten, aktuelle mappe og Bruger Variable.`,
+
+
+  // splfBrowser:
+  'splfBrowser.addUserSpooledFileFilter.prompt': `Bruger til at vise spoolede filer`,
+  'splfBrowser.deleteUserSpooledFileFilter.placeHolder': `Vælg filternavn for at fjerne`,
+
+  'splfBrowser.deleteSpooledFile.warningMessage': `Er du sikker på, at du vil slette den spoolede fil {0}?`,
+  'splfBrowser.deleteSpooledFile.infoMessage': `Slettet {0}.`,
+  'splfBrowser.deleteSpooledFile.errorMessage': `Fejl ved sletning af brugerspoolet fil! {0}.`,
+  'splfBrowser.deleteSpooledFile.cancelled': `Sletning annulleret.`,
+
+  'splfBrowser.deleteNamedSpooledFiles.warningMessage': `Er du sikker på, at du vil slette ALLE spoolede filer med navnet {0} for brugeren {1}?`,
+  'splfBrowser.deleteNamedSpooledFiles.infoMessage': `Slettede {0} spoolede filer.`,
+  'splfBrowser.deleteNamedSpooledFiles.errorMessage': `Fejl ved sletning af brugerspoolede filer! {0}.`,
+  'splfBrowser.deleteNamedSpooledFiles.cancelled': `Sletning annulleret.`,
+
+  'splfBrowser.deleteUserSpooledFiles.warningMessage': `Er du sikker på, at du vil slette ALLE spoolede filer for brugeren {0}?`,
+  'splfBrowser.deleteUserSpooledFiles.infoMessage': `Slettede {0} spoolede filer.`,
+  'splfBrowser.deleteUserSpooledFiles.errorMessage': `Fejl ved sletning af brugerspoolede filer! {0}.`,
+  'splfBrowser.deleteUserSpooledFiles.cancelled': `Sletning annulleret.`,
+
+  'splfBrowser.moveSpooledFile.prompt': `Navn på ny OUTQ`,
+  'splfBrowser.moveSpooledFile.errorMessage': `Fejl ved flytning af spoolet fil! {0}`,
+
+  'splfBrowser.searchSpooledFiles.promptUserName': `Indtast bruger at søge over`,
+  'splfBrowser.searchSpooledFiles.promptUserNameTitle': `Søg brugerspoolede filer`,
+  'splfBrowser.searchSpooledFiles.promptSplfName': `Indtast spoolet filnavn for at søge efter`,
+  'splfBrowser.searchSpooledFiles.promptSplfNameTitle': "Søg i navngivet spoolet fil",
+  'splfBrowser.searchSpooledFiles.promptsearchTerm': "Søg i spoolede filer med navnet {0}",
+  'splfBrowser.searchSpooledFiles.progressTitle': 'Søger',
+  'splfBrowser.searchSpooledFiles.progressMessage0': `'{0}' i {1}, {2} spoolede filer.`,
+  'splfBrowser.searchSpooledFiles.progressMessage1': `'{0}' i {1} spoolede filer.`,
+  'splfBrowser.searchSpooledFiles.progressMessage2': `Dette tager et stykke tid, fordi der er {0} spoolede filer. Søger stadig efter '{1}' i {2}.`,
+  'splfBrowser.searchSpooledFiles.progressMessage3': `Hvad er så specielt ved '{0}' overhovedet?`,
+  'splfBrowser.searchSpooledFiles.progressMessage4': `Søger stadig '{0}' i {1}...`,
+  'splfBrowser.searchSpooledFiles.progressMessage5': `Wow. Det her tager virkelig et stykke tid. Lad os håbe, du får det resultat, du ønsker.`,
+  'splfBrowser.searchSpooledFiles.progressMessage6': `Hvordan ender man med {0} spoolede filer. Har du nogensinde hørt om at rydde op?`,
+  'splfBrowser.searchSpooledFiles.progressMessage7': `'{0}' i {0}.`,
+  'splfBrowser.searchSpooledFiles.infoMessage': `Der blev ikke fundet nogen resultater, der søger efter '{0}' i {1}.`,
+  'splfBrowser.searchSpooledFiles.errorMessage0': `Ingen spoolede filer at søge i.`,
+  'splfBrowser.searchSpooledFiles.errorMessage1': `Fejl ved søgning af spoolede filer.`,
 };
