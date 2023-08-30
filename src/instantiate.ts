@@ -117,8 +117,9 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
         uri = getUriFromPath_Splf(path, options);
       }
       else {
+        
+        const [library, name, member_extension] = path.split('/');
         if (!options?.readonly && !path.startsWith('/')) {
-          const [library, name] = path.split('/');
           const writable = await instance.getContent()?.checkObject({ library, name, type: '*FILE' }, "*UPD");
           if (!writable) {
             options = options || {};
@@ -126,6 +127,7 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
           }
         }
         uri = getUriFromPath(path, options);
+        await storeMemberList([library, name].join(`/`), [`${member_extension}`]);
       }
       console.log(uri);
       try {
@@ -144,7 +146,6 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
           // Otherwise, do a generic open
           await vscode.commands.executeCommand(`vscode.open`, uri);
         }
-
         return true;
       } catch (e) {
         console.log(e);
@@ -447,4 +448,19 @@ async function onDisconnected() {
     disconnectBarItem,
     connectedBarItem,
   ].forEach(barItem => barItem.hide())
+}
+
+/**
+ *
+ * @param {string} path
+ * @param {string[]} list
+ */
+function storeMemberList(path: string, list: string[]) {
+  const storage = instance.getStorage();
+  if (!storage) return;
+  const existingDirs = storage.getSourceList();
+
+  existingDirs[path] = list;
+
+  return storage.setSourceList(existingDirs);
 }

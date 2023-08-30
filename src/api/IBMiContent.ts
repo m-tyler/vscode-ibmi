@@ -675,8 +675,9 @@ export default class IBMiContent {
     return items;
   }
 
-  async memberResolve(member: string, files: QsysPath[]): Promise<IBMiMember | undefined> {
-    const command = `for f in ${files.map(file => `/QSYS.LIB/${file.library.toUpperCase()}.LIB/${file.name.toUpperCase()}.FILE/${member.toUpperCase()}.MBR`).join(` `)}; do if [ -f $f ]; then echo $f; break; fi; done`;
+  async memberResolve(member: string, files: QsysPath[], asp?: string): Promise<IBMiMember | undefined> {
+    asp = asp || this.config.sourceASP;
+    const command = `for f in ${files.map(file => `${asp ? `/${asp}` : ``}/QSYS.LIB/${file.library.toUpperCase()}.LIB/${file.name.toUpperCase()}.FILE/${member.toUpperCase()}.MBR`).join(` `)}; do if [ -f $f ]; then echo $f; break; fi; done`;
 
     const result = await this.ibmi.sendCommand({
       command,
@@ -743,7 +744,7 @@ export default class IBMiContent {
   * @param {string=} splfName
   * @returns {Promise<IBMiSpooledFile[]>}
   */
-  async getUserSpooledFileFilter(user: string, sort: SortOptions = { order: "date" }, splfName?: string): Promise<IBMiSpooledFile[]> {
+  async getUserSpooledFileFilter(user: string, sort: SortOptions = { order: "date" }, splfName?: string, searchWords?: String): Promise<IBMiSpooledFile[]> {
     sort.order = sort.order === '?' ? 'name' : sort.order;
     user = user.toUpperCase();
 
@@ -768,8 +769,8 @@ from table (QSYS2.SPOOLED_FILE_INFO(USER_NAME => ucase('${user}')) ) QE where FI
       sorter = (r1, r2) => r1.creation_timestamp.localeCompare(r2.creation_timestamp);
     }
     return results
-      .map(object => ({
-        user: user,
+    .map(object => ({
+      user: user,
         name: this.ibmi.sysNameInLocal(String(object.SPOOLED_FILE_NAME)),
         number: Number(object.SPOOLED_FILE_NUMBER),
         status: this.ibmi.sysNameInLocal(String(object.STATUS)),
@@ -786,6 +787,11 @@ from table (QSYS2.SPOOLED_FILE_INFO(USER_NAME => ucase('${user}')) ) QE where FI
         queue: this.ibmi.sysNameInLocal(String(object.OUTPUT_QUEUE)),
       } as IBMiSpooledFile))
       .sort(sorter);
+      // return results.filter( seeee => !badLibs.includes(lib));
+      //https://stackoverflow.com/questions/49753978/typescript-filter-array-with-array
+      //const filteredList = this.arrayList.filter(item1 => 
+    //  !!activeCheckbuttons.find(item2 => item1.Description === item2.Description)
+      // );
   }
   /**
   * Download the contents of a source member

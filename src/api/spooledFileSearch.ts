@@ -66,14 +66,6 @@ export namespace SplfSearch {
             `('${objects[i].user}', '${objects[i].queue}', '${objects[i].qualified_job_name}', '${objects[i].name}', '${objects[i].number}')`
           )
         }
-        // const searchSplfList = objects.map(o => ({
-        //   user: o.user,
-        //   queue: o.queue,
-        //   qjob: o.qualified_job_name,
-        //   name: o.name,
-        //   number: o.number
-
-        // }));
 
         // Row length is the length of the SQL string used to insert each row
         const rowLength = recordLength + 55;
