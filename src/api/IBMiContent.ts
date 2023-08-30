@@ -676,7 +676,7 @@ export default class IBMiContent {
   }
 
   async memberResolve(member: string, files: QsysPath[], asp?: string): Promise<IBMiMember | undefined> {
-    asp = asp || this.config.sourceASP;
+    asp = asp || this.config.sourceASP || `WIASP`;
     const command = `for f in ${files.map(file => `${asp ? `/${asp}` : ``}/QSYS.LIB/${file.library.toUpperCase()}.LIB/${file.name.toUpperCase()}.FILE/${member.toUpperCase()}.MBR`).join(` `)}; do if [ -f $f ]; then echo $f; break; fi; done`;
 
     const result = await this.ibmi.sendCommand({
@@ -789,6 +789,8 @@ from table (QSYS2.SPOOLED_FILE_INFO(USER_NAME => ucase('${user}')) ) QE where FI
       .sort(sorter);
       // return results.filter( seeee => !badLibs.includes(lib));
       //https://stackoverflow.com/questions/49753978/typescript-filter-array-with-array
+      let searchWords_ = searchWords?.split(' ');
+      let searchOver_ = results.join;
       //const filteredList = this.arrayList.filter(item1 => 
     //  !!activeCheckbuttons.find(item2 => item1.Description === item2.Description)
       // );
