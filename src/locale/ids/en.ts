@@ -213,7 +213,7 @@ export const en: Locale = {
   'splfBrowser.searchSpooledFiles.progressMessage3': `What's so special about '{0}' anyway?`,
   'splfBrowser.searchSpooledFiles.progressMessage4': `Still searching '{0}' in {1}...`,
   'splfBrowser.searchSpooledFiles.progressMessage5': `Wow. This really is taking a while. Let's hope you get the result you want.`,
-  'splfBrowser.searchSpooledFiles.progressMessage6': `How does one end up with {0} spooled files.  Ever heared of cleaning up?`,
+  'splfBrowser.searchSpooledFiles.progressMessage6': `How does one end up with {0} spooled files.  Ever heard of cleaning up?`,
   'splfBrowser.searchSpooledFiles.progressMessage7': `'{0}' in {0}.`,
   'splfBrowser.searchSpooledFiles.infoMessage': `No results found searching for '{0}' in {1}.`,
   'splfBrowser.searchSpooledFiles.errorMessage0': `No spooled files to search.`,

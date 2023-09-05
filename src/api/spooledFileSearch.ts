@@ -24,7 +24,7 @@ export namespace SplfSearch {
     content: string
   }
 
-  export async function searchUserSpooledFiles_2(instance: Instance, searchTerm: string, filter: string, splfName?: string): Promise<Result[]> {
+  export async function searchUserSpooledFiles(instance: Instance, searchTerm: string, filter: string, splfName?: string): Promise<Result[]> {
     const connection = instance.getConnection();
     const config = instance.getConfig();
     const content = instance.getContent();

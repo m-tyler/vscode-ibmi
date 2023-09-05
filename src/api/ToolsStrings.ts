@@ -1,5 +1,5 @@
-export namespace Tools {
-  export function Utl_Foundsearch(SearchTokens: String, SearchOver: String): boolean {
+export namespace ToolsStrings {
+  export function Foundsearch(SearchTokens: String, SearchOver: String): boolean {
     let Words: string[];
 
     if (SearchTokens == '      ') {return false}
