@@ -770,7 +770,7 @@ from table (QSYS2.SPOOLED_FILE_INFO(USER_NAME => ucase('${user}')) ) QE where FI
       sorter = (r1, r2) => r1.creation_timestamp.localeCompare(r2.creation_timestamp);
     }
     let searchWords_ = searchWords?.split(' ')||[];
-    console.log(searchWords_);
+    // console.log(searchWords_);
     
     // return results
     let returnSplfList = results

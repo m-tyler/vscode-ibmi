@@ -198,8 +198,10 @@ export default class SPLFBrowser implements vscode.TreeDataProvider<any> {
             const TempMbrName = Tools.makeid();
             const asp = ``;
             const tempLib = content.config.tempLibrary;
+            let commandResult = ``;
+            
 
-            const objects = await content.getUserSpooledFileFilter(node.user, node.sort, node.name, node.filter);
+            const objects = await content.getUserSpooledFileFilter(node.user, node.sort, node.name);
             try {
               let commands = objects.map((o: any) => (
                 `DLTSPLF FILE(${o.name}) JOB(${o.qualified_job_name}) SPLNBR(${o.number})`              
@@ -228,8 +230,7 @@ export default class SPLFBrowser implements vscode.TreeDataProvider<any> {
             }
             if (deleteCount > 0) {
               if (GlobalConfiguration.get(`autoRefresh`)) this.refresh();
-              // vscode.window.showInformationMessage(`Deleted ${deleteCount} spooled files.`);
-              vscode.window.showInformationMessage(t(`splfBrowser.deleteNamedSpooledFiles.infoMessage`,deleteCount));
+              vscode.window.showInformationMessage(`Deleted ${deleteCount} spooled files.`);
               await connection.runCommand({
                 command: `DLTF FILE(${tempLib}/${TempFileName}) `
                 ,environment: `ile`
@@ -319,6 +320,7 @@ export default class SPLFBrowser implements vscode.TreeDataProvider<any> {
 
         let searchUser :any;
         let searchName :any;
+        let searchTerm :any;
         if (node) {
           searchUser = node.user;
           searchName = node.name;
@@ -341,10 +343,10 @@ export default class SPLFBrowser implements vscode.TreeDataProvider<any> {
         }
         
         if (!searchName) return;
-        
-        let searchTerm :any = await vscode.window.showInputBox({
-          // prompt: `Search in spooled files named ${searchName}.`
-          prompt: t(`splfBrowser.searchSpooledFiles.promptsearchTerm`,searchName)
+
+        searchTerm = await vscode.window.showInputBox({
+          prompt: `Search in spooled files named ${searchName}.`
+          // prompt: `Search ${searchPath}.`
         });
 
         if (searchTerm) {
@@ -391,54 +393,7 @@ export default class SPLFBrowser implements vscode.TreeDataProvider<any> {
                   vscode.window.showInformationMessage(t(`splfBrowser.searchSpooledFiles.infoMessage`, [searchTerm],[searchName]));
                 }
               } else {
-                // vscode.window.showErrorMessage(`No spooled files to search.`);
-                vscode.window.showErrorMessage(t(`splfBrowser.searchSpooledFiles.errorMessage0`));
-              }
-            });
-            
-          } catch (e) {
-            console.log(e);
-            // vscode.window.showErrorMessage(`Error searching spooled files.`);
-            vscode.window.showErrorMessage(t(`splfBrowser.searchSpooledFiles.errorMessage1`));
-          }
-        }
-
-      }),
-      vscode.commands.registerCommand(`code-for-ibmi.filterSpooledFiles`, async (node) => {
-        const connection = getInstance().getConnection();
-        const content = getInstance().getContent();
-        // /** @type {ConnectionConfiguration.Parameters} */
-        const config = getInstance().getConfig();
-        const treeItem = this.getTreeItem(node);
-
-        let searchUser :any;
-        let searchName :any;
-        if (node) {
-          searchUser = node.user;
-          searchName = node.name;
-        }
-
-        if (!searchUser) return;
-
-        let searchTerm :any = await vscode.window.showInputBox({
-          prompt: `Filter ${searchUser}'s spooled files.`
-        });
-
-        if (searchTerm) {
-          try {
-            await vscode.window.withProgress({
-              location: vscode.ProgressLocation.Notification,
-              title: `Filtering list of spooled files`,
-            }, async progress => {
-              progress.report({
-                message: `Filtering spooled files for ${searchUser}, using these words, ${searchTerm} spooled files.`
-              });
-              const splfnum = await content.getUserSpooledFileCount(searchUser);
-              if (splfnum > 0) {
-                node.addFilter(searchTerm);
-                this.refresh(node);
-              } else {
-                vscode.window.showErrorMessage(`No spooled files to filter.`);
+                vscode.window.showErrorMessage(`No spooled files to search.`);
               }
             });
             
