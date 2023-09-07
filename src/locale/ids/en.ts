@@ -307,4 +307,24 @@ export const en: Locale = {
   'actions.workAction.environment.pase': `PASE`,
   'actions.workAction.environment.pase.description': `Runs the command in the PASE environment`,
   'actions.workAction.delete.confirm': `Are you sure you want to delete the action "{0}"?`
+  // Custom contributions
+  ,
+  'objectBrowser.HWKsearchSourceFile.prompt': `Enter LIB/SPF/member.ext to search. See the help for DSPSCNSRC for selectable input values`,
+  'objectBrowser.HWKsearchSourceFile.title': `Search source file`,
+  'objectBrowser.HWKsearchSourceFile.invalidForm': `Please enter value in form LIB/SPF/member.ext`,
+  'objectBrowser.HWKsearchSourceFile.prompt2': `Use command DSPSCNSRC to search {0}.`,
+  'objectBrowser.HWKsearchSourceFile.notFound':`No results found searching for '{0}' in HAWKEYE/DSPSCNSRC {1}.`,
+  'objectBrowser.HWKsearchSourceFile.noMembers': `No members to search.`,
+  'objectBrowser.HWKsearchSourceFile.errorMessage': `Error searching source members: {0}`,
+  'objectBrowser.HWKsearchSourceFile.searchMessage0': `Using Hawkeye Pathfinder's DSPSCNSRC to search source members`,
+  'objectBrowser.HWKsearchSourceFile.searchMessage1': `'{0}' in {1}.`,
+  'objectBrowser.HWKsearchSourceFile.searchMessage2': `This is taking a while because there are {0} members. Searching '{1}' in {2} still.`,
+  'objectBrowser.HWKsearchSourceFile.searchMessage3': `What's so special about '{0}' anyway?`,
+  'objectBrowser.HWKsearchSourceFile.searchMessage4': `Still searching '{0}' in {1}...`,
+  'objectBrowser.HWKsearchSourceFile.searchMessage5': `While you wait, why not make some tea?`,
+  'objectBrowser.HWKsearchSourceFile.searchMessage6': `Wow. This really is taking a while. Let's hope you get the result you want.`,
+  'objectBrowser.HWKsearchSourceFile.searchMessage7': `Why was six afraid of seven?`,
+  'objectBrowser.HWKsearchSourceFile.searchMessage8': `How does one end up with {0} members?`,
+  'objectBrowser.HWKsearchSourceFile.searchMessage9': `'{0}' in {1}.`,
+  
 };

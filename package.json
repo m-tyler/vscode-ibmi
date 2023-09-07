@@ -575,7 +575,7 @@
 								"RPG"
 							],
 							"name": "Create Bound RPG Program (CRTBNDRPG)",
-							"command": "CRTBNDRPG PGM(&OPENLIB/&OPENMBR) SRCFILE(&OPENLIB/&OPENSPF) OPTION(*EVENTF) DBGVIEW(*SOURCE) TGTRLS(*CURRENT)"
+							"command": "CRTBNDRPG PGM(&OPENLIB/&OPENMBR) SRCFILE(&OPENLIB/&OPENSPF) OPTION(*EVENTF) DBGVIEW(*SOURCE)" 
 						},
 						{
 							"type": "member",
@@ -583,7 +583,7 @@
 								"GLOBAL"
 							],
 							"name": "Create Service Program (CRTSRVPGM)",
-							"command": "?CRTSRVPGM SRVPGM(&OPENLIB/&OPENMBR) EXPORT(*ALL) BNDSRVPGM(*NONE) BNDDIR(*NONE) ACTGRP(*CALLER) TGTRLS(*CURRENT)"
+							"command": "?CRTSRVPGM SRVPGM(&OPENLIB/&OPENMBR) EXPORT(*ALL) BNDSRVPGM(*NONE) BNDDIR(*NONE) ACTGRP(*CALLER)" 
 						},
 						{
 							"type": "member",
@@ -591,7 +591,7 @@
 								"SQLRPGLE"
 							],
 							"name": "Create SQL ILE RPG Program (CRTSQLRPGI)",
-							"command": "?CRTSQLRPGI OBJ(&OPENLIB/&OPENMBR) SRCFILE(&OPENLIB/&OPENSPF) CLOSQLCSR(*ENDMOD) OPTION(*EVENTF) DBGVIEW(*SOURCE) TGTRLS(*CURRENT)"
+							"command": "?CRTSQLRPGI OBJ(&OPENLIB/&OPENMBR) SRCFILE(&OPENLIB/&OPENSPF) CLOSQLCSR(*ENDMOD) OPTION(*EVENTF) DBGVIEW(*SOURCE)" 
 						},
 						{
 							"type": "member",
@@ -599,7 +599,7 @@
 								"SQLRPGLE"
 							],
 							"name": "Create SQL ILE RPG Module (CRTSQLRPGI)",
-							"command": "?CRTSQLRPGI OBJ(&OPENLIB/&OPENMBR) SRCFILE(&OPENLIB/&OPENSPF) OBJTYPE(*MODULE) CLOSQLCSR(*ENDMOD) OPTION(*EVENTF) DBGVIEW(*SOURCE) TGTRLS(*CURRENT)"
+							"command": "?CRTSQLRPGI OBJ(&OPENLIB/&OPENMBR) SRCFILE(&OPENLIB/&OPENSPF) OBJTYPE(*MODULE) CLOSQLCSR(*ENDMOD) OPTION(*EVENTF) DBGVIEW(*SOURCE)" 
 						},
 						{
 							"type": "member",
@@ -608,7 +608,7 @@
 								"RPG"
 							],
 							"name": "Create RPG Module (CRTRPGMOD)",
-							"command": "?CRTRPGMOD MODULE(&OPENLIB/&OPENMBR) SRCFILE(&OPENLIB/&OPENSPF) OPTION(*EVENTF) DBGVIEW(*SOURCE) TGTRLS(*CURRENT)"
+							"command": "?CRTRPGMOD MODULE(&OPENLIB/&OPENMBR) SRCFILE(&OPENLIB/&OPENSPF) OPTION(*EVENTF) DBGVIEW(*SOURCE)" 
 						},
 						{
 							"type": "member",
@@ -691,7 +691,7 @@
 								"GLOBAL"
 							],
 							"name": "Create Program (CRTPGM)",
-							"command": "?CRTPGM PGM(&OPENLIB/&OPENMBR) MODULE(*PGM) ENTMOD(*FIRST) BNDSRVPGM(*NONE) BNDDIR(*NONE) ACTGRP(*ENTMOD) TGTRLS(*CURRENT)"
+							"command": "?CRTPGM PGM(&OPENLIB/&OPENMBR) MODULE(*PGM) ENTMOD(*FIRST) BNDSRVPGM(*NONE) BNDDIR(*NONE) ACTGRP(*ENTMOD)"
 						},
 						{
 							"type": "member",
@@ -707,7 +707,7 @@
 								"rpgle"
 							],
 							"name": "Create Bound RPG Program (CRTBNDRPG) with inputs",
-							"command": "CRTBNDRPG PGM(${buildlib|Build library|&BUILDLIB}/${objectname|Object Name|&NAME}) SRCSTMF('${sourcePath|Source path|&FULLPATH}') OPTION(*EVENTF) DBGVIEW(*SOURCE) TGTRLS(*CURRENT) TGTCCSID(*JOB)"
+							"command": "CRTBNDRPG PGM(${buildlib|Build library|&BUILDLIB}/${objectname|Object Name|&NAME}) SRCSTMF('${sourcePath|Source path|&FULLPATH}') OPTION(*EVENTF) DBGVIEW(*SOURCE) TGTCCSID(*JOB)"
 						},
 						{
 							"type": "streamfile",
@@ -716,7 +716,7 @@
 								"RPG"
 							],
 							"name": "Create Bound RPG Program (CRTBNDRPG)",
-							"command": "CRTBNDRPG PGM(&BUILDLIB/&NAME) SRCSTMF('&FULLPATH') OPTION(*EVENTF) DBGVIEW(*SOURCE) TGTRLS(*CURRENT) TGTCCSID(*JOB)"
+							"command": "CRTBNDRPG PGM(&BUILDLIB/&NAME) SRCSTMF('&FULLPATH') OPTION(*EVENTF) DBGVIEW(*SOURCE) TGTCCSID(*JOB)"
 						},
 						{
 							"type": "streamfile",
@@ -724,7 +724,7 @@
 								"GLOBAL"
 							],
 							"name": "Create Service Program (CRTSRVPGM)",
-							"command": "?CRTSRVPGM SRVPGM(&BUILDLIB/&NAME) EXPORT(*ALL) BNDSRVPGM(*NONE) BNDDIR(*NONE) ACTGRP(*CALLER) TGTRLS(*CURRENT)"
+							"command": "?CRTSRVPGM SRVPGM(&BUILDLIB/&NAME) EXPORT(*ALL) BNDSRVPGM(*NONE) BNDDIR(*NONE) ACTGRP(*CALLER)"
 						},
 						{
 							"type": "streamfile",
@@ -732,7 +732,7 @@
 								"SQLRPGLE"
 							],
 							"name": "Create SQL ILE RPG Program (CRTSQLRPGI)",
-							"command": "?CRTSQLRPGI OBJ(&BUILDLIB/&NAME) SRCSTMF('&FULLPATH') CLOSQLCSR(*ENDMOD) OPTION(*EVENTF) DBGVIEW(*SOURCE) TGTRLS(*CURRENT) CVTCCSID(*JOB)"
+							"command": "?CRTSQLRPGI OBJ(&BUILDLIB/&NAME) SRCSTMF('&FULLPATH') CLOSQLCSR(*ENDMOD) OPTION(*EVENTF) DBGVIEW(*SOURCE) CVTCCSID(*JOB)"
 						},
 						{
 							"type": "streamfile",
@@ -740,7 +740,7 @@
 								"SQLRPGLE"
 							],
 							"name": "Create SQL ILE RPG Module (CRTSQLRPGI)",
-							"command": "?CRTSQLRPGI OBJ(&BUILDLIB/&NAME) SRCSTMF('&FULLPATH') OBJTYPE(*MODULE) CLOSQLCSR(*ENDMOD) OPTION(*EVENTF) DBGVIEW(*SOURCE) TGTRLS(*CURRENT) CVTCCSID(*JOB)"
+							"command": "?CRTSQLRPGI OBJ(&BUILDLIB/&NAME) SRCSTMF('&FULLPATH') OBJTYPE(*MODULE) CLOSQLCSR(*ENDMOD) OPTION(*EVENTF) DBGVIEW(*SOURCE) CVTCCSID(*JOB)"
 						},
 						{
 							"type": "streamfile",
@@ -749,7 +749,7 @@
 								"RPG"
 							],
 							"name": "Create RPG Module (CRTRPGMOD)",
-							"command": "?CRTRPGMOD MODULE(&BUILDLIB/&NAME) SRCSTMF('&FULLPATH') OPTION(*EVENTF) DBGVIEW(*SOURCE) TGTRLS(*CURRENT)"
+							"command": "?CRTRPGMOD MODULE(&BUILDLIB/&NAME) SRCSTMF('&FULLPATH') OPTION(*EVENTF) DBGVIEW(*SOURCE)" 
 						},
 						{
 							"type": "streamfile",
