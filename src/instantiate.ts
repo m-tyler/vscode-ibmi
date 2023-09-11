@@ -1,11 +1,14 @@
 
-import path, { dirname } from 'path';
+import path from 'path';
 import * as vscode from "vscode";
-import { CompileTools } from './api/CompileTools';
-import { ConnectionConfiguration, GlobalConfiguration, onCodeForIBMiConfigurationChange } from "./api/Configuration";
 import Instance from "./api/Instance";
-import { Search } from "./api/Search";
+import { CompileTools } from './api/CompileTools';
 import { Terminal } from './api/Terminal';
+import { SearchView } from "./views/searchView";
+import { VariablesUI } from "./webviews/variables";
+import { dirname } from 'path';
+import { ConnectionConfiguration, GlobalConfiguration, onCodeForIBMiConfigurationChange } from "./api/Configuration";
+import { Search } from "./api/Search";
 import { refreshDiagnosticsFromServer } from './api/errors/diagnostics';
 import { QSysFS, getMemberUri, getUriFromPath } from "./filesystems/qsys/QSysFs";
 import { init as clApiInit } from "./languages/clle/clApi";
@@ -14,9 +17,7 @@ import { initGetNewLibl } from "./languages/clle/getnewlibl";
 import { SEUColorProvider } from "./languages/general/SEUColorProvider";
 import { SplfFS, getUriFromPath_Splf } from "./filesystems/qsys/SplfFs";
 import { Action, DeploymentMethod, QsysFsOptions } from "./typings";
-import { SearchView } from "./views/searchView";
 import { ActionsUI } from './webviews/actions';
-import { VariablesUI } from "./webviews/variables";
 
 export let instance: Instance;
 
@@ -221,15 +222,15 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(`code-for-ibmi.runAction`, async (target: vscode.TreeItem | vscode.Uri, group?: any, action?: Action, method?: DeploymentMethod) => {
       const editor = vscode.window.activeTextEditor;
       let uri;
-      if (target) {
-        if ("fsPath" in target) {
+      if(target){
+        if("fsPath" in target){
           uri = target;
         }
-        else {
+        else{
           uri = target?.resourceUri;
         }
-      }
-
+      } 
+      
       uri = uri || editor?.document.uri;
 
       if (uri) {
@@ -260,15 +261,13 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
           }
 
           if (canRun && [`member`, `streamfile`, `file`].includes(uri.scheme)) {
-            return await CompileTools.runAction(instance, uri, action, method);
+            await CompileTools.runAction(instance, uri, action, method);
           }
         }
         else {
           vscode.window.showErrorMessage('Please connect to an IBM i first');
         }
       }
-      
-      return false;
     }),
 
     vscode.commands.registerCommand(`code-for-ibmi.openErrors`, async (qualifiedObject?: string) => {
