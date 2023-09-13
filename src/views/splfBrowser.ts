@@ -385,9 +385,11 @@ export default class SPLFBrowser implements vscode.TreeDataProvider<any> {
         let searchUser :any;
         let searchName :any;
         let searchTerm :any;
+        let searchWord :string;
         if (node) {
           searchUser = node.user;
           searchName = node.name;
+          searchWord = node.parent.filter;
         }
         else {
           searchUser = await vscode.window.showInputBox({
@@ -446,7 +448,7 @@ export default class SPLFBrowser implements vscode.TreeDataProvider<any> {
                     clearInterval(messageTimeout);
                   }
                 }, timeoutInternal);
-                let results = await SplfSearch.searchUserSpooledFiles(instance, searchTerm, searchUser, searchName);
+                let results = await SplfSearch.searchUserSpooledFiles(instance, searchTerm, searchUser, searchName, searchWord);
 
                 if (results.length > 0) {
 

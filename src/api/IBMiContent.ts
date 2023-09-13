@@ -875,7 +875,7 @@ from table (QSYS2.SPOOLED_FILE_INFO(USER_NAME => ucase('${user}')) ) QE where FI
   * @param {string=} splfName
   * @returns {Promise<String>} a string with the count of spooled file for user
   */
-  async getUserSpooledFileCount(user: string, splfName?: string): Promise<String> {
+  async getUserSpooledFileCount(user: string, splfName?: string, searchWord?: string): Promise<String> {
     user = user.toUpperCase();
 
     // const tempLib = this.config.tempLibrary;
