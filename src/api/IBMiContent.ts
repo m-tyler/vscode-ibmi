@@ -8,7 +8,6 @@ import { CommandResult, IBMiError, IBMiFile, IBMiMember, IBMiObject, IFSFile, Qs
 import { ConnectionConfiguration } from './Configuration';
 import { default as IBMi } from './IBMi';
 import { Tools } from './Tools';
-import { ToolsStrings } from './ToolsStrings';
 const tmpFile = util.promisify(tmp.file);
 const readFileAsync = util.promisify(fs.readFile);
 const writeFileAsync = util.promisify(fs.writeFile);
@@ -270,7 +269,7 @@ export default class IBMiContent {
     } else {
       const tempRmt = this.getTempRemote(Tools.qualifyPath(library, file, member));
       await this.ibmi.remoteCommand(
-        `WCPYTOIMPF FROMFILE(${library}/${file} ${member}) ` +
+        `QSYS/CPYTOIMPF FROMFILE(${library}/${file} ${member}) ` +
         `TOSTMF('${tempRmt}') ` +
         `MBROPT(*REPLACE) STMFCCSID(1208) RCDDLM(*CRLF) DTAFMT(*DLM) RMVBLANK(*TRAILING) ADDCOLNAM(*SQL) FLDDLM(',') DECPNT(*PERIOD)`
       );

@@ -1,14 +1,14 @@
-import util from "util";
-import fs from "fs";
-import tmp from "tmp";
+// import util from "util";
+// import fs from "fs";4
+// import tmp from "tmp";
 
 import { GlobalConfiguration } from './Configuration';
 import Instance from './Instance';
 import { Tools } from './Tools';
 import { CommandResult } from "../typings";
 
-const tmpFile = util.promisify(tmp.file);
-const writeFileAsync = util.promisify(fs.writeFile);
+// const tmpFile = util.promisify(tmp.file);
+// const writeFileAsync = util.promisify(fs.writeFile);
 
 export namespace Search {
   const QSYS_PATTERN = /(?:\/\w{1,10}\/QSYS\.LIB\/)|(?:\/QSYS\.LIB\/)|(?:\.LIB)|(?:\.FILE)|(?:\.MBR)/g;

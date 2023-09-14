@@ -210,13 +210,6 @@ export namespace Tools {
       .toLowerCase();
   }
 
-  export function sliceUp(arr: any[], size: number): any[] {
-    const result = [];
-    for (let i = 0; i < arr.length; i += size) {
-      result.push(arr.slice(i, i + size));
-    }
-    return result;
-  }
   export function capitalize(text:string) {
     return text.charAt(0).toUpperCase() + text.slice(1);
   }

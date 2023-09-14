@@ -188,7 +188,7 @@ export default class SPLFBrowser implements vscode.TreeDataProvider<any> {
           let deleteCount = 0;
           let result = await vscode.window.showWarningMessage(t(`splfBrowser.deleteNamedSpooledFiles.warningMessage`,node.name), t(`Yes`), t(`Cancel`));
           
-          if (result === `Yes` || result === `All`) {
+          if (result === `Yes`) {
             const connection = getConnection();
             const content = getContent();
             const TempFileName = Tools.makeid();
@@ -217,7 +217,7 @@ export default class SPLFBrowser implements vscode.TreeDataProvider<any> {
                 ,environment: `ile`
               });
               if (commandResult) {
-                // // vscode.window.showInformationMessage(` ${commandResult.stdout}.`);
+                // vscode.window.showInformationMessage(` ${commandResult.stdout}.`);
                 if (commandResult.code === 0 || commandResult.code === null) {
                 } else {
                 }
@@ -227,8 +227,9 @@ export default class SPLFBrowser implements vscode.TreeDataProvider<any> {
               vscode.window.showErrorMessage(t(`splfBrowser.deleteNamedSpooledFiles.errorMessage`, e));
             }
             if (deleteCount > 0) {
-              if (GlobalConfiguration.get(`autoRefresh`)) this.refresh();
-              vscode.window.showInformationMessage(`Deleted ${deleteCount} spooled files.`);
+              if (GlobalConfiguration.get(`autoRefresh`)) this.refresh(node.parent);
+              // vscode.window.showInformationMessage(`Deleted ${deleteCount} spooled files.`);
+              vscode.window.showInformationMessage(t(`splfBrowser.deleteNamedSpooledFiles.infoMessage`,deleteCount));
               await connection.runCommand({
                 command: `DLTF FILE(${tempLib}/${TempFileName}) `
                 ,environment: `ile`
@@ -405,12 +406,12 @@ export default class SPLFBrowser implements vscode.TreeDataProvider<any> {
             title: t(`splfBrowser.searchSpooledFiles.promptSplfNameTitle`),
           })
         }
-        
+
         if (!searchName) return;
 
         searchTerm = await vscode.window.showInputBox({
-          prompt: `Search in spooled files named ${searchName}.`
-          // prompt: `Search ${searchPath}.`
+          // prompt: `Search in spooled files named ${searchName}.`
+          prompt: t(`splfBrowser.searchSpooledFiles.promptsearchTerm`,searchName)
         });
 
         if (searchTerm) {
@@ -457,7 +458,8 @@ export default class SPLFBrowser implements vscode.TreeDataProvider<any> {
                   vscode.window.showInformationMessage(t(`splfBrowser.searchSpooledFiles.infoMessage`, [searchTerm],[searchName]));
                 }
               } else {
-                vscode.window.showErrorMessage(`No spooled files to search.`);
+                // vscode.window.showErrorMessage(`No spooled files to search.`);
+                vscode.window.showErrorMessage(t(`splfBrowser.searchSpooledFiles.errorMessage0`));
               }
             });
             
