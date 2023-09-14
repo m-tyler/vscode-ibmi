@@ -197,7 +197,6 @@ export default class SPLFBrowser implements vscode.TreeDataProvider<any> {
             const tempLib = getConfig().tempLibrary;
             let objects: IBMiSpooledFile[] = [];
 
-            // const objects = await content.getUserSpooledFileFilter(node.user, node.sort, node.name, node.parent.filter);
             if (result === `Yes`) {
               objects = await content.getUserSpooledFileFilter(node.user, node.sort, node.name);
             }
@@ -261,7 +260,6 @@ export default class SPLFBrowser implements vscode.TreeDataProvider<any> {
             const tempLib = getConfig().tempLibrary;
             let objects: IBMiSpooledFile[] = [];
 
-            // const objects = await content.getUserSpooledFileFilter(node.user, node.sort, node.name, node.parent.filter);
             if (result === `Yes`) {
               objects = await content.getUserSpooledFileFilter(node.user, node.sort, undefined, node.parent.filter);
             }
