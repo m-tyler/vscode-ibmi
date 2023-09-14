@@ -5,16 +5,13 @@ import { parseFSOptions } from '../filesystems/qsys/QSysFs';
 import { Action, CommandResult, DeploymentMethod, RemoteCommand, StandardIO } from '../typings';
 import { GlobalConfiguration } from './Configuration';
 import { CustomUI } from './CustomUI';
-import { getLocalActions } from './local/actions';
-import { getEnvConfig } from './local/env';
-import { parseFSOptions } from '../filesystems/qsys/QSysFs';
-import { instance } from '../instantiate';
-import { Action, CommandResult, DeploymentMethod, RemoteCommand, StandardIO } from '../typings';
 import IBMi from './IBMi';
 import Instance from './Instance';
 import { Tools } from './Tools';
 import { EvfEventInfo, refreshDiagnosticsFromLocal, refreshDiagnosticsFromServer, registerDiagnostics } from './errors/diagnostics';
+import { getLocalActions } from './local/actions';
 import { DeployTools } from './local/deployTools';
+import { getEnvConfig } from './local/env';
 
 const NEWLINE = `\r\n`;
 
@@ -86,12 +83,12 @@ export namespace CompileTools {
 
     if (uriOptions.readonly) {
       window.showWarningMessage(`Cannot run Actions against readonly objects.`);
-      return;
+      return false;
     }
 
     if (config?.readOnlyMode) {
       window.showWarningMessage(`Cannot run Actions while readonly mode is enabled in the connection settings.`);
-      return;
+      return false;
     }
 
     const workspaceFolder = vscode.workspace.getWorkspaceFolder(uri);
@@ -141,11 +138,11 @@ export namespace CompileTools {
               workspaceId = deployResult;
             } else {
               vscode.window.showWarningMessage(`Action "${chosenAction.name}" was cancelled.`);
-              return;
+              return false;
             }
           }
 
-          let fromWorkspace: WorkspaceFolder|undefined;
+          let fromWorkspace: WorkspaceFolder | undefined;
 
           if (chosenAction.type === `file` && vscode.workspace.workspaceFolders) {
             fromWorkspace = vscode.workspace.workspaceFolders[workspaceId || 0];
@@ -370,40 +367,59 @@ export namespace CompileTools {
                           }
                         }
                       }
-                    }
-        
-                    if (chosenAction.type === `file` && chosenAction.postDownload?.length) {
-                      if (fromWorkspace) {
-                        const client = connection.client;
-                        const remoteDir = config.homeDirectory;
-                        const localDir = fromWorkspace.uri.path;
-        
-                        // First, we need to create or clear the relative directories in the workspace
-                        // in case they don't exist. For example, if the path is `.logs/joblog.json`
-                        // then we would need to create `.logs`.
-                        const downloadDirectories = chosenAction.postDownload.map(path.parse)
-                          .map(pathInfo => pathInfo.dir || pathInfo.base) //Get directories or files' parent directory
-                          .filter(Tools.distinct) //Remove duplicates
-                          .map(downloadDirectory => vscode.Uri.parse((path.posix.join(localDir, downloadDirectory)))); //Create local Uri path
-        
-                        for (const downloadPath of downloadDirectories) {                  
-                          try {
-                            const stat = await vscode.workspace.fs.stat(downloadPath); //Check if target exists
-                            if(stat.type !== vscode.FileType.Directory){
-                              if(await vscode.window.showWarningMessage(`${downloadPath} exists but is a file.`, "Delete and create directory")){
-                                await vscode.workspace.fs.delete(downloadPath);
+
+                      if (chosenAction.type === `file` && chosenAction.postDownload?.length) {
+                        if (fromWorkspace) {
+                          const client = connection.client;
+                          const remoteDir = config.homeDirectory;
+                          const localDir = fromWorkspace.uri.path;
+
+                          // First, we need to create or clear the relative directories in the workspace
+                          // in case they don't exist. For example, if the path is `.logs/joblog.json`
+                          // then we would need to create `.logs`.
+                          const downloadDirectories = chosenAction.postDownload.map(path.parse)
+                            .map(pathInfo => pathInfo.dir || pathInfo.base) //Get directories or files' parent directory
+                            .filter(Tools.distinct) //Remove duplicates
+                            .map(downloadDirectory => vscode.Uri.parse((path.posix.join(localDir, downloadDirectory)))); //Create local Uri path
+
+                          for (const downloadPath of downloadDirectories) {
+                            try {
+                              const stat = await vscode.workspace.fs.stat(downloadPath); //Check if target exists
+                              if (stat.type !== vscode.FileType.Directory) {
+                                if (await vscode.window.showWarningMessage(`${downloadPath} exists but is a file.`, "Delete and create directory")) {
+                                  await vscode.workspace.fs.delete(downloadPath);
+                                  throw new Error("Create directory");
+                                }
+                              }
+                              else if (stat.type !== vscode.FileType.Directory) {
+                                await vscode.workspace.fs.delete(downloadPath, { recursive: true });
                                 throw new Error("Create directory");
                               }
                             }
-                            else if(stat.type !== vscode.FileType.Directory){
-                              await vscode.workspace.fs.delete(downloadPath, {recursive: true});
-                              throw new Error("Create directory");
+                            catch (e) {
+                              //Either fs.stat did not find the folder or it wasn't a folder and it's been deleted above
+                              try {
+                                await vscode.workspace.fs.createDirectory(downloadPath)
+                              }
+                              catch (error) {
+                                vscode.window.showWarningMessage(`Failed to create download path ${downloadPath}: ${error}`);
+                                console.log(error);
+                                closeEmitter.fire(1);
+                              }
                             }
                           }
-                          catch(e){
-                            //Either fs.stat did not find the folder or it wasn't a folder and it's been deleted above
-                            try {
-                              await vscode.workspace.fs.createDirectory(downloadPath)
+
+                          // Then we download the files that is specified.
+                          const downloads = chosenAction.postDownload.map(
+                            async (downloadPath) => {
+                              const localPath = vscode.Uri.parse(path.posix.join(localDir, downloadPath)).fsPath;
+                              const remotePath = path.posix.join(remoteDir, downloadPath);
+
+                              if (await content.isDirectory(remotePath)) {
+                                return client.getDirectory(localPath, remotePath);
+                              } else {
+                                return client.getFile(localPath, remotePath);
+                              }
                             }
                           );
 
@@ -422,39 +438,8 @@ export namespace CompileTools {
                               vscode.window.showErrorMessage(`Failed to download files as part of Action.`);
                               writeEmitter.fire(`Failed to download a file after Action: ${error.message}\n`);
                               closeEmitter.fire(1);
-                            }
-                          }
+                            });
                         }
-        
-                        // Then we download the files that is specified.
-                        const downloads = chosenAction.postDownload.map(
-                          async (downloadPath) => {
-                            const localPath = vscode.Uri.parse(path.posix.join(localDir, downloadPath)).fsPath;
-                            const remotePath = path.posix.join(remoteDir, downloadPath);
-                            
-                            if (await content.isDirectory(remotePath)) {
-                              return client.getDirectory(localPath, remotePath);                      
-                            } else {
-                              return client.getFile(localPath, remotePath);
-                            }
-                          }
-                        );
-        
-                        Promise.all(downloads)
-                          .then(async result => {
-                            // Done!
-                            writeEmitter.fire(`Downloaded files as part of Action: ${chosenAction.postDownload!.join(`, `)}\n`);
-        
-                            // Process locally downloaded evfevent files:
-                            if (useLocalEvfevent) {
-                              refreshDiagnosticsFromLocal(instance, evfeventInfo);
-                            }
-                          })
-                          .catch(error => {
-                            vscode.window.showErrorMessage(`Failed to download files as part of Action.`);
-                            writeEmitter.fire(`Failed to download a file after Action: ${error.message}\n`);
-                            closeEmitter.fire(1);
-                          });
                       }
 
                       if (problemsFetched && viewControl === `problems`) {
@@ -466,19 +451,14 @@ export namespace CompileTools {
                       vscode.window.showErrorMessage(`Action ${chosenAction} for ${evfeventInfo.library}/${evfeventInfo.object} failed. (internal error).`);
                       closeEmitter.fire(1);
                     }
-        
-                  } catch (e) {
-                    writeEmitter.fire(`${e}\n`);
-                    vscode.window.showErrorMessage(`Action ${chosenAction} for ${evfeventInfo.library}/${evfeventInfo.object} failed. (internal error).`);
-                    closeEmitter.fire(1);
-                  }
 
-                  closeEmitter.fire(0);
-                },
-                close: function (): void { }
-              };
+                    closeEmitter.fire(successful ? 0 : 1);
+                  },
+                  close: function (): void { }
+                };
 
-              return term;
+                return term;
+              })
             })
           );
 
@@ -506,6 +486,7 @@ export namespace CompileTools {
       } else {
         //No compile commands
         vscode.window.showErrorMessage(`No compile commands found for ${uri.scheme}-${extension}.`);
+        return false;
       }
     }
     else {
@@ -530,7 +511,7 @@ export namespace CompileTools {
       if (options.env) {
         const libl: string | undefined = options.env[`&LIBL`];
         const curlib: string | undefined = options.env[`&CURLIB`];
-        
+
         if (libl) ileSetup.libraryList = libl.split(` `);
         if (curlib) ileSetup.currentLibrary = curlib;
       }
