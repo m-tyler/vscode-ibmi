@@ -814,8 +814,8 @@ from table (QSYS2.SPOOLED_FILE_INFO(USER_NAME => ucase('${user}')) ) QE where FI
     const tempRmt = this.getTempRemote(uriPath);
     const tmpobj = await tmpFile();
 
-    const tmpName = path.basename(tempRmt);
-    const tmpFolder = path.dirname(tempRmt) + (additionalPath ? `/${additionalPath}` : ``);
+    // const tmpName = path.basename(tempRmt);
+    // const tmpFolder = path.dirname(tempRmt) + (additionalPath ? `/${additionalPath}` : ``);
 
     // const path = homeDirectory +(folder !== undefined ? '/'+folder :'');
     const client = this.ibmi.client;

@@ -326,6 +326,7 @@ export const en: Locale = {
   'objectBrowser.HWKsearchSourceFile.notFound':`No results found searching for '{0}' in HAWKEYE/DSPSCNSRC {1}.`,
   'objectBrowser.HWKsearchSourceFile.noMembers': `No members to search.`,
   'objectBrowser.HWKsearchSourceFile.errorMessage': `Error searching source members: {0}`,
+  'objectBrowser.HWKsearchSourceFile.progressMessage': `Fetching member list for {0}.`,
   'objectBrowser.HWKsearchSourceFile.searchMessage0': `Using Hawkeye Pathfinder's DSPSCNSRC to search source members`,
   'objectBrowser.HWKsearchSourceFile.searchMessage1': `'{0}' in {1}.`,
   'objectBrowser.HWKsearchSourceFile.searchMessage2': `This is taking a while because there are {0} members. Searching '{1}' in {2} still.`,

@@ -1122,7 +1122,7 @@ export function initializeObjectBrowser(context: vscode.ExtensionContext) {
                 title: `Searching`,
               }, async progress => {
                 progress.report({
-                  message: t(`objectBrowser.searchSourceFile.progressMessage`, parameters.path)
+                  message: t(`objectBrowser.HWKsearchSourceFile.progressMessage`, parameters.path)
                 });
                 const members = await content.getMemberList(pathParts[0], pathParts[1], parameters.filter?.member);
                 
