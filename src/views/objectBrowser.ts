@@ -1175,6 +1175,7 @@ export function initializeObjectBrowser(context: vscode.ExtensionContext) {
                       if (objectNamesLower === true) {
                         result.path = result.path.toLowerCase();
                       }
+                      result.label = result.path;
                     });
 
                     results = results.sort((a, b) => {
