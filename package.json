@@ -13,12 +13,12 @@
 		"as400"
 	],
 	"author": {
-		"name": "Code4i",
-		"url": "https://github.com/codefori"
+		"name": "mtyler forked project from Halcyon Tech Ltd",
+		"url": "https://github.com/m-tyler/"
 	},
 	"publisher": "halcyontechltd",
 	"repository": {
-		"url": "https://github.com/codefori/code-for-ibmi"
+		"url": "https://github.com/m-tyler/vscode-ibmi"
 	},
 	"license": "MIT",
 	"engines": {
@@ -34,7 +34,8 @@
 	"activationEvents": [
 		"onStartupFinished",
 		"onFileSystem:member",
-		"onFileSystem:streamfile"
+		"onFileSystem:streamfile",
+		"onFileSystem:SplfFs"
 	],
 	"main": "./dist/extension.js",
 	"contributes": {
@@ -1115,6 +1116,13 @@
 				"icon": "$(search)"
 			},
 			{
+				"command": "Hawkeye_Pathfinder.searchSourceFiles",
+				"enablement": "code-for-ibmi:connected",
+				"title": "Scan Source Files - Hawkeye",
+				"category": "Hawkeye",
+				"icon": "$(search-fuzzy)"
+			},
+			{
 				"command": "code-for-ibmi.filterSpooledFiles",
 				"enablement": "code-for-ibmi:connected",
 				"title": "Filter Spooled Files",
@@ -1480,9 +1488,84 @@
 				"category": "IBM i"
 			},
 			{
+				"command": "code-for-ibmi.sortSPLFSFilesByName",
+				"title": "Name",
+				"category": "IBM i"
+			},
+			{
+				"command": "code-for-ibmi.sortSPLFSFilesByDate",
+				"title": "Date",
+				"category": "IBM i"
+			},
+			{
 				"command": "code-for-ibmi.sortMembersByName",
 				"title": "Name",
 				"category": "IBM i"
+			},
+			{
+				"command": "code-for-ibmi.addUserSpooledFileFilter",
+				"title": "add Spooled File",
+				"category": "IBM i",
+				"enablement": "code-for-ibmi:connected == true",
+				"icon": "$(add)"
+			},
+			{
+				"command": "code-for-ibmi.deleteUserSpooledFileFilter",
+				"title": "Delete user",
+				"category": "IBM i",
+				"enablement": "code-for-ibmi:connected == true",
+				"icon": "$(delete)"
+			},
+			{
+				"command": "code-for-ibmi.deleteUserSpooledFiles",
+				"title": "Delete all spooled files",
+				"category": "IBM i",
+				"enablement": "code-for-ibmi:connected == true",
+				"icon": "$(delete)"
+			},
+			{
+				"command": "code-for-ibmi.sortUserSpooledFileFilter",
+				"title": "Sort spooled files",
+				"category": "IBM i",
+				"enablement": "code-for-ibmi:connected == true",
+				"icon": "$(list-ordered)"
+			},
+			{
+				"command": "code-for-ibmi.deleteSpooledFile",
+				"title": "Delete select spooled file",
+				"enablement": "code-for-ibmi:connected",
+				"icon": "$(delete)"
+			},
+			{
+				"command": "code-for-ibmi.deleteNamedSpooledFiles",
+				"title": "Delete like NAMED spooled files",
+				"enablement": "code-for-ibmi:connected",
+				"icon": "$(delete)"
+			},
+			{
+				"command": "code-for-ibmi.deleteFilteredSpooledFiles",
+				"title": "Delete like FILTERED spooled files",
+				"enablement": "code-for-ibmi:connected",
+				"icon": "$(delete)"
+			},
+			{
+				"command": "code-for-ibmi.moveSpooledFile",
+				"title": "Move spooled file to new Output Queue",
+				"enablement": "code-for-ibmi:connected",
+				"icon": "$(move)"
+			},
+			{
+				"command": "code-for-ibmi.downloadSpooledfile",
+				"title": "Download spooled file",
+				"enablement": "code-for-ibmi:connected",
+				"icon": "$(down)"
+			},
+			{
+				"command": "code-for-ibmi.refreshSPLFBrowser",
+				"enablement": "code-for-ibmi:connected",
+				"title": "Refresh Spooled File Browser",
+				"category": "IBM i",
+				"icon": "$(refresh)"
 			},
 			{
 				"command": "code-for-ibmi.cl.runSelected",
@@ -1548,6 +1631,36 @@
 				"key": "ctrl+r",
 				"mac": "cmd+r",
 				"when": "editorLangId == cl"
+			},
+			{
+				"command": "editor.action.deleteLines",
+				"key": "alt+d",
+				"mac": "alt+d"
+			},
+			{
+				"command": "editor.action.joinLines",
+				"key": "alt+j",
+				"mac": "alt+j"
+			},
+			{
+				"command": "editor.action.transformToTitlecase",
+				"key": "alt+t"
+			},
+			{
+				"command": "vscode-rpgfree.rpgleFree",
+				"key": "shift+alt+v"
+			},
+			{
+				"command": "editor.action.transformToUppercase",
+				"key": "alt+u"
+			},
+			{
+				"command": "editor.action.transformToLowercase",
+				"key": "alt+i"
+			},
+			{
+				"command": "outline.focus",
+				"key": "ctrl+alt+o"
 			}
 		],
 		"viewsContainers": {
@@ -1601,6 +1714,11 @@
 					"id": "testingView",
 					"name": "Test cases",
 					"when": "code-for-ibmi:connected && code-for-ibmi:testing"
+				},
+				{
+					"id": "splfBrowser",
+					"name": "User SPLF Browser",
+					"when": "code-for-ibmi:connected && code-for-ibmi:splfBrowserDisabled !== true"
 				}
 			],
 			"ibmi-search": [
@@ -1619,6 +1737,10 @@
 			{
 				"id": "code-for-ibmi.sortMembers",
 				"label": "Sort by"
+			},
+			{
+				"id": "code-for-ibmi.sortSpooledFiles",
+				"label": "Sort Spooled Files by"
 			}
 		],
 		"menus": {
@@ -1636,6 +1758,14 @@
 				},
 				{
 					"command": "code-for-ibmi.sortMembersByDate"
+				}
+			],
+			"code-for-ibmi.sortSpooledFiles": [
+				{
+					"command": "code-for-ibmi.sortSPLFSFilesByName"
+				},
+				{
+					"command": "code-for-ibmi.sortSPLFSFilesByDate"
 				}
 			],
 			"commandPalette": [
@@ -1705,6 +1835,14 @@
 				},
 				{
 					"command": "code-for-ibmi.sortMembersByName",
+					"when": "never"
+				},
+				{
+					"command": "code-for-ibmi.sortSPLFSFilesByDate",
+					"when": "never"
+				},
+				{
+					"command": "code-for-ibmi.sortSPLFSFilesByName",
 					"when": "never"
 				},
 				{
@@ -1928,6 +2066,21 @@
 					"command": "code-for-ibmi.collapseSearchView",
 					"group": "navigation@1",
 					"when": "view == searchView"
+				},
+				{
+					"command": "code-for-ibmi.addUserSpooledFileFilter",
+					"group": "navigation",
+					"when": "view == splfBrowser"
+				},
+				{
+					"command": "code-for-ibmi.refreshSPLFBrowser",
+					"group": "navigation@1",
+					"when": "view == splfBrowser"
+				},
+				{
+					"command": "code-for-ibmi.sortUserSpooledFileFilter",
+					"group": "navigation",
+					"when": "view == splfBrowser"
 				}
 			],
 			"editor/title": [
@@ -2332,6 +2485,66 @@
 					"command": "code-for-ibmi.runAction",
 					"when": "view == objectBrowser && viewItem =~ /^object/",
 					"group": "1_workspace@1"
+				},
+				{
+					"command": "code-for-ibmi.filterSpooledFiles",
+					"when": "view == splfBrowser && viewItem =~ /^splfuser.*$/",
+					"group": "inline"
+				},
+				{
+					"command": "code-for-ibmi.filterSpooledFiles",
+					"when": "view == splfBrowser && viewItem =~ /^splfuser.*$/",
+					"group": "4_splfuser@1"
+				},
+				{
+					"command": "code-for-ibmi.searchSpooledFiles",
+					"when": "view == splfBrowser && viewItem =~ /^spooledfile.*$/",
+					"group": "4_splfuser@1"
+				},
+				{
+					"command": "code-for-ibmi.deleteUserSpooledFileFilter",
+					"when": "view == splfBrowser && viewItem =~ /^splfuser.*$/",
+					"group": "5_splfuser@1"
+				},
+				{
+					"command": "code-for-ibmi.deleteUserSpooledFiles",
+					"when": "view == splfBrowser && viewItem =~ /^splfuser$/",
+					"group": "5_splfuser@2"
+				},
+				{
+					"submenu": "code-for-ibmi.sortSpooledFiles",
+					"when": "view == splfBrowser",
+					"group": "7_splfuser@3"
+				},
+				{
+					"command": "code-for-ibmi.deleteSpooledFile",
+					"when": "view == splfBrowser && viewItem =~ /^spooledfile$/ ",
+					"group": "2_spooledfile@2"
+				},
+				{
+					"command": "code-for-ibmi.deleteNamedSpooledFiles",
+					"when": "view == splfBrowser && viewItem =~ /^spooledfile$/ ",
+					"group": "3_spooledfile@1"
+				},
+				{
+					"command": "code-for-ibmi.deleteFilteredSpooledFiles",
+					"when": "view == splfBrowser && viewItem =~ /^spooledfile$/ ",
+					"group": "3_spooledfile@2"
+				},
+				{
+					"command": "code-for-ibmi.moveSpooledFile",
+					"when": "view == splfBrowser && viewItem =~ /^spooledfile$/",
+					"group": "2_spooledfile@3"
+				},
+				{
+					"command": "code-for-ibmi.downloadSpooledfile",
+					"when": "view == splfBrowser && viewItem =~ /^spooledfile.*$/",
+					"group": "2_spooledfile@5"
+				},
+				{
+					"command": "code-for-ibmi.filterSpooledFiles",
+					"when": "view == splfBrowser && viewItem =~ /^spooledfile.*$/",
+					"group": "1_spooledfile@1"
 				}
 			]
 		},
