@@ -1532,7 +1532,7 @@
 			},
 			{
 				"command": "code-for-ibmi.deleteSpooledFile",
-				"title": "Delete select spooled file",
+				"title": "Delete SELECTED spooled file",
 				"enablement": "code-for-ibmi:connected",
 				"icon": "$(delete)"
 			},
@@ -2519,7 +2519,7 @@
 				{
 					"command": "code-for-ibmi.deleteSpooledFile",
 					"when": "view == splfBrowser && viewItem =~ /^spooledfile$/ ",
-					"group": "2_spooledfile@2"
+					"group": "3_spooledfile@0"
 				},
 				{
 					"command": "code-for-ibmi.deleteNamedSpooledFiles",
