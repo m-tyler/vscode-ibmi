@@ -1,6 +1,6 @@
 {
   "name": "@halcyontech/vscode-ibmi-types",
-  "version": "2.3.1",
+  "version": "2.4.0",
   "description": "Types for vscode-ibmi",
   "typings": "./typings.d.ts",
   "scripts": {
@@ -8,7 +8,7 @@
     "deploy": "npm publish --access public"
   },
   "repository": {
-    "url": "https://github.com/halcyon-tech/vscode-ibmi"
+    "url": "https://github.com/codefori/vscode-ibmi"
   },
   "author": "halcyontech",
   "license": "ISC"

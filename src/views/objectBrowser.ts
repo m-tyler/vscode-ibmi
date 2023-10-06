@@ -417,7 +417,9 @@ export function initializeObjectBrowser(context: vscode.ExtensionContext) {
       objectBrowser.autoRefresh();
     }),
 
-    vscode.commands.registerCommand(`code-for-ibmi.refreshObjectBrowser`, async (item?: BrowserItem) => {
+    vscode.commands.registerCommand(`code-for-ibmi.refreshObjectBrowser`, () => objectBrowser.refresh()),
+
+    vscode.commands.registerCommand(`code-for-ibmi.refreshObjectBrowserItem`, async (item: BrowserItem) => {
       objectBrowser.refresh(item);
     }),
 
@@ -935,7 +937,7 @@ export function initializeObjectBrowser(context: vscode.ExtensionContext) {
           try {
             newPathOK = true;
             await connection.remoteCommand(
-              node.object.type === `LIB` ?
+              node.object.type.toLocaleLowerCase() === `*lib` ?
                 `CPYLIB FROMLIB(${oldObject}) TOLIB(${newObject})` :
                 `CRTDUPOBJ OBJ(${oldObject}) FROMLIB(${oldLibrary}) OBJTYPE(${node.object.type}) TOLIB(${newLibrary}) NEWOBJ(${newObject})`
             );
