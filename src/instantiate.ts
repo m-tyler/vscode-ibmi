@@ -160,7 +160,7 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
 
           const compareWith = await vscode.window.showInputBox({
             prompt: `Enter the path to compare selected with`,
-            value: `${activeEditor ? activeEditor.document.uri.toString() : selectedForCompare.toString()}`,
+            value: `${activeEditor ? activeEditor.document.uri.path : selectedForCompare.toString()}`,
             title: `Compare with`
           })
 

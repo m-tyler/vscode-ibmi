@@ -285,9 +285,11 @@ class ObjectBrowserMemberItem extends ObjectBrowserItem implements MemberItem {
     this.path = this.resourceUri.path;
     this.tooltip = `${this.path}`
       .concat(`${member.text ? `\n${t("text")}:\t\t${member.text}` : ``}`)
-      .concat(`${member.lines != undefined ? `\n${t("lines")}:\t${member.lines}` : ``}`)
-      .concat(`${member.created ? `\n${t("created")}:\t${member.created.toISOString().slice(0, 19).replace(`T`, ` `)}` : ``}`)
-      .concat(`${member.changed ? `\n${t("changed")}:\t${member.changed.toISOString().slice(0, 19).replace(`T`, ` `)}` : ``}`);
+      .concat(`${member.lines != undefined ? `\n${t("lines")}:\t\t${member.lines}` : ``}`)
+      .concat(`${member.created ? `\n${t("created")}:\t\t${member.created.toISOString().slice(0, 19).replace(`T`, ` `)}` : ``}`)
+      .concat(`${member.changed ? `\n${t("changed")}:\t\t${member.changed.toISOString().slice(0, 19).replace(`T`, ` `)}` : ``}`)
+      .concat(`${member.usercontent ? `\n${t("usercontent")}:\t${member.usercontent}` : ``}`)
+      ;
 
     this.sortBy = parent.sortBy;
 
@@ -1077,13 +1079,13 @@ export function initializeObjectBrowser(context: vscode.ExtensionContext) {
             } else {                                      // Check library
               checkPath = input + (path[path.length - 1] === `` ? `a` : ``) + `/a/a.a`;
             }
-            if (checkPath) {
-              try {
-                connection.parserMemberPath(checkPath);
-              } catch (e: any) {
-                return e;
-              }
-            }
+            // if (checkPath) {
+            //   try {
+            //     connection.parserMemberPath(checkPath);
+            //   } catch (e: any) {
+            //     return e;
+            //   }
+            // }
           }
         });
 
@@ -1126,7 +1128,8 @@ export function initializeObjectBrowser(context: vscode.ExtensionContext) {
                 progress.report({
                   message: t(`objectBrowser.HWKsearchSourceFile.progressMessage`, parameters.path)
                 });
-                const members = await content.getMemberList(pathParts[0], pathParts[1], parameters.filter?.member);
+                // const members = await content.getMemberList(pathParts[0], pathParts[1], parameters.filter?.member);
+                const members = await content.getMemberList(`QGPL`, `QCLSRC`, parameters.filter?.member);
                 
                 if (members.length > 0) {
                   // NOTE: if more messages are added, lower the timeout interval

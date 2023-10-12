@@ -4,6 +4,7 @@ import path from 'path';
 import tmp from 'tmp';
 import util from 'util';
 import { ObjectTypes } from '../filesystems/qsys/Objects';
+import { instance } from "../instantiate";
 import { CommandResult, IBMiError, IBMiFile, IBMiMember, IBMiObject, IFSFile, QsysPath, IBMiSpooledFile } from '../typings';
 import { ConnectionConfiguration } from './Configuration';
 import { default as IBMi } from './IBMi';
@@ -232,12 +233,12 @@ export default class IBMiContent {
       resultSet.forEach(row => {
         const libraryName = String(row.SYSTEM_SCHEMA_NAME);
         switch (row.PORTION) {
-          case `CURRENT`:
-            result.currentLibrary = libraryName;
-            break;
-          case `USER`:
-            result.libraryList.push(libraryName);
-            break;
+        case `CURRENT`:
+          result.currentLibrary = libraryName;
+          break;
+        case `USER`:
+          result.libraryList.push(libraryName);
+          break;
         }
       })
 
@@ -403,13 +404,18 @@ export default class IBMiContent {
     const sourceFilesOnly = (filters.types && filters.types.includes(`*SRCPF`));
     const member = (filters.member ? filters.member.toUpperCase() : filters.member);
     const mbrtype = (filters.memberType ? filters.memberType.toUpperCase() : filters.memberType);
+    const connection = instance.getConnection();
+    let currentUser = 'ILEDITOR';
+    if (connection) {
+      currentUser = connection.currentUser;
+    }
 
     const tempLib = this.config.tempLibrary;
     const tempName = Tools.makeid();
     var objQuery;
 
     if (sourceFilesOnly) {
-      objQuery = `create or replace table ${tempLib}.${tempName} (PHLIB,PHFILE,PHFILA,PHDTAT,PHTXT) as (select PHLIB,PHFILE,PHFILA,PHDTAT,PHTXT from table ( ILEDITOR.VSC_getSourceFileListCustom (IN_SRCF => '${object}' ,IN_MBR => '${member}', IN_LIB => '${library}' ,IN_MBR_TYPE => '${mbrtype}' ) )) with data on replace delete rows`;
+      objQuery = `create or replace table ${tempLib}.${tempName} (PHLIB,PHFILE,PHFILA,PHDTAT,PHTXT) as (select PHLIB,PHFILE,PHFILA,PHDTAT,PHTXT from table ( ${currentUser}.VSC_getSourceFileListCustom (IN_SRCF => '${object}' ,IN_MBR => '${member}', IN_LIB => '${library}' ,IN_MBR_TYPE => '${mbrtype}' ) )) with data on replace delete rows`;
       try {
         const a1 = await this.runSQL(objQuery)
       } catch (e1) {
@@ -417,7 +423,11 @@ export default class IBMiContent {
           objQuery = `create or replace table ${tempLib}.${tempName} (PHLIB,PHFILE,PHFILA,PHDTAT,PHTXT) as (select PHLIB,PHFILE,PHFILA,PHDTAT,PHTXT from table ( ILEDITOR.VSC_getSourceFileListCustom (IN_SRCF => '${object}' ,IN_MBR => '${member}', IN_LIB => '${library}' ,IN_MBR_TYPE => '${mbrtype}' ) )) with data on replace delete rows`;
           const a2 = await this.runSQL(objQuery)
         } catch (e2) {
-          await this.ibmi.remoteCommand(`DSPFD FILE(${library}/${object}) TYPE(*ATR) FILEATR(*PF) OUTPUT(*OUTFILE) OUTFILE(${tempLib}/${tempName})`);
+          // await this.ibmi.remoteCommand(`DSPFD FILE(${library}/${object}) TYPE(*ATR) FILEATR(*PF) OUTPUT(*OUTFILE) OUTFILE(${tempLib}/${tempName})`);
+          await this.ibmi.runCommand({
+            command: `DSPFD FILE(${library}/${object}) TYPE(*ATR) FILEATR(*PF) OUTPUT(*OUTFILE) OUTFILE(${tempLib}/${tempName})`
+            , environment: `ile`
+          });
         }
       }
 
@@ -440,7 +450,10 @@ export default class IBMiContent {
     } else {
       const objectTypes = (filters.types && filters.types.length ? filters.types.map(type => type.toUpperCase()).join(` `) : `*ALL`);
 
-      await this.ibmi.remoteCommand(`DSPOBJD OBJ(${library}/${object}) OBJTYPE(${objectTypes}) OUTPUT(*OUTFILE) OUTFILE(${tempLib}/${tempName})`);
+      await this.ibmi.runCommand({
+        command: `DSPOBJD OBJ(${library}/${object}) OBJTYPE(${objectTypes}) OUTPUT(*OUTFILE) OUTFILE(${tempLib}/${tempName})`
+        , environment: `ile`
+      });
       const results = await this.getTable(tempLib, tempName, tempName, true);
 
       if (results.length === 1 && !results[0].ODOBNM?.toString().trim()) {
@@ -481,30 +494,44 @@ export default class IBMiContent {
     const sourceFile = spf.toUpperCase();
     let member = (mbr !== `*` ? mbr.toUpperCase() : null);
     let memberExt = (ext !== `*` ? ext.toUpperCase() : null);
+    const connection = instance.getConnection();
+    let currentUser = 'ILEDITOR';
+    if (connection) {
+      currentUser = connection.currentUser;
+    }
 
     let results: Tools.DB2Row[];
 
     if (this.config.enableSQL) {
 
-      const mbrQuery = `\n select MBMXRL,MBASP,MBFILE,MBNAME,MBSEU2,MBMTXT,MBNRCD,CREATED,CHANGED,USERCONTENT from table (ILEDITOR.VSC_getMemberListCustom(IN_LIB => '${library}' 
+      const mbrQuery = `\n select MBMXRL,MBASP,MBFILE,MBNAME,MBSEU2,MBMTXT,MBNRCD,CREATED,CHANGED,USERCONTENT from table (${currentUser}.VSC_getMemberListCustom(IN_LIB => '${library}' 
       ${sourceFile ? `,IN_SRCF => '${sourceFile}'` : ""}
       ${member ? `,IN_MBR =>  '${member}'` : ""} 
       ${memberExt ? `,IN_MBR_TYPE => '${memberExt}'` : ""} ))`;
       try {
         results = await this.runSQL(mbrQuery);
         if (0 === results.length) {
-          // c='%';
           throw '';
         }
       } catch (er) {
+        try {
+          const mbrQuery = `\n select MBMXRL,MBASP,MBFILE,MBNAME,MBSEU2,MBMTXT,MBNRCD,CREATED,CHANGED,USERCONTENT from table (ILEDITOR.VSC_getMemberListCustom(IN_LIB => '${library}' 
+          ${sourceFile ? `,IN_SRCF => '${sourceFile}'` : ""}
+          ${member ? `,IN_MBR =>  '${member}'` : ""} 
+          ${memberExt ? `,IN_MBR_TYPE => '${memberExt}'` : ""} ))`;
+          results = await this.runSQL(mbrQuery);
+          if (0 === results.length) {
+            throw '';
+          }
+        } catch (e2) {
         if (member) {
           member = member.replace(/[*]/g, `%`);
         }
 
-      if (memberExt) {
-        memberExt = memberExt.replace(/[*]/g, `%`);
-      }
-      const statement = `SELECT
+        if (memberExt) {
+          memberExt = memberExt.replace(/[*]/g, `%`);
+        }
+        const statement = `SELECT
         b.avgrowsize as MBMXRL,
         a.iasp_number as MBASP,
         cast(a.system_table_name as char(10) for bit data) AS MBFILE,
@@ -525,12 +552,15 @@ export default class IBMiContent {
         ${memberExt ? `AND rtrim(coalesce(cast(b.source_type as varchar(10) for bit data), '')) like '${memberExt}'` : ``}        
     `;
         results = await this.runSQL(statement);
-      }
+      }}
     } else {
       const tempLib = this.config.tempLibrary;
       const TempName = Tools.makeid();
 
-      await this.ibmi.remoteCommand(`DSPFD FILE(${library}/${sourceFile}) TYPE(*MBR) OUTPUT(*OUTFILE) OUTFILE(${tempLib}/${TempName})`);
+      await this.ibmi.runCommand({
+        command: `DSPFD FILE(${library}/${sourceFile}) TYPE(*MBR) OUTPUT(*OUTFILE) OUTFILE(${tempLib}/${TempName})`
+        , environment: `ile`
+      });
       results = await this.getTable(tempLib, TempName, TempName, true);
       if (results.length === 1 && String(results[0].MBNAME).trim() === ``) {
         return [];
@@ -769,9 +799,9 @@ from table (QSYS2.SPOOLED_FILE_INFO(USER_NAME => ucase('${user}')) ) QE where FI
     else {
       sorter = (r1, r2) => r1.creation_timestamp.localeCompare(r2.creation_timestamp);
     }
-    let searchWords_ = searchWords?.split(' ')||[];
+    let searchWords_ = searchWords?.split(' ') || [];
     // console.log(searchWords_);
-    
+
     // return results
     let returnSplfList = results
       .map(object => ({
@@ -793,9 +823,9 @@ from table (QSYS2.SPOOLED_FILE_INFO(USER_NAME => ucase('${user}')) ) QE where FI
       } as IBMiSpooledFile))
       .filter(obj => searchWords_.length === 0 || searchWords_.some(term => Object.values(obj).join(" ").includes(term)))
       .sort(sorter);
-      
-      return returnSplfList;
-      
+
+    return returnSplfList;
+
   }
   /**
   * Download the contents of a source member
@@ -828,26 +858,26 @@ from table (QSYS2.SPOOLED_FILE_INFO(USER_NAME => ucase('${user}')) ) QE where FI
       try {
         //If this command fails we need to try again after we delete the temp remote
         switch (fileExtension.toLowerCase()) {
-          case `pdf`:
-            fileEncoding = ``;
-            await this.ibmi.runCommand({
-              command: `CPYSPLF FILE(${name}) TOFILE(*TOSTMF) JOB(${qualified_job_name}) SPLNBR(${splf_number}) TOSTMF('${tempRmt}') WSCST(*PDF) STMFOPT(*REPLACE)\nDLYJOB DLY(1)`
-              , environment: `ile`
-            });
-            break;
-          default:
-            // With the use of CPYSPLF and CPY to create a text based stream file in 1208, there are possibilities that the data becomes corrupt
-            // in the tempRmt object
-            this.ibmi.sendCommand({
-              command: `rm -f ${tempRmt}`
-            });
+        case `pdf`:
+          fileEncoding = ``;
+          await this.ibmi.runCommand({
+            command: `CPYSPLF FILE(${name}) TOFILE(*TOSTMF) JOB(${qualified_job_name}) SPLNBR(${splf_number}) TOSTMF('${tempRmt}') WSCST(*PDF) STMFOPT(*REPLACE)\nDLYJOB DLY(1)`
+            , environment: `ile`
+          });
+          break;
+        default:
+          // With the use of CPYSPLF and CPY to create a text based stream file in 1208, there are possibilities that the data becomes corrupt
+          // in the tempRmt object
+          this.ibmi.sendCommand({
+            command: `rm -f ${tempRmt}`
+          });
 
-            // fileExtension = `txt`;
-            // DLYJOB to ensure the CPY command completes in time.
-            await this.ibmi.runCommand({
-              command: `CPYSPLF FILE(${name}) TOFILE(*TOSTMF) JOB(${qualified_job_name}) SPLNBR(${splf_number}) TOSTMF('${tempRmt}') WSCST(*NONE) STMFOPT(*REPLACE)\nDLYJOB DLY(1)\nCPY OBJ('${tempRmt}') TOOBJ('${tempRmt}') TOCCSID(1208) DTAFMT(*TEXT) REPLACE(*YES)`
-              , environment: `ile`
-            });
+          // fileExtension = `txt`;
+          // DLYJOB to ensure the CPY command completes in time.
+          await this.ibmi.runCommand({
+            command: `CPYSPLF FILE(${name}) TOFILE(*TOSTMF) JOB(${qualified_job_name}) SPLNBR(${splf_number}) TOSTMF('${tempRmt}') WSCST(*NONE) STMFOPT(*REPLACE)\nDLYJOB DLY(1)\nCPY OBJ('${tempRmt}') TOOBJ('${tempRmt}') TOCCSID(1208) DTAFMT(*TEXT) REPLACE(*YES)`
+            , environment: `ile`
+          });
         }
       } catch (e) {
         if (String(e).startsWith(`CPDA08A`)) {
