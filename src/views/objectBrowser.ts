@@ -1160,7 +1160,7 @@ export function initializeObjectBrowser(context: vscode.ExtensionContext) {
                   }, timeoutInternal);
                   // Hawkeye-Pathfinder-DSPSCNSRC
                   // returns results member name with member type as extension
-                  let results = await Search.HwksearchMembers(instance, pathParts[0], pathParts[1], `${parameters.filter?.member || `*`}.${parameters.filter?.memberTypeFilter||`*`}`, searchTerm, parameters?.filter?.protected);
+                  let results = await Search.HwksearchMembers(instance, pathParts[0], pathParts[1], `${pathParts[2] || `*`}.${pathParts[3]||`*`}`, searchTerm, parameters?.filter?.protected);
 
                   // Filter search result by member type filter.
                   if (results.length > 0 && parameters.filter?.memberTypeFilter) {

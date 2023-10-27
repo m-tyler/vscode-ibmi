@@ -101,6 +101,7 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(`code-for-ibmi.openEditable`, async (path: string, line?: number, options?: QsysFsOptions) => {
       console.log(path);
       let uri = {};
+      let library, name, member_extension;
       if (path.toLocaleUpperCase().endsWith('.SPLF')) {
         options = options || {};
         options.readonly = true;
@@ -116,7 +117,6 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
           }
         }
         uri = getUriFromPath(path, options);
-        await storeMemberList([library, name].join(`/`), [`${member_extension}`]);
       }
       console.log(uri);
       try {
@@ -124,8 +124,9 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
           // If a line is provided, we have to do a specific open
           let doc = await vscode.workspace.openTextDocument(uri); // calls back into the provider
           const editor = await vscode.window.showTextDocument(doc, { preview: false });
-
+          
           if (editor) {
+            await storeMemberList([library, name].join(`/`), [`${member_extension}`]);
             const selectedLine = editor.document.lineAt(line);
             editor.selection = new vscode.Selection(line, selectedLine.firstNonWhitespaceCharacterIndex, line, 100);
             editor.revealRange(selectedLine.range, vscode.TextEditorRevealType.InCenter);

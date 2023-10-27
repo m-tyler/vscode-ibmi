@@ -67,14 +67,15 @@ export namespace Search {
     const content = instance.getContent();
     const lib = (library !== '*' ? library : '*ALL');
     const spf = (sourceFile !== '*' ? sourceFile : '*ALL');
-    const member_Ext = (memberFilter !== '*.*' ? memberFilter : '*ALL.*ALL');
+    let mbrExt = memberFilter.split(`.`);
+    const member = (mbrExt[0] !== '*' ? mbrExt[0] : '*ALL');
+    const member_Ext = (mbrExt[1] !== '*' ? mbrExt[1] : '*ALL');
     const tempLibrary = `ILEDITOR`;
     const tempName = Tools.makeid();
 
     if (connection && config && content) {
-      let mbrExt = member_Ext.split(`.`);
       const result = await connection.sendQsh({
-        command: `system -q "CLRPFM ${tempLibrary}/${tempName} MBR(HWKSEARCH)"; system -q "DSPSCNSRC SRCFILE(${connection.sysNameInAmerican(lib)}/${connection.sysNameInAmerican(spf)}) SRCMBR(${connection.sysNameInAmerican(mbrExt[0])}) TYPE(${connection.sysNameInAmerican(mbrExt[1])}) OUTPUT(*OUTFILE) OUTFILE(${tempLibrary}/${tempName}) OUTMBR(HWKSEARCH) SCAN('${sanitizeSearchTerm(searchTerm).substring(0, 30)}') CASE(*IGNORE) BEGPOS(001) ENDPOS(240)" && db2 -s "select '/WIASP/QSYS.LIB/'||trim(SCDLIB)||'.LIB/'||trim(SCDFIL)||'.FILE/'||trim(SCDMBR)||'.'||(case when SP.SOURCE_TYPE is not null then SP.SOURCE_TYPE when SP.SOURCE_TYPE is null and SCDFIL = 'QSQDSRC' then 'SQL' else 'MBR' end)||':'||int(SCDSEQ)||':'||varchar(trim(SCDSTM),112) from ${tempLibrary}.${tempName} left join QSYS2.SYSPARTITIONSTAT SP on SP.SYSTEM_TABLE_SCHEMA=SCDLIB and SP.SYSTEM_TABLE_NAME=SCDFIL and SP.SYSTEM_TABLE_MEMBER=SCDMBR where ucase(rtrim(SCDSTM)) like ucase('%${sanitizeSearchTerm(searchTerm)}%')" | sed -e '1,3d' -e 's/\(.*\)/&/' -e '/^$/d' -e '/RECORD.*.*.* SELECTED/d' ;`,
+        command: `system -q "CLRPFM ${tempLibrary}/${tempName} MBR(HWKSEARCH)"; system -q "DSPSCNSRC SRCFILE(${connection.sysNameInAmerican(lib)}/${connection.sysNameInAmerican(spf)}) SRCMBR(${connection.sysNameInAmerican(member)}) TYPE(${connection.sysNameInAmerican(member_Ext)}) OUTPUT(*OUTFILE) OUTFILE(${tempLibrary}/${tempName}) OUTMBR(HWKSEARCH) SCAN('${sanitizeSearchTerm(searchTerm).substring(0, 30)}') CASE(*IGNORE) BEGPOS(001) ENDPOS(240)" && db2 -s "select '/WIASP/QSYS.LIB/'||trim(SCDLIB)||'.LIB/'||trim(SCDFIL)||'.FILE/'||trim(SCDMBR)||'.'||(case when SP.SOURCE_TYPE is not null then SP.SOURCE_TYPE when SP.SOURCE_TYPE is null and SCDFIL = 'QSQDSRC' then 'SQL' else 'MBR' end)||':'||int(SCDSEQ)||':'||varchar(trim(SCDSTM),112) from ${tempLibrary}.${tempName} left join QSYS2.SYSPARTITIONSTAT SP on SP.SYSTEM_TABLE_SCHEMA=SCDLIB and SP.SYSTEM_TABLE_NAME=SCDFIL and SP.SYSTEM_TABLE_MEMBER=SCDMBR where ucase(rtrim(SCDSTM)) like ucase('%${sanitizeSearchTerm(searchTerm)}%')" | sed -e '1,3d' -e 's/\(.*\)/&/' -e '/^$/d' -e '/RECORD.*.*.* SELECTED/d' ;`,
       }); // add to end of list in future => -e 's/:/~/' -e 's/:/~/'
 
       if (!result.stderr) {
