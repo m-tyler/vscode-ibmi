@@ -792,7 +792,7 @@ class SPLF extends vscode.TreeItem {
       .concat(object.creation_timestamp  ?  t(`splfBrowser.SPLF.toolTipCreated`,object.creation_timestamp ) :``)
       .concat(object.size  ?  t(`splfBrowser.SPLF.toolTipSize`,object.size ) :``)
       .concat(object.form_type  ?  t(`splfBrowser.SPLF.toolTipForm`,object.form_type ) :``)
-      .concat(object.queue  ?  t(`splfBrowser.SPLF.toolTipOQ`,object.queue ) :``)
+      .concat(object.queue  ?  t(`splfBrowser.SPLF.toolTipOQ`,object.queue_library,object.queue ) :``)
     ;
     this.command = {
       command: `vscode.open`,
