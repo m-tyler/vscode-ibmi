@@ -1643,12 +1643,16 @@
 				"mac": "alt+j"
 			},
 			{
-				"command": "editor.action.transformToTitlecase",
-				"key": "alt+t"
-			},
-			{
 				"command": "vscode-rpgfree.rpgleFree",
 				"key": "shift+alt+v"
+			},
+			{
+				"command": "outline.focus",
+				"key": "ctrl+alt+o"
+			},
+			{
+				"command": "editor.action.transformToTitlecase",
+				"key": "alt+t"
 			},
 			{
 				"command": "editor.action.transformToUppercase",
@@ -1657,10 +1661,6 @@
 			{
 				"command": "editor.action.transformToLowercase",
 				"key": "alt+i"
-			},
-			{
-				"command": "outline.focus",
-				"key": "ctrl+alt+o"
 			}
 		],
 		"viewsContainers": {

@@ -12,12 +12,13 @@ Using this fork to add in Winco personalized changes to the extension.  For inst
   3. Make the member the source object you are looking up cross reference for.  This object needs to be qualified to its actual object location.
   4. Make the member type a special value that matches the cross reference command like `$HWK$FSU`.
      - $HWK : always required
-     - $FSU : DSPFILSETU
-     - $DOU : DSPOBJU
-     - $DPO : DSPPGMOBJ
+       - $FSU : DSPFILSETU
+       - $DOU : DSPOBJU
+       - $DPO : DSPPGMOBJ
 
 ## * Actions added
   <img src="Actions.png">
+  
 ## * Key short-cuts added
   * Atl+D : Delete Line
   * Alt+J : Join Line
@@ -28,7 +29,8 @@ Using this fork to add in Winco personalized changes to the extension.  For inst
   * Ctrl+Alt+O : Open Outline View
 
 
-[GitHub star the original repo 🌟](https://github.com/halcyon-tech/vscode-ibmi)
+[GitHub star the original repo 🌟](https://github.com/codefori/vscode-ibmi)
+https://github.com/codefori/vscode-ibmi
  
  
 <img src="./icon.png" align="right">
@@ -37,7 +39,7 @@ Maintain your RPGLE, CL, COBOL, C/CPP on IBM i right from Visual Studio Code. Ed
 
 * [Install original from Marketplace](https://marketplace.visualstudio.com/items?itemName=HalcyonTechLtd.code-for-ibmi) 💻
 * [Watch some tutorials](https://www.youtube.com/playlist?list=PLNl31cqBafCp-ml8WqPeriHWLD1bkg7KL) 📺
-* [View our documentation](https://codefori.github.io/docs/#/) 📘
+* [View Codefori documentation](https://codefori.github.io/docs/#/) 📘
 * [See previous releases](https://github.com/codefori/vscode-ibmi/releases) 🔎
 * Build from source (see below!) 🔨
 * [Use our IBM i API in your own extension](https://codefori.github.io/docs/#/pages/api/extending) 🛠
