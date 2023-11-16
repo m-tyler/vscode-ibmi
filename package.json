@@ -432,7 +432,7 @@
 				"code-for-ibmi.autoRefresh": {
 					"type": "boolean",
 					"default": true,
-					"description": "If enabled, listings will refresh when items are interacted with (create, copy, delele, etc). Turn this off if you find performance is bad."
+					"description": "If enabled, listings will refresh when items are interacted with (create, copy, delete, etc). Turn this off if you find performance is bad."
 				},
 				"code-for-ibmi.ObjectBrowser.showNamesInLowercase": {
 					"type": "boolean",
@@ -443,6 +443,11 @@
 					"type": "boolean",
 					"default": true,
 					"description": "If enabled, objects will be sorted by object name. If disabled, objects will be sorted by object type (MI object type)."
+				},
+				"code-for-ibmi.clearDiagnosticOnEdit": {
+					"type": "boolean",
+					"default": false,
+					"description": "When lines with ILE diagnostics are edited, the diagnostic will be removed. Requires reload/restart if changed."
 				},
 				"code-for-ibmi.safeDeleteMode": {
 					"type": "boolean",
@@ -856,25 +861,25 @@
 				"command": "code-for-ibmi.debug.setup.remote",
 				"title": "Setup Remote Certificates",
 				"category": "IBM i Debug",
-				"enablement": "code-for-ibmi:connected"
+				"enablement": "code-for-ibmi:connected && code-for-ibmi:debugManaged != true"
 			},
 			{
 				"command": "code-for-ibmi.debug.setup.local",
 				"title": "Import Local Certificate",
 				"category": "IBM i Debug",
-				"enablement": "code-for-ibmi:connected"
+				"enablement": "code-for-ibmi:connected && code-for-ibmi:debugManaged != true"
 			},
 			{
 				"command": "code-for-ibmi.debug.start",
 				"title": "Start Debug Service",
 				"category": "IBM i Debug",
-				"enablement": "code-for-ibmi:connected"
+				"enablement": "code-for-ibmi:connected && code-for-ibmi:debugManaged != true"
 			},
 			{
 				"command": "code-for-ibmi.debug.stop",
 				"title": "Stop Debug Service",
 				"category": "IBM i Debug",
-				"enablement": "code-for-ibmi:connected"
+				"enablement": "code-for-ibmi:connected && code-for-ibmi:debugManaged != true"
 			},
 			{
 				"command": "code-for-ibmi.debug.activeEditor",
@@ -1030,6 +1035,12 @@
 				"title": "Run Action",
 				"category": "IBM i",
 				"icon": "$(file-binary)"
+			},
+			{
+				"command": "code-for-ibmi.userLibraryList.enable",
+				"enablement": "code-for-ibmi:connected",
+				"title": "Force Enable User Library List",
+				"category": "IBM i"
 			},
 			{
 				"command": "code-for-ibmi.addToLibraryList",
@@ -1701,6 +1712,12 @@
 					"when": "code-for-ibmi:connected && code-for-ibmi:libraryListDisabled !== true"
 				},
 				{
+					"id": "libraryListViewDisabled",
+					"name": "User Library List",
+					"when": "code-for-ibmi:connected && code-for-ibmi:libraryListDisabled == true",
+					"visibility": "collapsed"
+				},
+				{
 					"id": "objectBrowser",
 					"name": "Object Browser",
 					"when": "code-for-ibmi:connected && code-for-ibmi:objectBrowserDisabled !== true"
@@ -1769,6 +1786,10 @@
 				}
 			],
 			"commandPalette": [
+				{
+					"command": "code-for-ibmi.userLibraryList.enable",
+					"when": "never"
+				},
 				{
 					"command": "code-for-ibmi.connectTo",
 					"when": "code-for-ibmi:hasPreviousConnection"
@@ -2552,6 +2573,10 @@
 			{
 				"view": "connectionBrowser",
 				"contents": "No connection found.\n[Connect to an IBM i](command:code-for-ibmi.connect)"
+			},
+			{
+				"view": "libraryListViewDisabled",
+				"contents": "The User Library List is currently disabled. This happens when another extension wants to manage the library list.\n[Force Enable](command:code-for-ibmi.userLibraryList.enable)"
 			}
 		]
 	},
@@ -2593,7 +2618,8 @@
 		"node-ssh": "^13.1.0",
 		"tar": "^6.1.13",
 		"tmp": "^0.2.1",
-		"vscode-diff": "^2.0.2"
+		"vscode-diff": "^2.0.2",
+    "crc-32": "https://cdn.sheetjs.com/crc-32-latest/crc-32-latest.tgz"
 	},
 	"extensionDependencies": [
 		"barrettotte.ibmi-languages",
