@@ -158,10 +158,12 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
           uri = node.resourceUri;
         } else {
           const activeEditor = vscode.window.activeTextEditor;
-
+          const value = (activeEditor ? activeEditor.document.uri : selectedForCompare)
+            .with({ query: '' })
+            .toString();
           const compareWith = await vscode.window.showInputBox({
             prompt: `Enter the path to compare selected with`,
-            value: `${activeEditor ? activeEditor.document.uri.path : selectedForCompare.toString()}`,
+            value,
             title: `Compare with`
           })
 
@@ -260,7 +262,7 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
             }
           }
 
-          if (canRun && [`member`, `streamfile`, `file`].includes(uri.scheme)) {
+          if (canRun && [`member`, `streamfile`, `file`, `object`].includes(uri.scheme)) {
             return await CompileTools.runAction(instance, uri, action, method);
           }
         }
@@ -268,7 +270,7 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
           vscode.window.showErrorMessage('Please connect to an IBM i first');
         }
       }
-      
+
       return false;
     }),
 

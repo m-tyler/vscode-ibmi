@@ -42,7 +42,7 @@ class ObjectBrowserItem extends BrowserItem {
   }
 
   refresh(): void {
-    vscode.commands.executeCommand(`code-for-ibmi.refreshObjectBrowser`, this);
+    vscode.commands.executeCommand(`code-for-ibmi.refreshObjectBrowserItem`, this);
   }
 
   reveal(options?: FocusOptions) {
@@ -291,7 +291,7 @@ class ObjectBrowserMemberItem extends ObjectBrowserItem implements MemberItem {
       .concat(`${member.usercontent ? `\n${t("usercontent")}:\t${member.usercontent}` : ``}`)
       ;
 
-    this.sortBy = parent.sortBy;
+    this.sortBy = (sort: SortOptions) => parent.sortBy(sort);
 
     this.command = {
       command: `vscode.open`,
