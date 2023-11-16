@@ -63,6 +63,6 @@ Maintain your RPGLE, CL, COBOL, C/CPP on IBM i right from Visual Studio Code. Ed
 ---
 
 * Aldon project filter example 
-  <img src="./aldon-filter.png" align="left">
+  <img src="./Aldon-Filter.png" align="left">
 * Hawkeye cross reference filter example 
-  <img src="./hawkeye-filter.png" align="left">
+  <img src="./Hawkeye-Filter.png" align="left">
