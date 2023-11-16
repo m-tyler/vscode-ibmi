@@ -8,9 +8,12 @@ import * as certificates from "./certificates";
 import * as server from "./server";
 import { copyFileSync } from "fs";
 import { instance } from "../../instantiate";
+import { getEnvConfig } from "../local/env";
+import { ILELibrarySettings } from "../CompileTools";
 
 const debugExtensionId = `IBM.ibmidebug`;
 
+// These context values are used for walkthroughs only
 const ptfContext = `code-for-ibmi:debug.ptf`;
 const remoteCertContext = `code-for-ibmi:debug.remote`;
 const localCertContext = `code-for-ibmi:debug.local`;
@@ -18,32 +21,62 @@ const localCertContext = `code-for-ibmi:debug.local`;
 let connectionConfirmed = false;
 let temporaryPassword: string | undefined;
 
+export function isManaged() {
+  return process.env[`DEBUG_MANAGED`] === `true`;
+}
+
 export async function initialize(context: ExtensionContext) {
   const debugExtensionAvailable = () => {
     const debugclient = vscode.extensions.getExtension(debugExtensionId);
     return debugclient !== undefined;
   }
 
-  const startDebugging = async (library: string, object: string) => {
+  const startDebugging = async (objectLibrary: string, objectName: string, workspaceFolder?: vscode.WorkspaceFolder) => {
     if (debugExtensionAvailable()) {
       const connection = instance.getConnection();
-      if (connection) {
+      const config = instance.getConfig();
+      if (connection && config) {
         if (connection.remoteFeatures[`startDebugService.sh`]) {
           const password = await getPassword();
+
+          const libraries: ILELibrarySettings = {
+            currentLibrary: config?.currentLibrary,
+            libraryList: config?.libraryList
+          };
+
+          // If we are debugging from a workspace, perhaps
+          // the user has a custom CURLIB and LIBL setup.
+          if (workspaceFolder) {
+            const env = await getEnvConfig(workspaceFolder);
+            if (env[`CURLIB`]) {
+              objectLibrary = env[`CURLIB`];
+              libraries.currentLibrary = env[`CURLIB`];
+            }
+
+            if (env[`LIBL`]) {
+              libraries.libraryList = env[`LIBL`].split(` `);
+            }
+          }
 
           if (password) {
             const debugOpts: DebugOptions = {
               password,
-              library: library,
-              object: object
+              library: objectLibrary,
+              object: objectName,
+              libraries
             };
 
             startDebug(instance, debugOpts);
           }
         } else {
-          const openTut = await vscode.window.showInformationMessage(`Looks like you do not have the debug PTF installed. Do you want to see the Walkthrough to set it up?`, `Take me there`);
-          if (openTut === `Take me there`) {
-            vscode.commands.executeCommand(`workbench.action.openWalkthrough`, `halcyontechltd.vscode-ibmi-walkthroughs#code-ibmi-debug`);
+          if (isManaged()) {
+            vscode.window.showInformationMessage(`Looks like the Debug Service is not setup on this IBM i server. Please contact your system administrator.`);
+            
+          } else {
+            const openTut = await vscode.window.showInformationMessage(`Looks like you do not have the debug PTF installed. Do you want to see the Walkthrough to set it up?`, `Take me there`);
+            if (openTut === `Take me there`) {
+              vscode.commands.executeCommand(`workbench.action.openWalkthrough`, `halcyontechltd.vscode-ibmi-walkthroughs#code-ibmi-debug`);
+            }
           }
         }
       }
@@ -60,7 +93,7 @@ export async function initialize(context: ExtensionContext) {
     }
   }
 
-  const getObjectFromUri = (uri: Uri) => {
+  const getObjectFromUri = async (uri: Uri) => {
     const connection = instance.getConnection();
 
     const configuration = instance.getConfig();
@@ -79,10 +112,14 @@ export async function initialize(context: ExtensionContext) {
           qualifiedPath.object = memberPath.name;
           break;
         case `streamfile`:
-        case `file`:
-          const parsedPath = path.parse(uri.path);
+          const streamfilePath = path.parse(uri.path);
           qualifiedPath.library = configuration.currentLibrary;
-          qualifiedPath.object = parsedPath.name;
+          qualifiedPath.object = streamfilePath.name;
+          break;
+        case `file`:
+          const localPath = path.parse(uri.path);
+          qualifiedPath.library = configuration.currentLibrary;
+          qualifiedPath.object = localPath.name;
           break;
       }
 
@@ -153,10 +190,13 @@ export async function initialize(context: ExtensionContext) {
     vscode.commands.registerCommand(`code-for-ibmi.debug.activeEditor`, async () => {
       const activeEditor = vscode.window.activeTextEditor;
       if (activeEditor) {
-        const qualifiedObject = getObjectFromUri(activeEditor.document.uri);
+        // Get the workspace folder if one is available.
+        const workspaceFolder = [`member`, `streamfile`].includes(activeEditor.document.uri.scheme) ? undefined : vscode.workspace.getWorkspaceFolder(activeEditor.document.uri);
+
+        const qualifiedObject = await getObjectFromUri(activeEditor.document.uri);
 
         if (qualifiedObject.library && qualifiedObject.object) {
-          startDebugging(qualifiedObject.library, qualifiedObject.object);
+          startDebugging(qualifiedObject.library, qualifiedObject.object, workspaceFolder);
         }
       }
     }),
@@ -345,44 +385,49 @@ export async function initialize(context: ExtensionContext) {
     if (connection && content && connection?.remoteFeatures[`startDebugService.sh`]) {
       vscode.commands.executeCommand(`setContext`, ptfContext, true);
 
-      const remoteCertsExist = await certificates.checkRemoteExists(connection);
+      if (!isManaged()) {
+        const remoteCertsExist = await certificates.checkRemoteExists(connection);
 
-      if (remoteCertsExist) {
-        vscode.commands.executeCommand(`setContext`, remoteCertContext, true);
+        if (remoteCertsExist) {
+          vscode.commands.executeCommand(`setContext`, remoteCertContext, true);
 
-        if (connection.config!.debugIsSecure) {
-          const localCertsExists = await certificates.checkLocalExists(connection);
+          if (connection.config!.debugIsSecure) {
+            const localCertsExists = await certificates.checkLocalExists(connection);
 
-          if (localCertsExists) {
-            vscode.commands.executeCommand(`setContext`, localCertContext, true);
-          } else {
-            vscode.commands.executeCommand(`code-for-ibmi.debug.setup.local`);
+            if (localCertsExists) {
+              vscode.commands.executeCommand(`setContext`, localCertContext, true);
+            } else {
+              vscode.commands.executeCommand(`code-for-ibmi.debug.setup.local`);
+            }
           }
-        }
-      } else {
-        const existingDebugService = await server.getRunningJob(connection.config?.debugPort || "8005", instance.getContent()!);
-        if (existingDebugService) {
-          const openSettings = await vscode.window.showInformationMessage(`Looks like the Debug Service is already running, but couldn't find the certificates in the configuration location.`, `Open settings`);
-          if (openSettings === `Open settings`) {
-            // Open directory to the debugger tab
-            vscode.commands.executeCommand(`code-for-ibmi.showAdditionalSettings`, undefined, `Debugger`);
-          }
-
         } else {
-          const openTut = await vscode.window.showInformationMessage(`Looks like you have the debug PTF installed. Do you want to see the Walkthrough to set it up?`, `Take me there`);
-          if (openTut === `Take me there`) {
-            vscode.commands.executeCommand(`workbench.action.openWalkthrough`, `halcyontechltd.vscode-ibmi-walkthroughs#code-ibmi-debug`);
+          const existingDebugService = await server.getRunningJob(connection.config?.debugPort || "8005", instance.getContent()!);
+          if (existingDebugService) {
+            const openSettings = await vscode.window.showInformationMessage(`Looks like the Debug Service is already running, but couldn't find the certificates in the configuration location.`, `Open settings`);
+            if (openSettings === `Open settings`) {
+              // Open directory to the debugger tab
+              vscode.commands.executeCommand(`code-for-ibmi.showAdditionalSettings`, undefined, `Debugger`);
+            }
+
+          } else {
+            const openTut = await vscode.window.showInformationMessage(`Looks like you have the debug PTF installed. Do you want to see the Walkthrough to set it up?`, `Take me there`);
+            if (openTut === `Take me there`) {
+              vscode.commands.executeCommand(`workbench.action.openWalkthrough`, `halcyontechltd.vscode-ibmi-walkthroughs#code-ibmi-debug`);
+            }
           }
         }
       }
     }
   });
+
+  vscode.commands.executeCommand(`setContext`, `code-for-ibmi:debugManaged`, isManaged());
 }
 
 interface DebugOptions {
   password: string;
   library: string;
   object: string;
+  libraries: ILELibrarySettings
 };
 
 export async function startDebug(instance: Instance, options: DebugOptions) {
@@ -394,10 +439,19 @@ export async function startDebug(instance: Instance, options: DebugOptions) {
   const updateProductionFiles = config?.debugUpdateProductionFiles;
   const enableDebugTracing = config?.debugEnableDebugTracing;
 
-  const secure = config?.debugIsSecure;
+  let secure = true;
 
-  if (secure) {
-    process.env[`DEBUG_CA_PATH`] = certificates.getLocalCertPath(connection!);
+  if (isManaged()) {
+    // If we're in a managed environment, only set secure if a cert is set
+    secure = process.env[`DEBUG_CA_PATH`] ? true : false;
+  } else {
+    secure = config?.debugIsSecure || false;
+    if (secure) {
+      process.env[`DEBUG_CA_PATH`] = certificates.getLocalCertPath(connection!);
+    } else {
+      // Environment variable must be deleted otherwise cert issues will happen
+      delete process.env[`DEBUG_CA_PATH`];
+    }
   }
 
   const pathKey = options.library.trim() + `/` + options.object.trim();
@@ -429,7 +483,7 @@ export async function startDebug(instance: Instance, options: DebugOptions) {
       "ignoreCertificateErrors": !secure,
       "library": options.library.toUpperCase(),
       "program": options.object.toUpperCase(),
-      "startBatchJobCommand": `SBMJOB CMD(${currentCommand}) INLLIBL(${config?.libraryList.join(` `)}) CURLIB(${config?.currentLibrary}) JOBQ(QSYSNOMAX)`,
+      "startBatchJobCommand": `SBMJOB CMD(${currentCommand}) INLLIBL(${options.libraries.libraryList.join(` `)}) CURLIB(${options.libraries.currentLibrary}) JOBQ(QSYSNOMAX) MSGQ(*USRPRF)`,
       "updateProductionFiles": updateProductionFiles,
       "trace": enableDebugTracing,
     };
