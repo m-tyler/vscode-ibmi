@@ -89,6 +89,11 @@ export namespace ConnectionConfiguration {
     command: string;
   }
 
+  export interface IBMiSplfUser {
+    user: string
+    text?: string
+  }  
+
   function getConnectionSettings(): Parameters[] {
     return getConfiguration().get<Parameters[]>(`connectionSettings`) || [];
   }

@@ -6,7 +6,7 @@ import * as path from 'path';
 
 const writeFileAsync = util.promisify(fs.writeFile);
 
-import { IBMiSpooledFile, IBMiSplfUser } from '../typings';
+import { IBMiSpooledFile } from '../typings';
 import { instance, setSearchResults } from "../instantiate";
 import { GlobalConfiguration, ConnectionConfiguration } from '../api/Configuration';
 import { SplfSearch } from '../api/spooledFileSearch';
@@ -703,7 +703,7 @@ class UserSpooledFiles extends vscode.TreeItem {
    * @param {import("../typings/IBMiSplfUser")} theUser
    * @param {string} currentUser
    */
-  constructor(parent: vscode.TreeItem, theUser: IBMiSplfUser, currentUser: string) {
+  constructor(parent: vscode.TreeItem, theUser: ConnectionConfiguration.IBMiSplfUser, currentUser: string) {
     super(theUser.user, vscode.TreeItemCollapsibleState.Collapsed);
     this.user = theUser.user;
     const icon = objectIcons[`OUTQ`] || objectIcons[``];

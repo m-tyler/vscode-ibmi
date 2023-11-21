@@ -190,11 +190,6 @@ export interface MemberItem extends FilteredItem, WithPath {
   member: IBMiMember
 }
 
-export interface IBMiSplfUser {
-  user: string
-  text?: string
-}
-
 export interface IBMiSpooledFile {
   user: string
   name: string
