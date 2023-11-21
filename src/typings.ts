@@ -65,7 +65,8 @@ export interface Action {
   extensions?: string[];
   deployFirst?: boolean;
   postDownload?: string[];
-  refresh?: ActionRefresh
+  refresh?: ActionRefresh;
+  runOnProtected?:boolean;  
 }
 
 export interface ConnectionData {
@@ -189,11 +190,6 @@ export interface SourcePhysicalFileItem extends FilteredItem, WithPath {
 
 export interface MemberItem extends FilteredItem, WithPath {
   member: IBMiMember
-}
-
-export interface IBMiSplfUser {
-  user: string
-  text?: string
 }
 
 export interface IBMiSpooledFile {

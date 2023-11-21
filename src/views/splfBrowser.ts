@@ -1,19 +1,25 @@
-import * as vscode from 'vscode';
-import * as fs from 'fs';
-import * as os from 'os';
-import * as util from 'util';
-import * as path from 'path';
-
-const writeFileAsync = util.promisify(fs.writeFile);
-
-import { IBMiSpooledFile, IBMiSplfUser } from '../typings';
-import { instance, setSearchResults } from "../instantiate";
+import fs from "fs";
+import os from "os";
+import util from "util";
+import path from "path";
+import vscode from "vscode";
 import { GlobalConfiguration, ConnectionConfiguration } from '../api/Configuration';
 import { SplfSearch } from '../api/spooledFileSearch';
 import { getSpooledFileUri } from '../filesystems/qsys/SplfFs';
 import { Tools } from '../api/Tools';
+import { instance, setSearchResults } from "../instantiate";
 import { t } from "../locale";
+import { IBMiSpooledFile } from '../typings';
 
+const writeFileAsync = util.promisify(fs.writeFile);
+
+
+//https://code.visualstudio.com/api/references/icons-in-labels
+const objectIcons: Record<string, string> = {
+  'OUTQ': 'server',
+  'SPLF': 'file',
+  '': 'circle-large-outline'
+}
 
 export default class SPLFBrowser implements vscode.TreeDataProvider<any> {
   private emitter: vscode.EventEmitter<any>;
@@ -703,7 +709,7 @@ class UserSpooledFiles extends vscode.TreeItem {
    * @param {import("../typings/IBMiSplfUser")} theUser
    * @param {string} currentUser
    */
-  constructor(parent: vscode.TreeItem, theUser: IBMiSplfUser, currentUser: string) {
+  constructor(parent: vscode.TreeItem, theUser: ConnectionConfiguration.IBMiSplfUser, currentUser: string) {
     super(theUser.user, vscode.TreeItemCollapsibleState.Collapsed);
     this.user = theUser.user;
     const icon = objectIcons[`OUTQ`] || objectIcons[``];
@@ -803,11 +809,6 @@ class SPLF extends vscode.TreeItem {
   }
 }
 
-const objectIcons: Record<string, string> = {
-  'OUTQ': 'server',
-  'SPLF': 'file',
-  '': 'circle-large-outline'
-}
 function getConfig() {
   const config = instance.getConfig();
   if (config) {
