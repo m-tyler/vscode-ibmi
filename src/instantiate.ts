@@ -120,6 +120,7 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
       }
       console.log(uri);
       try {
+        const [library, name, member_extension] = path.split('/');
         if (line) {
           // If a line is provided, we have to do a specific open
           let doc = await vscode.workspace.openTextDocument(uri); // calls back into the provider
@@ -131,9 +132,10 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
             editor.selection = new vscode.Selection(line, selectedLine.firstNonWhitespaceCharacterIndex, line, 100);
             editor.revealRange(selectedLine.range, vscode.TextEditorRevealType.InCenter);
           }
-
+          
         } else {
           // Otherwise, do a generic open
+          await storeMemberList([library, name].join(`/`), [`${member_extension}`]);
           await vscode.commands.executeCommand(`vscode.open`, uri);
         }
 
