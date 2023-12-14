@@ -183,10 +183,13 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(`code-for-ibmi.goToFileReadOnly`, async () => vscode.commands.executeCommand(`code-for-ibmi.goToFile`, true)),
     vscode.commands.registerCommand(`code-for-ibmi.goToFile`, async (readonly?: boolean) => {
       const LOADING_LABEL = `Please wait`;
+      const clearList = `$(trash) Clear list`;
+      const clearListArray = [{ label: ``, kind: vscode.QuickPickItemKind.Separator }, { label: clearList }];
       const storage = instance.getStorage();
       const content = instance.getContent();
       const config = instance.getConfig();
       const connection = instance.getConnection();
+      let starRemoved: boolean = false;
 
       if (!storage && !content) return;
       let list: string[] = [];
@@ -202,13 +205,19 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
         });
       });
 
-      list.push(`Clear list`);
-
       const listItems: vscode.QuickPickItem[] = list.map(item => ({ label: item }));
 
       const quickPick = vscode.window.createQuickPick();
-      quickPick.items = listItems;
+      quickPick.items = [
+        {
+          label: 'Cached',
+          kind: vscode.QuickPickItemKind.Separator
+        },
+        ...listItems,
+        ...clearListArray
+      ];
       quickPick.canSelectMany = false;
+      (quickPick as any).sortByLabel = false; // https://github.com/microsoft/vscode/issues/73904#issuecomment-680298036
       quickPick.placeholder = `Enter file path (format: LIB/SPF/NAME.ext (type '*' to search server) or /home/xx/file.txt)`;
 
       quickPick.show();
@@ -223,29 +232,25 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
         ).then(resultSetLibrary => {
           schemaItems = resultSetLibrary.map(row => ({
             label: String(row.SYSTEM_SCHEMA_NAME),
-            detail: String(row.SCHEMA_TEXT)
+            description: String(row.SCHEMA_TEXT)
           }))
-
-          if (quickPick.value === ``) {
-            quickPick.items = [
-              {
-                label: 'Files',
-                kind: vscode.QuickPickItemKind.Separator
-              },
-              ...listItems
-            ]
-          }
         });
       }
 
       let filteredItems: vscode.QuickPickItem[] = [];
 
       quickPick.onDidChangeValue(async () => {
-
-        // INJECT user values into proposed values
-        // if (!list.includes(quickPick.value.toUpperCase())) { 
-        //   quickPick.items = [quickPick.value.toUpperCase(), ...list].map(label => ({ label }));
-        // }
+        if (quickPick.value === ``) {
+          quickPick.items = [
+            {
+              label: 'Cached',
+              kind: vscode.QuickPickItemKind.Separator
+            },
+            ...listItems,
+            ...clearListArray
+          ];
+          filteredItems = [];
+        }
 
         // autosuggest
         if (config && config.enableSQL && (!quickPick.value.startsWith(`/`)) && quickPick.value.endsWith(`*`)) {
@@ -267,16 +272,18 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
                 },
                 ...filteredItems,
                 {
-                  label: 'Files',
+                  label: 'Cached',
                   kind: vscode.QuickPickItemKind.Separator
                 },
-                ...listItems
+                ...listItems,
+                ...clearListArray
               ]
 
               break;
 
             case 2:
               // Create cache
+              quickPick.busy = true;
               quickPick.items = [
                 {
                   label: LOADING_LABEL,
@@ -296,7 +303,7 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
 
               const listFile: vscode.QuickPickItem[] = resultSet.map(row => ({
                 label: selectionSplit[0] + '/' + String(row.SYSTEM_TABLE_NAME),
-                detail: String(row.TABLE_TEXT)
+                description: String(row.TABLE_TEXT)
               }))
 
               filteredItems = listFile.filter(file => file.label.startsWith(selectionSplit[0] + '/' + filterText));
@@ -308,16 +315,19 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
                 },
                 ...filteredItems,
                 {
-                  label: 'Files',
+                  label: 'Cached',
                   kind: vscode.QuickPickItemKind.Separator
                 },
-                ...listItems
+                ...listItems,
+                ...clearListArray
               ]
+              quickPick.busy = false;
 
               break;
 
             case 3:
               // Create cache
+              quickPick.busy = true;
               quickPick.items = [
                 {
                   label: LOADING_LABEL,
@@ -339,7 +349,7 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
 
               const listMember = resultSet.map(row => ({
                 label: selectionSplit[0] + '/' + selectionSplit[1] + '/' + String(row.TABLE_PARTITION) + '.' + String(row.SOURCE_TYPE),
-                detail: String(row.PARTITION_TEXT)
+                description: String(row.PARTITION_TEXT)
               }))
 
               filteredItems = listMember.filter(member => member.label.startsWith(selectionSplit[0] + '/' + selectionSplit[1] + '/' + filterText));
@@ -351,11 +361,13 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
                 },
                 ...filteredItems,
                 {
-                  label: 'Files',
+                  label: 'Cached',
                   kind: vscode.QuickPickItemKind.Separator
                 },
-                ...listItems
+                ...listItems,
+                ...clearListArray
               ]
+              quickPick.busy = false;
 
               break;
 
@@ -365,10 +377,11 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
 
           // We remove the asterisk from the value so that the user can continue typing
           quickPick.value = quickPick.value.substring(0, quickPick.value.indexOf(`*`));
+          starRemoved = true;
 
         } else {
 
-          if (filteredItems.length > 0) {
+          if (filteredItems.length > 0 && !starRemoved) {
             quickPick.items = [
               {
                 label: 'Filter',
@@ -379,16 +392,18 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
                 label: 'Cached',
                 kind: vscode.QuickPickItemKind.Separator
               },
-              ...listItems
+              ...listItems,
+              ...clearListArray
             ]
           }
+          starRemoved = false;
         }
       })
 
       quickPick.onDidAccept(() => {
         const selection = quickPick.selectedItems[0].label;
         if (selection && selection !== LOADING_LABEL) {
-          if (selection === `Clear list`) {
+          if (selection === clearList) {
             storage!.setSourceList({});
             vscode.window.showInformationMessage(`Cleared list.`);
             quickPick.hide()
