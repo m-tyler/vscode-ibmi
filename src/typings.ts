@@ -42,7 +42,7 @@ export interface RemoteCommand {
   environment?: ActionEnvironment;
   cwd?: string;
   env?: Record<string, string>;
-  noLibList? : boolean
+  noLibList?: boolean
 }
 
 export interface CommandData extends StandardIO {
@@ -67,7 +67,7 @@ export interface Action {
   deployFirst?: boolean;
   postDownload?: string[];
   refresh?: ActionRefresh;
-  runOnProtected?:boolean;  
+  runOnProtected?: boolean;
 }
 
 export interface ConnectionData {
@@ -211,3 +211,12 @@ export interface IBMiSpooledFile {
   queue_library: string
   queue: string
 }  
+export type IBMiMessage = {
+  id: string
+  text: string  
+}
+
+export type IBMiMessages = {
+  messages: IBMiMessage[]
+  findId(id:string) : IBMiMessage | undefined
+}
