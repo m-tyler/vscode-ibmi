@@ -219,3 +219,4 @@ export type IBMiMessages = {
   messages: IBMiMessage[]
   findId(id:string) : IBMiMessage | undefined
 }
+export const IFS_BROWSER_MIMETYPE = "application/vnd.code.tree.ifsbrowser";
