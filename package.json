@@ -1834,8 +1834,12 @@
 				"label": "Sort by"
 			},
 			{
-				"id": "code-for-ibmi.sortSpooledFiles",
-				"label": "Sort Spooled Files by"
+				"id": "code-for-ibmi.openMember",
+				"label": "Open"
+			},
+			{
+				"id": "code-for-ibmi.openIFSFile",
+				"label": "Open"
 			},
 			{
 				"id": "code-for-ibmi.sortSpooledFiles",
