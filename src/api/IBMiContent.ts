@@ -3,13 +3,13 @@ import fs from 'fs';
 import path from 'path';
 import tmp from 'tmp';
 import util from 'util';
+import { window } from 'vscode';
 import { ObjectTypes } from '../filesystems/qsys/Objects';
 import { instance } from "../instantiate";
 import { CommandResult, IBMiError, IBMiFile, IBMiMember, IBMiObject, IFSFile, QsysPath, IBMiSpooledFile } from '../typings';
 import { ConnectionConfiguration } from './Configuration';
 import { default as IBMi } from './IBMi';
 import { Tools } from './Tools';
-import { window } from 'vscode';
 const tmpFile = util.promisify(tmp.file);
 const readFileAsync = util.promisify(fs.readFile);
 const writeFileAsync = util.promisify(fs.writeFile);
@@ -1085,9 +1085,9 @@ from table (QSYS2.SPOOLED_FILE_INFO(USER_NAME => ucase('${user}')) ) QE where FI
     if (path.startsWith('/')) { //IFS path
       return this.config.protectedPaths.some(p => path.startsWith(p));
     }
-    else { //QSYS path
-      const [library] = path.split('/');
-      return this.config.protectedPaths.includes(library.toLocaleUpperCase());
+    else { //QSYS path      
+      const qsysObject = Tools.parseQSysPath(path);
+      return this.config.protectedPaths.includes(qsysObject.library.toLocaleUpperCase());
     }
   }
 }
