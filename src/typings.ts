@@ -1,5 +1,5 @@
 import { Ignore } from 'ignore';
-import { ProviderResult, ThemeIcon, TreeItem, TreeItemCollapsibleState, WorkspaceFolder } from "vscode";
+import { ProviderResult, Range, ThemeIcon, TreeItem, TreeItemCollapsibleState, WorkspaceFolder } from "vscode";
 import { ConnectionConfiguration } from './api/Configuration';
 import { CustomUI } from "./api/CustomUI";
 import Instance from "./api/Instance";
@@ -213,10 +213,13 @@ export interface IBMiSpooledFile {
 }  
 export type IBMiMessage = {
   id: string
-  text: string  
+  text: string
 }
 
 export type IBMiMessages = {
   messages: IBMiMessage[]
-  findId(id:string) : IBMiMessage | undefined
+  findId(id: string): IBMiMessage | undefined
 }
+export const IFS_BROWSER_MIMETYPE = "application/vnd.code.tree.ifsbrowser";
+
+export type OpenEditableOptions = QsysFsOptions & { position?: Range };

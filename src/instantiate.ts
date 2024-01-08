@@ -3,23 +3,26 @@ import { Tools } from './api/Tools';
 import path, { dirname } from 'path';
 import * as vscode from "vscode";
 import { CompileTools } from './api/CompileTools';
-import { ConnectionConfiguration, GlobalConfiguration, onCodeForIBMiConfigurationChange } from "./api/Configuration";
+import { ConnectionConfiguration, DefaultOpenMode, GlobalConfiguration, onCodeForIBMiConfigurationChange } from "./api/Configuration";
 import Instance from "./api/Instance";
 import { Search } from "./api/Search";
 import { Terminal } from './api/Terminal';
 import { refreshDiagnosticsFromServer } from './api/errors/diagnostics';
-import { QSysFS, getMemberUri, getUriFromPath } from "./filesystems/qsys/QSysFs";
+import { QSysFS, getUriFromPath } from "./filesystems/qsys/QSysFs";
 import { init as clApiInit } from "./languages/clle/clApi";
 import * as clRunner from "./languages/clle/clRunner";
 import { initGetNewLibl } from "./languages/clle/getnewlibl";
 import { SEUColorProvider } from "./languages/general/SEUColorProvider";
-import { Action, BrowserItem, DeploymentMethod, QsysFsOptions } from "./typings";
-import { SplfFS, getUriFromPath_Splf } from "./filesystems/qsys/SplfFs";
+import { Action, BrowserItem, DeploymentMethod, MemberItem, OpenEditableOptions, WithPath } from "./typings";
 import { SearchView } from "./views/searchView";
 import { ActionsUI } from './webviews/actions';
 import { VariablesUI } from "./webviews/variables";
+import { SplfFS, getUriFromPath_Splf } from "./filesystems/qsys/SplfFs";
 
 export let instance: Instance;
+
+const CLEAR_RECENT = `$(trash) Clear recently opened`;
+const CLEAR_CACHED = `$(trash) Clear cached`;
 
 const disconnectBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 12);
 disconnectBarItem.command = {
@@ -99,8 +102,10 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
       `searchView`,
       searchViewContext
     ),
-    vscode.commands.registerCommand(`code-for-ibmi.openEditable`, async (path: string, line?: number, options?: QsysFsOptions) => {
+    vscode.commands.registerCommand(`code-for-ibmi.openEditable`, async (path: string, options?: OpenEditableOptions) => {
       console.log(path);
+      options = options || {};
+      options.readonly = options.readonly || instance.getContent()?.isProtectedPath(path);
       let uri = {};
       let library, name, member_extension;
       if (path.toLocaleUpperCase().endsWith('.SPLF')) {
@@ -110,40 +115,37 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
       }
       else {
         const [library, name, member_extension] = path.split('/');
-        if (!options?.readonly && !path.startsWith('/')) {
-          const writable = await instance.getContent()?.checkObject({ library, name, type: '*FILE' }, "*UPD");
-          if (!writable) {
-            options = options || {};
-            options.readonly = true;
+        if (!options.readonly) {
+          if (path.startsWith('/')) {
+            options.readonly = !await instance.getContent()?.testStreamFile(path, "w");
+          }
+          else {
+            const [library, name] = path.split('/');
+            const writable = await instance.getContent()?.checkObject({ library, name, type: '*FILE' }, "*UPD");
+            if (!writable) {
+              options.readonly = true;
+            }
           }
         }
         uri = getUriFromPath(path, options);
       }
-      console.log(uri);
+
       try {
-        const [library, name, member_extension] = path.split('/');
-        if (line) {
-          // If a line is provided, we have to do a specific open
-          let doc = await vscode.workspace.openTextDocument(uri); // calls back into the provider
-          const editor = await vscode.window.showTextDocument(doc, { preview: false });
-          
-          if (editor) {
-            await storeMemberList([library, name].join(`/`), [`${member_extension}`]);
-            const selectedLine = editor.document.lineAt(line);
-            editor.selection = new vscode.Selection(line, selectedLine.firstNonWhitespaceCharacterIndex, line, 100);
-            editor.revealRange(selectedLine.range, vscode.TextEditorRevealType.InCenter);
-          }
-          
+        await vscode.commands.executeCommand(`vscode.openWith`, uri, 'default', { selection: options.position } as vscode.TextDocumentShowOptions);
+
+        // Add file to front of recently opened files list.
+        const recentLimit = GlobalConfiguration.get<number>(`recentlyOpenedFilesLimit`);
+        const storage = instance.getStorage();
+        if (recentLimit) {
+          const recent = storage!.getRecentlyOpenedFiles();
+          storage!.setRecentlyOpenedFiles([path, ...recent.filter((file) => file !== path).slice(0, recentLimit - 1)]);
         } else {
-          // Otherwise, do a generic open
-          await storeMemberList([library, name].join(`/`), [`${member_extension}`]);
-          await vscode.commands.executeCommand(`vscode.open`, uri);
+          storage!.clearRecentlyOpenedFiles();
         }
 
         return true;
       } catch (e) {
         console.log(e);
-
         return false;
       }
     }),
@@ -186,8 +188,6 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(`code-for-ibmi.goToFileReadOnly`, async () => vscode.commands.executeCommand(`code-for-ibmi.goToFile`, true)),
     vscode.commands.registerCommand(`code-for-ibmi.goToFile`, async (readonly?: boolean) => {
       const LOADING_LABEL = `Please wait`;
-      const clearList = `$(trash) Clear list`;
-      const clearListArray = [{ label: ``, kind: vscode.QuickPickItemKind.Separator }, { label: clearList }];
       const storage = instance.getStorage();
       const content = instance.getContent();
       const config = instance.getConfig();
@@ -196,6 +196,14 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
 
       if (!storage && !content) return;
       let list: string[] = [];
+
+      // Get recently opened files - cut if limit has been reduced.
+      const recentLimit = GlobalConfiguration.get(`recentlyOpenedFilesLimit`) as number;
+      const recent = storage!.getRecentlyOpenedFiles();
+      if (recent.length > recentLimit) {
+        recent.splice(recentLimit);
+        storage!.setRecentlyOpenedFiles(recent);
+      }
 
       const sources = storage!.getSourceList();
       const dirs = Object.keys(sources);
@@ -208,17 +216,18 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
         });
       });
 
+      const recentItems: vscode.QuickPickItem[] = recent.map(item => ({ label: item }));
       const listItems: vscode.QuickPickItem[] = list.map(item => ({ label: item }));
 
       const quickPick = vscode.window.createQuickPick();
-      quickPick.items = [
-        {
-          label: 'Cached',
-          kind: vscode.QuickPickItemKind.Separator
-        },
-        ...listItems,
-        ...clearListArray
-      ];
+      quickPick.items = await createQuickPickItemsList(
+        ``,
+        [],
+        `Recent`,
+        recentItems,
+        `Cached`,
+        listItems
+      );
       quickPick.canSelectMany = false;
       (quickPick as any).sortByLabel = false; // https://github.com/microsoft/vscode/issues/73904#issuecomment-680298036
       quickPick.placeholder = `Enter file path (format: LIB/SPF/NAME.ext (type '*' to search server) or /home/xx/file.txt)`;
@@ -244,14 +253,14 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
 
       quickPick.onDidChangeValue(async () => {
         if (quickPick.value === ``) {
-          quickPick.items = [
-            {
-              label: 'Cached',
-              kind: vscode.QuickPickItemKind.Separator
-            },
-            ...listItems,
-            ...clearListArray
-          ];
+          quickPick.items = await createQuickPickItemsList(
+            ``,
+            [],
+            `Recent`,
+            recentItems,
+            `Cached`,
+            listItems
+          );
           filteredItems = [];
         } else {
           if (!starRemoved && !list.includes(quickPick.value.toUpperCase())) {
@@ -272,19 +281,14 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
               filteredItems = schemaItems.filter(schema => schema.label.startsWith(filterText));
 
               // Using `kind` didn't make any difference because it's sorted alphabetically on label
-              quickPick.items = [
-                {
-                  label: 'Libraries',
-                  kind: vscode.QuickPickItemKind.Separator
-                },
-                ...filteredItems,
-                {
-                  label: 'Cached',
-                  kind: vscode.QuickPickItemKind.Separator
-                },
-                ...listItems,
-                ...clearListArray
-              ]
+              quickPick.items = await createQuickPickItemsList(
+                `Libraries`,
+                filteredItems,
+                `Recent`,
+                recentItems,
+                `Cached`,
+                listItems
+              );
 
               break;
 
@@ -316,19 +320,14 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
 
               filteredItems = listFile.filter(file => file.label.startsWith(selectionSplit[0] + '/' + filterText));
 
-              quickPick.items = [
-                {
-                  label: 'Source files',
-                  kind: vscode.QuickPickItemKind.Separator
-                },
-                ...filteredItems,
-                {
-                  label: 'Cached',
-                  kind: vscode.QuickPickItemKind.Separator
-                },
-                ...listItems,
-                ...clearListArray
-              ]
+              quickPick.items = await createQuickPickItemsList(
+                `Source files`,
+                filteredItems,
+                `Recent`,
+                recentItems,
+                `Cached`,
+                listItems
+              );
               quickPick.busy = false;
 
               break;
@@ -364,19 +363,14 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
 
               filteredItems = listMember.filter(member => member.label.startsWith(selectionSplit[0] + '/' + selectionSplit[1] + '/' + filterText));
 
-              quickPick.items = [
-                {
-                  label: 'Members',
-                  kind: vscode.QuickPickItemKind.Separator
-                },
-                ...filteredItems,
-                {
-                  label: 'Cached',
-                  kind: vscode.QuickPickItemKind.Separator
-                },
-                ...listItems,
-                ...clearListArray
-              ]
+              quickPick.items = await createQuickPickItemsList(
+                `Members`,
+                filteredItems,
+                `Recent`,
+                recentItems,
+                `Cached`,
+                listItems
+              );
               quickPick.busy = false;
 
               break;
@@ -392,19 +386,14 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
         } else {
 
           if (filteredItems.length > 0 && !starRemoved) {
-            quickPick.items = [
-              {
-                label: 'Filter',
-                kind: vscode.QuickPickItemKind.Separator
-              },
-              ...filteredItems,
-              {
-                label: 'Cached',
-                kind: vscode.QuickPickItemKind.Separator
-              },
-              ...listItems,
-              ...clearListArray
-            ]
+            quickPick.items = await createQuickPickItemsList(
+              `Filter`,
+              filteredItems,
+              `Recent`,
+              recentItems,
+              `Cached`,
+              listItems
+            );
           }
         }
         starRemoved = false;
@@ -413,10 +402,28 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
       quickPick.onDidAccept(async () => {
         let selection = quickPick.selectedItems[0].label;
         if (selection && selection !== LOADING_LABEL) {
-          if (selection === clearList) {
+          if (selection === CLEAR_RECENT) {
+            recentItems.length = 0;
+            storage!.clearRecentlyOpenedFiles();
+            quickPick.items = await createQuickPickItemsList(
+              `Filter`,
+              filteredItems,
+              ``,
+              [],
+              `Cached`,
+              listItems
+            );
+            vscode.window.showInformationMessage(`Cleared previously opened files.`);
+          } else if (selection === CLEAR_CACHED) {
+            listItems.length = 0;
             storage!.setSourceList({});
-            quickPick.items = clearListArray;
-            vscode.window.showInformationMessage(`Cleared list.`);
+            quickPick.items = await createQuickPickItemsList(
+              `Filter`,
+              filteredItems,
+              `Recent`,
+              recentItems,
+            );
+            vscode.window.showInformationMessage(`Cleared cached files.`);
           } else {
             const selectionSplit = selection.toUpperCase().split('/')
             if (selectionSplit.length === 3 || selection.startsWith(`/`)) {
@@ -431,11 +438,14 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
                     from QSYS2.SYSPARTITIONSTAT
                    where ( SYSTEM_TABLE_SCHEMA, SYSTEM_TABLE_NAME, SYSTEM_TABLE_MEMBER ) = ( '${lib}', '${file}', '${member.name}' )
                    limit 1
-                `).then((resultSet) => { return resultSet.length !== 1 ? {} :
-                  { base: `${resultSet[0].MEMBER}.${resultSet[0].TYPE}`,
-                    name: `${resultSet[0].MEMBER}`,
-                    ext: `${resultSet[0].TYPE}`,
-                  }});
+                `).then((resultSet) => {
+                  return resultSet.length !== 1 ? {} :
+                    {
+                      base: `${resultSet[0].MEMBER}.${resultSet[0].TYPE}`,
+                      name: `${resultSet[0].MEMBER}`,
+                      ext: `${resultSet[0].TYPE}`,
+                    }
+                });
                 if (!fullMember) {
                   vscode.window.showWarningMessage(`Member ${lib}/${file}/${member.base} does not exist.`);
                   return;
@@ -453,8 +463,8 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
                 }
                 selection = selection.toUpperCase() === quickPick.value.toUpperCase() ? quickPick.value : selection;
               }
-              vscode.commands.executeCommand(`code-for-ibmi.openEditable`, selection, 0, { readonly });
-              quickPick.hide()
+              vscode.commands.executeCommand(`code-for-ibmi.openEditable`, selection, { readonly });
+              quickPick.hide();
             } else {
               quickPick.value = selection.toUpperCase() + '/'
             }
@@ -619,18 +629,17 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
       return value;
     }),
 
-    vscode.commands.registerCommand("code-for-ibmi.browse", (node: any) => { //any for now, typed later after TS conversion of browsers
-      let uri;
-      if (node?.member) {
-        uri = getMemberUri(node?.member, { readonly: true });
-      }
-      else if (node?.path) {
-        uri = getUriFromPath(node?.path, { readonly: true });
-      }
+    vscode.commands.registerCommand("code-for-ibmi.browse", (item: WithPath | MemberItem) => {
+      return vscode.commands.executeCommand("code-for-ibmi.openWithDefaultMode", item, "browse" as DefaultOpenMode);
+    }),
 
-      if (uri) {
-        return vscode.commands.executeCommand(`vscode.open`, uri);
-      }
+    vscode.commands.registerCommand("code-for-ibmi.edit", (item: WithPath | MemberItem) => {
+      return vscode.commands.executeCommand("code-for-ibmi.openWithDefaultMode", item, "edit" as DefaultOpenMode);
+    }),
+
+    vscode.commands.registerCommand("code-for-ibmi.openWithDefaultMode", (item: WithPath, overrideMode?: DefaultOpenMode) => {
+      const readonly = (overrideMode || GlobalConfiguration.get<DefaultOpenMode>("defaultOpenMode")) === "browse";
+      vscode.commands.executeCommand(`code-for-ibmi.openEditable`, item.path, { readonly });
     })
   );
 
@@ -705,17 +714,23 @@ async function onDisconnected() {
   ].forEach(barItem => barItem.hide())
 }
 
-/**
- *
- * @param {string} path
- * @param {string[]} list
- */
-function storeMemberList(path: string, list: string[]) {
-  const storage = instance.getStorage();
-  if (!storage) return;
-  const existingDirs = storage.getSourceList();
+async function createQuickPickItemsList(
+  labelFiltered: string = ``, filtered: vscode.QuickPickItem[] = [],
+  labelRecent: string = ``, recent: vscode.QuickPickItem[] = [],
+  labelCached: string = ``, cached: vscode.QuickPickItem[] = [],
+) {
+  const clearRecentArray = [{ label: ``, kind: vscode.QuickPickItemKind.Separator }, { label: CLEAR_RECENT }];
+  const clearCachedArray = [{ label: ``, kind: vscode.QuickPickItemKind.Separator }, { label: CLEAR_CACHED }];
 
-  existingDirs[path] = list;
-
-  return storage.setSourceList(existingDirs);
+  const returnedList: vscode.QuickPickItem[] = [
+    { label: labelFiltered, kind: vscode.QuickPickItemKind.Separator },
+    ...filtered,
+    { label: labelRecent, kind: vscode.QuickPickItemKind.Separator },
+    ...recent,
+    ...(recent.length != 0 ? clearRecentArray : []),
+    { label: labelCached, kind: vscode.QuickPickItemKind.Separator },
+    ...cached,
+    ...(cached.length != 0 ? clearCachedArray : [])
+  ];
+  return returnedList;
 }

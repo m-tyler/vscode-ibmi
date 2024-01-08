@@ -9,6 +9,7 @@ import { CommandResult, IBMiError, IBMiFile, IBMiMember, IBMiObject, IFSFile, Qs
 import { ConnectionConfiguration } from './Configuration';
 import { default as IBMi } from './IBMi';
 import { Tools } from './Tools';
+import { window } from 'vscode';
 const tmpFile = util.promisify(tmp.file);
 const readFileAsync = util.promisify(fs.readFile);
 const writeFileAsync = util.promisify(fs.writeFile);
@@ -188,6 +189,10 @@ export default class IBMiContent {
         });
 
         if (copyResult.code === 0) {
+          const messages = Tools.parseMessages(copyResult.stderr);
+          if (messages.findId("CPIA083")) {
+            window.showWarningMessage(`${library}/${sourceFile}(${member}) was saved with truncated records!`);
+          }
           return true;
         } else {
           if (!retry) {
@@ -439,10 +444,10 @@ export default class IBMiContent {
    */
   async getObjectList(filters: { library: string; object?: string; types?: string[]; member?: string; memberType?: string; }, sortOrder?: SortOrder): Promise<IBMiFile[]> {
     const library = filters.library.toUpperCase();
-    if(!await this.checkObject({ library: "QSYS", name: library, type: "*LIB"})){
+    if (!await this.checkObject({ library: "QSYS", name: library, type: "*LIB" })) {
       throw new Error(`Library ${library} does not exist.`);
     }
-    
+
     const object = (filters.object && filters.object !== `*` ? filters.object.toUpperCase() : `*ALL`);
     const sourceFilesOnly = (filters.types && filters.types.includes(`*SRCPF`));
     const member = (filters.member ? filters.member.toUpperCase() : filters.member);
@@ -607,7 +612,7 @@ export default class IBMiContent {
       results = await this.getTable(tempLib, TempName, TempName, true);
       if (results.length === 1 && String(results[0].MBNAME).trim() === ``) {
         return [];
-    }
+      }
 
       if (member || memberExt) {
         let pattern: RegExp | undefined, patternExt: RegExp | undefined;
@@ -1069,6 +1074,20 @@ from table (QSYS2.SPOOLED_FILE_INFO(USER_NAME => ucase('${user}')) ) QE where FI
     return (await this.ibmi.runCommand({
       command: `CHKOBJ OBJ(${object.library.toLocaleUpperCase()}/${object.name.toLocaleUpperCase()}) OBJTYPE(${object.type.toLocaleUpperCase()}) AUT(${authorities.join(" ")})`,
       noLibList: true
-    }))?.code === 0;
+    })).code === 0;
+  }
+
+  async testStreamFile(path: string, right: "r" | "w" | "x") {
+    return (await this.ibmi.sendCommand({ command: `test -${right} ${Tools.escapePath(path)}` })).code === 0;
+  }
+
+  isProtectedPath(path: string) {
+    if (path.startsWith('/')) { //IFS path
+      return this.config.protectedPaths.some(p => path.startsWith(p));
+    }
+    else { //QSYS path
+      const [library] = path.split('/');
+      return this.config.protectedPaths.includes(library.toLocaleUpperCase());
+    }
   }
 }
