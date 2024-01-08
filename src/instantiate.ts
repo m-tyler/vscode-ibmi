@@ -118,8 +118,8 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
             options.readonly = !await instance.getContent()?.testStreamFile(path, "w");
           }
           else {
-            const [library, name] = path.split('/');
-            const writable = await instance.getContent()?.checkObject({ library, name, type: '*FILE' }, "*UPD");
+            const qsysObject = Tools.parseQSysPath(path);
+            const writable = await instance.getContent()?.checkObject({ library: qsysObject.library, name: qsysObject.name, type: '*FILE' }, "*UPD");
             if (!writable) {
               options.readonly = true;
             }
