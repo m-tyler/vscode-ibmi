@@ -121,7 +121,7 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
           }
           else {
             const qsysObject = Tools.parseQSysPath(path);
-          const writable = await instance.getContent()?.checkObject({ library: qsysObject.library, name: qsysObject.name, type: '*FILE' }, "*UPD");
+            const writable = await instance.getContent()?.checkObject({ library: qsysObject.library, name: qsysObject.name, type: '*FILE' }, "*UPD");
             if (!writable) {
               options.readonly = true;
             }
@@ -625,8 +625,7 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
         return newValue;
       }
 
-      const value = context.secrets.get(connectionKey);
-      return value;
+      return await context.secrets.get(connectionKey);
     }),
 
     vscode.commands.registerCommand("code-for-ibmi.browse", (item: WithPath | MemberItem) => {
