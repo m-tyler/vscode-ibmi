@@ -126,8 +126,8 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
               options.readonly = true;
             }
           }
-          uri = getUriFromPath(path, options);
         }
+        uri = getUriFromPath(path, options);
       }
 
       try {
