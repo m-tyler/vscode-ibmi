@@ -1,7 +1,8 @@
 import { stringify, parse, ParsedUrlQueryInput } from "querystring";
 import vscode, { FilePermission } from "vscode";
 import { instance } from "../../instantiate";
-import { IBMiSpooledFile, QsysFsOptions } from "../../typings";
+import { QsysFsOptions } from "../../typings";
+import { IBMiSpooledFile} from "../../typingsSplf";
 import fs from 'fs';
 import os from 'os';
 import util from 'util';
@@ -41,8 +42,6 @@ export function isProtectedFilter(filter?: string): boolean {
 
 export class SplfFS implements vscode.FileSystemProvider {
 
-
-
   private emitter = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
   onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]> = this.emitter.event;
 
@@ -60,7 +59,6 @@ export class SplfFS implements vscode.FileSystemProvider {
     instance.onEvent("connected", () => this.updateSpooledFileSupport());
     instance.onEvent("disconnected", () => this.updateSpooledFileSupport());
   }
-
 
   private updateSpooledFileSupport() {
 

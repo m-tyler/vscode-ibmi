@@ -9,7 +9,7 @@ import { getSpooledFileUri } from '../filesystems/qsys/SplfFs';
 import { Tools } from '../api/Tools';
 import { instance, setSearchResults } from "../instantiate";
 import { t } from "../locale";
-import { IBMiSpooledFile } from '../typings';
+import { IBMiSpooledFile } from '../typingsSplf';
 
 const writeFileAsync = util.promisify(fs.writeFile);
 
@@ -594,6 +594,22 @@ export default class SPLFBrowser implements vscode.TreeDataProvider<any> {
           //Running from command.
         }
       }),
+      vscode.commands.registerCommand("code-for-ibmi.openSplfWithLineSpacing", (node) => {
+        return vscode.commands.executeCommand("code-for-ibmi.openSpooledFile", node, true);
+      }),
+      vscode.commands.registerCommand("code-for-ibmi.openSplfWithoutLineSpacing", (node) => {
+        return vscode.commands.executeCommand("code-for-ibmi.openSpooledFile", node, false);
+      }),
+      vscode.commands.registerCommand("code-for-ibmi.openSpooledFile", (node,withSpacing:boolean) => {
+        const readonly = true;
+        // vscode.commands.executeCommand(`code-for-ibmi.openEditable`, item.path, { readonly });
+        //1- Download content.
+        //2- read through content, looking for *PRTCTL values in position 0-3
+        //3- Add lines based on *PRTCTL values
+        //4- return content results. 
+
+      })
+
     )
 
     // getInstance().onEvent(`connected`, () => this.refresh());
@@ -747,6 +763,7 @@ class SPLF extends vscode.TreeItem {
   userData: string;
   size: number;
   totalPages: number;
+  pageLength: number;
   qualifiedJobName: string;
   jobName: string;
   jobUser: string;
@@ -779,6 +796,7 @@ class SPLF extends vscode.TreeItem {
     this.userData = object.user_data
     this.size = object.size
     this.totalPages = object.total_pages
+    this.pageLength = object.page_length
     this.qualifiedJobName = object.qualified_job_name
     this.jobName = object.job_name
     this.jobUser = object.job_user

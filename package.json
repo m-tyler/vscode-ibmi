@@ -1633,7 +1633,7 @@
 			},
 			{
 				"command": "code-for-ibmi.moveSpooledFile",
-				"title": "Move spooled file to new Output Queue",
+				"title": "Move to new Output Queue",
 				"enablement": "code-for-ibmi:connected",
 				"icon": "$(move)"
 			},
@@ -1649,6 +1649,18 @@
 				"title": "Refresh Spooled File Browser",
 				"category": "IBM i",
 				"icon": "$(refresh)"
+			},
+			{
+				"command": "code-for-ibmi.openSplfWithLineSpacing",
+				"enablement": "code-for-ibmi:connected",
+				"title": "with Line Spacing",
+				"category": "IBM i"
+			},
+			{
+				"command": "code-for-ibmi.openSplfWithoutLineSpacing",
+				"enablement": "code-for-ibmi:connected",
+				"title": "without Line Spacing",
+				"category": "IBM i"
 			},
 			{
 				"command": "code-for-ibmi.cl.runSelected",
@@ -1834,12 +1846,20 @@
 				"label": "Sort by"
 			},
 			{
-				"id": "code-for-ibmi.sortSpooledFiles",
-				"label": "Sort Spooled Files by"
+				"id": "code-for-ibmi.openIFSFile",
+				"label": "Open"
+			},
+			{
+				"id": "code-for-ibmi.openMember",
+				"label": "Open"
 			},
 			{
 				"id": "code-for-ibmi.sortSpooledFiles",
 				"label": "Sort Spooled Files by"
+			},
+			{
+				"id": "code-for-ibmi.openSpooledFile",
+				"label": "Open"
 			}
 		],
 		"menus": {
@@ -1874,6 +1894,14 @@
 				{
 					"command": "code-for-ibmi.edit",
 					"when": "viewItem == member"
+				}
+			],
+			"code-for-ibmi.openSpooledFile": [
+				{
+					"command": "code-for-ibmi.openSplfWithLineSpacing"
+				},
+				{
+					"command": "code-for-ibmi.openSplfWithoutLineSpacing"
 				}
 			],
 			"code-for-ibmi.sortSpooledFiles": [
@@ -2111,6 +2139,14 @@
 				},
 				{
 					"command": "code-for-ibmi.removeIFSShortcut",
+					"when": "never"
+				},
+				{
+					"command": "code-for-ibmi.openSplfWithLineSpacing",
+					"when": "never"
+				},
+				{
+					"command": "code-for-ibmi.openSplfWithoutLineSpacing",
 					"when": "never"
 				}
 			],
@@ -2713,6 +2749,11 @@
 					"command": "code-for-ibmi.filterSpooledFiles",
 					"when": "view == splfBrowser && viewItem =~ /^spooledfile.*$/",
 					"group": "1_spooledfile@1"
+				},
+				{
+					"submenu": "code-for-ibmi.openSpooledFile",
+					"when": "view == splfBrowser && viewItem =~ /^spooledfile.*$/",
+					"group": "0_open@1"
 				}
 			]
 		},
