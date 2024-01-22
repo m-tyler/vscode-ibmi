@@ -107,6 +107,7 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
       console.log(path);
       options = options || {};
       options.readonly = options.readonly || instance.getContent()?.isProtectedPath(path);
+      let uri  = {};
       if (path.toLocaleUpperCase().endsWith('.SPLF')) {
         options = options || {};
         options.readonly = true;
