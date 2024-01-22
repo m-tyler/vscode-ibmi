@@ -5,8 +5,8 @@ import tmp from 'tmp';
 import util from 'util';
 import { window } from 'vscode';
 import { ObjectTypes } from '../filesystems/qsys/Objects';
-import { instance } from "../instantiate";
-import { CommandResult, IBMiError, IBMiFile, IBMiMember, IBMiObject, IFSFile, QsysPath, IBMiSpooledFile } from '../typings';
+import { CommandResult, IBMiError, IBMiFile, IBMiMember, IBMiObject, IFSFile, QsysPath } from '../typings';
+import { IBMiSpooledFile } from '../typingsSplf';
 import { ConnectionConfiguration } from './Configuration';
 import { default as IBMi } from './IBMi';
 import { Tools } from './Tools';
@@ -849,8 +849,7 @@ export default class IBMiContent {
     var objQuery;
     let results: Tools.DB2Row[];
 
-    objQuery = `select QE.SPOOLED_FILE_NAME, QE.SPOOLED_FILE_NUMBER, QE.STATUS, QE.CREATION_TIMESTAMP, QE.USER_DATA, QE.SIZE, QE.TOTAL_PAGES, QE.QUALIFIED_JOB_NAME, QE.JOB_NAME, QE.JOB_USER, QE.JOB_NUMBER, QE.FORM_TYPE, QE.OUTPUT_QUEUE_LIBRARY, QE.OUTPUT_QUEUE
-from table (QSYS2.SPOOLED_FILE_INFO(USER_NAME => ucase('${user}')) ) QE where FILE_AVAILABLE = '*FILEEND' ${splfName ? ` and SPOOLED_FILE_NAME = ucase('${splfName}')` : ""}`;
+    objQuery = `select SPE.SPOOLED_FILE_NAME, SPE.SPOOLED_FILE_NUMBER, SPE.STATUS, SPE.CREATION_TIMESTAMP, SPE.USER_DATA, SPE.SIZE, SPE.TOTAL_PAGES, SPE.QUALIFIED_JOB_NAME, SPE.JOB_NAME, SPE.JOB_USER, SPE.JOB_NUMBER, SPE.FORM_TYPE, SPE.OUTPUT_QUEUE_LIBRARY, SPE.OUTPUT_QUEUE, QE.PAGE_LENGTH from table (QSYS2.SPOOLED_FILE_INFO(USER_NAME => ucase('${user}')) ) SPE left join TABLE(QSYS2.OUTPUT_QUEUE_ENTRIES( OUTQ_LIB => OUTPUT_QUEUE_LIBRARY ,OUTQ_NAME=> OUTPUT_QUEUE, DETAILED_INFO => 'YES',IGNORE_ERRORS => 'YES' ) ) QE on QE.SPOOLED_FILE_NAME = SPE.SPOOLED_FILE_NAME and QE.JOB_NAME = SPE.QUALIFIED_JOB_NAME and QE.FILE_NUMBER = SPE.SPOOLED_FILE_NUMBER where SPE.FILE_AVAILABLE = '*FILEEND' ${splfName ? ` and SPOOLED_FILE_NAME = ucase('${splfName}')` : ""}`;
     results = await this.runSQL(objQuery);
     if (results.length === 0) {
       return [];
@@ -878,6 +877,7 @@ from table (QSYS2.SPOOLED_FILE_INFO(USER_NAME => ucase('${user}')) ) QE where FI
         user_data: this.ibmi.sysNameInLocal(String(object.USER_DATA)),
         size: Number(object.SIZE),
         total_pages: Number(object.TOTAL_PAGES),
+        page_length: Number(object.PAGE_LENGTH),
         qualified_job_name: this.ibmi.sysNameInLocal(String(object.QUALIFIED_JOB_NAME)),
         job_name: this.ibmi.sysNameInLocal(String(object.JOB_NAME)),
         job_user: this.ibmi.sysNameInLocal(String(object.JOB_USER)),
@@ -979,7 +979,7 @@ from table (QSYS2.SPOOLED_FILE_INFO(USER_NAME => ucase('${user}')) ) QE where FI
     const objQuery = `select count(*) USER_SPLF_COUNT
     from table (QSYS2.SPOOLED_FILE_INFO(USER_NAME => '${user}') ) QE 
     where FILE_AVAILABLE = '*FILEEND' ${splfName ? `and SPOOLED_FILE_NAME = ucase('${splfName}')` : ""} 
-    group by QE.JOB_USER` ;
+    group by SPE.JOB_USER` ;
     results = await this.runSQL(objQuery);
     if (results.length === 0) {
       return ` ${user} user has no spooled files`;
@@ -1070,7 +1070,7 @@ from table (QSYS2.SPOOLED_FILE_INFO(USER_NAME => ucase('${user}')) ) QE where FI
     })).code === 0;
   }
 
-  async checkObject(object: { library: string, name: string, type: string }, ...authorities: Authority[]) {
+  async checkObject(object: { library: string, name: string, type: string }, authorities: Authority[] = [`*NONE`]) {
     return (await this.ibmi.runCommand({
       command: `CHKOBJ OBJ(${object.library.toLocaleUpperCase()}/${object.name.toLocaleUpperCase()}) OBJTYPE(${object.type.toLocaleUpperCase()}) AUT(${authorities.join(" ")})`,
       noLibList: true

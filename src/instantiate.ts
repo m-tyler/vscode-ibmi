@@ -18,6 +18,7 @@ import { SearchView } from "./views/searchView";
 import { ActionsUI } from './webviews/actions';
 import { VariablesUI } from "./webviews/variables";
 import { SplfFS, getUriFromPath_Splf } from "./filesystems/qsys/SplfFs";
+import { setupGitEventHandler } from './api/local/git';
 
 export let instance: Instance;
 
@@ -106,8 +107,7 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
       console.log(path);
       options = options || {};
       options.readonly = options.readonly || instance.getContent()?.isProtectedPath(path);
-      let uri = {};
-      let library, name, member_extension;
+      let uri  = {};
       if (path.toLocaleUpperCase().endsWith('.SPLF')) {
         options = options || {};
         options.readonly = true;
@@ -121,13 +121,13 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
           }
           else {
             const qsysObject = Tools.parseQSysPath(path);
-            const writable = await instance.getContent()?.checkObject({ library: qsysObject.library, name: qsysObject.name, type: '*FILE' }, "*UPD");
+            const writable = await instance.getContent()?.checkObject({ library: qsysObject.library, name: qsysObject.name, type: '*FILE' }, ["*UPD"]);
             if (!writable) {
               options.readonly = true;
             }
           }
+          uri = getUriFromPath(path, options);
         }
-        uri = getUriFromPath(path, options);
       }
 
       try {
@@ -660,6 +660,12 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
   }
 
   clRunner.initialise(context);
+
+  // Register git events based on workspace folders
+  if (vscode.workspace.workspaceFolders) {
+    setupGitEventHandler(context);
+  }
+
 }
 
 function updateConnectedBar() {
