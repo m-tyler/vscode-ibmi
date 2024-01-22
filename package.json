@@ -48,12 +48,16 @@
 			{
 				"path": "./schemas/cl.code-snippets",
 				"language": "cl"
+			},
+			{
+				"path": "./schemas/local-variables.code-snippets",
+				"language": "json"
 			}
 		],
 		"jsonValidation": [
 			{
 				"fileMatch": [
-					"actions.json"
+					".vscode/actions.json"
 				],
 				"url": "./schemas/actions.json"
 			}
@@ -476,6 +480,11 @@
 					"type": "boolean",
 					"default": false,
 					"description": "When lines with ILE diagnostics are edited, the diagnostic will be removed. Requires reload/restart if changed."
+				},
+				"code-for-ibmi.createLibraryOnBranchChange": {
+					"type": "boolean",
+					"default": false,
+					"description": "Used in conjuction with git. When the branch changes, prompt the user if they would like a new branch library for this branch. The branch name, which is deterministic, always starts with 'VS', followed by 8 characters."
 				},
 				"code-for-ibmi.recentlyOpenedFilesLimit": {
 					"type": "integer",
@@ -2793,7 +2802,6 @@
 		"ssh2-streams": "^0.4.10",
 		"ts-loader": "^9.3.1",
 		"typescript": "^4.8.2",
-		"vscode-test": "^1.5.0",
 		"webpack": "^5.76.0",
 		"webpack-cli": "^4.5.0"
 	},
