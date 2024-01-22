@@ -1189,7 +1189,14 @@
 			{
 				"command": "Hawkeye_Pathfinder.searchSourceFiles",
 				"enablement": "code-for-ibmi:connected",
-				"title": "Scan Source Files - Hawkeye",
+				"title": "Scan Source Files ",
+				"category": "Hawkeye",
+				"icon": "$(search-fuzzy)"
+			},
+			{
+				"command": "Hawkeye_Pathfinder.displayFileSetsUsed",
+				"enablement": "code-for-ibmi:connected",
+				"title": "Display File Set Where Used ",
 				"category": "Hawkeye",
 				"icon": "$(search-fuzzy)"
 			},
