@@ -443,6 +443,7 @@ export default class IBMiContent {
    * @returns an array of IBMiFile 
    */
   async getObjectList(filters: { library: string; object?: string; types?: string[]; member?: string; memberType?: string; }, sortOrder?: SortOrder): Promise<IBMiFile[]> {
+    const { instance } = (require(`../instantiate`));
     const library = filters.library.toUpperCase();
     if (!await this.checkObject({ library: "QSYS", name: library, type: "*LIB" })) {
       throw new Error(`Library ${library} does not exist.`);
@@ -536,6 +537,7 @@ export default class IBMiContent {
    * @returns an array of IBMiMember 
    */
   async getMemberList(lib: string, spf: string, mbr: string = `*`, ext: string = `*`, sort: SortOptions = { order: "name" }): Promise<IBMiMember[]> {
+    const { instance } = (require(`../instantiate`));
     sort.order = sort.order === '?' ? 'name' : sort.order;
 
     const library = lib.toUpperCase();

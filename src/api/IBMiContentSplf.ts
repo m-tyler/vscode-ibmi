@@ -796,9 +796,9 @@ export default class IBMiContentSplf {
   * @returns {Promise<IBMiSpooledFile[]>}
   */
   async getUserSpooledFileFilter(user: string, sort: SortOptions = { order: "date" }, splfName?: string, searchWords?: string): Promise<IBMiSpooledFile[]> {
-    // const connection = instance.getConnection();
-    // const config = instance.getConfig();
-    // const content = instance.getContent();
+    const connection = instance.getConnection();
+    const config = instance.getConfig();
+    const content = instance.getContent();
 
     sort.order = sort.order === '?' ? 'name' : sort.order;
     user = user.toUpperCase();
