@@ -107,13 +107,13 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
       console.log(path);
       options = options || {};
       options.readonly = options.readonly || instance.getContent()?.isProtectedPath(path);
-      let uri  = {};
-      if (path.toLocaleUpperCase().endsWith('.SPLF')) {
-        options = options || {};
-        options.readonly = true;
-        uri = getUriFromPath_Splf(path, options);
-      }
-      else {
+      // let uri  = {};
+      // if (path.toLocaleUpperCase().endsWith('.SPLF')) {
+      //   options = options || {};
+      //   options.readonly = true;
+      //   uri = getUriFromPath_Splf(path, options);
+      // }
+      // else {
         const [library, name, member_extension] = path.split('/');
         if (!options.readonly) {
           if (path.startsWith('/')) {
@@ -127,8 +127,8 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
             }
           }
         }
-        uri = getUriFromPath(path, options);
-      }
+        const uri = getUriFromPath(path, options);
+      // }
 
       try {
         await vscode.commands.executeCommand(`vscode.openWith`, uri, 'default', { selection: options.position } as vscode.TextDocumentShowOptions);
