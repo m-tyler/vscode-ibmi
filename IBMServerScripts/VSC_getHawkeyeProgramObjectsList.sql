@@ -65,7 +65,7 @@ VSC00AFN83: begin
       set cmdstring = 'DSPPGMOBJ PGM(' ||trim(IN_LIB) ||'/' ||trim(IN_OBJ)||') OUTPUT(*OUTFILE) OUTFILE('||trim(user)||'/VSC_T$DPO) OUTMBR(*FIRST *REPLACE)';
       call qcmdexc( cmdstring );
 
-      update PGMT.VSC_T$DPO o
+      update VSC_T$DPO o
       set (PODSFL,PODSLB,PODSMB) = (select APISF,APISFL,APISFM
                                     from table ( ILEDITOR.VSC_GETHAWKEYEPROGRAMOBJECTSOURCELISTTF(APITYP => '20' ,APIOPT => '80'
                                                                                              ,APIOB => o.PODOBJ ,APIOBL => o.PODLIB

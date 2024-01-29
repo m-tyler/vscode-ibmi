@@ -138,21 +138,21 @@ export default class IBMiContent {
         if (!retry) {
           const messageID = String(copyResult.stdout).substring(0, 7);
           switch (messageID) {
-            case "CPDA08A":
-              //We need to try again after we delete the temp remote
-              const result = await this.ibmi.sendCommand({ command: `rm -f ${tempRmt}`, directory: `.` });
-              retry = !result.code || result.code === 0;
-              break;
-            case "CPFA0A9":
-              //The member may be located on SYSBAS
-              if (asp) {
-                path = Tools.qualifyPath(library, sourceFile, member);
-                retry = true;
-              }
-              break;
-            default:
-              retry = false;
-              break;
+          case "CPDA08A":
+            //We need to try again after we delete the temp remote
+            const result = await this.ibmi.sendCommand({ command: `rm -f ${tempRmt}`, directory: `.` });
+            retry = !result.code || result.code === 0;
+            break;
+          case "CPFA0A9":
+            //The member may be located on SYSBAS
+            if (asp) {
+              path = Tools.qualifyPath(library, sourceFile, member);
+              retry = true;
+            }
+            break;
+          default:
+            retry = false;
+            break;
           }
         }
 
@@ -574,14 +574,14 @@ export default class IBMiContent {
             throw '';
           }
         } catch (e2) {
-        if (member) {
-          member = member.replace(/[*]/g, `%`);
-        }
+          if (member) {
+            member = member.replace(/[*]/g, `%`);
+          }
 
-        if (memberExt) {
-          memberExt = memberExt.replace(/[*]/g, `%`);
-        }
-        const statement = `SELECT
+          if (memberExt) {
+            memberExt = memberExt.replace(/[*]/g, `%`);
+          }
+          const statement = `SELECT
         b.avgrowsize as MBMXRL,
         a.iasp_number as MBASP,
         cast(a.system_table_name as char(10) for bit data) AS MBFILE,
@@ -601,8 +601,9 @@ export default class IBMiContent {
         ${member ? `AND rtrim(cast(b.system_table_member as char(10) for bit data)) like '${member}'` : ``}
         ${memberExt ? `AND rtrim(coalesce(cast(b.source_type as varchar(10) for bit data), '')) like '${memberExt}'` : ``}        
     `;
-        results = await this.runSQL(statement);
-      }}
+          results = await this.runSQL(statement);
+        }
+      }
     } else {
       const tempLib = this.config.tempLibrary;
       const TempName = Tools.makeid();
@@ -904,17 +905,11 @@ export default class IBMiContent {
   * @param {string=} additionalPath 
   * @returns {string} a string containing spooled file data 
   */
-  async downloadSpooledFileContent(uriPath: string, name: string, qualified_job_name: string, splf_number: string, fileExtension: string, additionalPath?: string) {
+  async downloadSpooledFileContent(uriPath: string, name: string, qualified_job_name: string, splf_number: string, fileExtension: string, ctlchar?:string) {
     name = name.toUpperCase();
     qualified_job_name = qualified_job_name.toUpperCase();
 
     const tempRmt = this.getTempRemote(uriPath);
-    const tmpobj = await tmpFile();
-
-    // const tmpName = path.basename(tempRmt);
-    // const tmpFolder = path.dirname(tempRmt) + (additionalPath ? `/${additionalPath}` : ``);
-
-    // const path = homeDirectory +(folder !== undefined ? '/'+folder :'');
     const client = this.ibmi.client;
 
     let retried = false;
@@ -932,6 +927,14 @@ export default class IBMiContent {
             , environment: `ile`
           });
           break;
+        // case `prtctl`:
+        //   const tempLib = this.config.tempLibrary;
+        //   const tempName = Tools.makeid();
+        //   await this.ibmi.runCommand({
+        //     command: `CPYSPLF FILE(${name}) TOFILE(${tempLib}/${tempName}) JOB(${qualified_job_name}) SPLNBR(${splf_number}) CTLCHAR(*PRTCTL) MBROPT(*REPLACE)\nDLYJOB DLY(1)\nCPYTOIMPF FROMFILE(${tempLib}/${tempName}) TOSTMF('${tempRmt}') MBROPT(*REPLACE) `
+        //     , environment: `ile`
+        //   });
+        //   break;
         default:
           // With the use of CPYSPLF and CPY to create a text based stream file in 1208, there are possibilities that the data becomes corrupt
           // in the tempRmt object
@@ -942,7 +945,7 @@ export default class IBMiContent {
           // fileExtension = `txt`;
           // DLYJOB to ensure the CPY command completes in time.
           await this.ibmi.runCommand({
-            command: `CPYSPLF FILE(${name}) TOFILE(*TOSTMF) JOB(${qualified_job_name}) SPLNBR(${splf_number}) TOSTMF('${tempRmt}') WSCST(*NONE) STMFOPT(*REPLACE)\nDLYJOB DLY(1)\nCPY OBJ('${tempRmt}') TOOBJ('${tempRmt}') TOCCSID(1208) DTAFMT(*TEXT) REPLACE(*YES)`
+            command: `CPYSPLF FILE(${name}) TOFILE(*TOSTMF) JOB(${qualified_job_name}) SPLNBR(${splf_number}) TOSTMF('${tempRmt}') WSCST(*NONE) STMFOPT(*REPLACE) ${ctlchar?`CTLCHAR(*PRTCTL)`:``}\nDLYJOB DLY(1)\nCPY OBJ('${tempRmt}') TOOBJ('${tempRmt}') TOCCSID(1208) DTAFMT(*TEXT) REPLACE(*YES)`
             , environment: `ile`
           });
         }
@@ -960,9 +963,9 @@ export default class IBMiContent {
         }
       }
     }
-
-    await client.getFile(tmpobj, tempRmt);
-    return await readFileAsync(tmpobj, fileEncoding);
+    return tempRmt;
+    // await client.getFile(tmpobj, tempRmt);
+    // return await readFileAsync(tmpobj, fileEncoding);
 
   }
 

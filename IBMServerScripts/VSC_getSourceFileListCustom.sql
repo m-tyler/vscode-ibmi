@@ -262,7 +262,7 @@ comment on specific function VSC00AFN03 is 'Return list of source files for VS C
  
 ;values x'ff'
 ;select * from table ( VSC_GETSOURCEFILELISTCUSTOM(IN_SRCF => 'TSTSRC' ,IN_MBR => '*', IN_LIB => 'PGMT' ) )
-;select * from table ( PGMT.VSC_GETSOURCEFILELIST(IN_SRCF => 'TSTSRC' ,IN_MBR => '*', IN_LIB => 'PGMT' ) )
+;select * from table ( VSC_GETSOURCEFILELIST(IN_SRCF => 'TSTSRC' ,IN_MBR => '*', IN_LIB => 'PGMT' ) )
 ;select * from table ( VSC_GETSOURCEFILELISTCUSTOM(IN_SRCF => 'Q*' ,IN_MBR => '#PCR1976200', IN_LIB => 'PGMT' ) )
 ;select * from table ( VSC_GETSOURCEFILELISTCUSTOM(IN_SRCF => 'Q*' ,IN_MBR => '#PCR1970000', IN_LIB => 'WFIQUAL' ) )
 ;select * from table ( VSC_GETSOURCEFILELISTCUSTOM(IN_SRCF => 'Q*' ,IN_MBR => '#PCR1970000', IN_LIB => 'WFISRC' ) )

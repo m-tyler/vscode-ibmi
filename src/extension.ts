@@ -27,6 +27,7 @@ import { ProfilesView } from "./views/ProfilesView";
 import { HelpView } from "./views/helpView";
 import { initializeIFSBrowser } from "./views/ifsBrowser";
 import { initializeObjectBrowser } from "./views/objectBrowser";
+import { initializeHawkeyePathfinder } from "./HawkeyePathfinder";
 import SPLFBrowser from "./views/splfBrowser";
 
 export async function activate(context: ExtensionContext): Promise<CodeForIBMi> {
@@ -46,6 +47,7 @@ export async function activate(context: ExtensionContext): Promise<CodeForIBMi> 
   initializeObjectBrowser(context)
   initializeIFSBrowser(context);
   new SPLFBrowser(context);
+  initializeHawkeyePathfinder(context);
   
   context.subscriptions.push(
     window.registerTreeDataProvider(

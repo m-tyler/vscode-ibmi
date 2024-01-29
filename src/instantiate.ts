@@ -15,9 +15,11 @@ import { initGetNewLibl } from "./languages/clle/getnewlibl";
 import { SEUColorProvider } from "./languages/general/SEUColorProvider";
 import { Action, BrowserItem, DeploymentMethod, MemberItem, OpenEditableOptions, WithPath } from "./typings";
 import { SearchView } from "./views/searchView";
+import { HawkeyeSearch } from "./api/HawkeyeSearch";
+import { HawkeyeSearchView } from "./views/HawkeyeSearchView";
 import { ActionsUI } from './webviews/actions';
 import { VariablesUI } from "./webviews/variables";
-import { SplfFS, getUriFromPath_Splf } from "./filesystems/qsys/SplfFs";
+import { SplfFS } from "./filesystems/qsys/SplfFs";
 import { setupGitEventHandler } from './api/local/git';
 
 export let instance: Instance;
@@ -50,6 +52,11 @@ let searchViewContext: SearchView;
 
 export function setSearchResults(term: string, results: Search.Result[]) {
   searchViewContext.setResults(term, results);
+}
+
+let HawkeyeSearchViewContext: HawkeyeSearchView;
+export function setSearchResultsHwk(term: string, results: HawkeyeSearch.Result[]) {
+  HawkeyeSearchViewContext.setResults(term, results);
 }
 
 export async function disconnect(): Promise<boolean> {
@@ -87,6 +94,7 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
 
   instance = new Instance(context);
   searchViewContext = new SearchView(context);
+  HawkeyeSearchViewContext = new HawkeyeSearchView(context);
 
   context.subscriptions.push(
     connectedBarItem,
@@ -99,36 +107,26 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
       }
     }),
     onCodeForIBMiConfigurationChange("connectionSettings", updateConnectedBar),
-    vscode.window.registerTreeDataProvider(
-      `searchView`,
-      searchViewContext
-    ),
+    vscode.window.registerTreeDataProvider( `searchView`, searchViewContext ),
+    vscode.window.registerTreeDataProvider( `HawkeyeSearchView`, searchViewContext ),
     vscode.commands.registerCommand(`code-for-ibmi.openEditable`, async (path: string, options?: OpenEditableOptions) => {
       console.log(path);
       options = options || {};
       options.readonly = options.readonly || instance.getContent()?.isProtectedPath(path);
-      // let uri  = {};
-      // if (path.toLocaleUpperCase().endsWith('.SPLF')) {
-      //   options = options || {};
-      //   options.readonly = true;
-      //   uri = getUriFromPath_Splf(path, options);
-      // }
-      // else {
-        const [library, name, member_extension] = path.split('/');
-        if (!options.readonly) {
-          if (path.startsWith('/')) {
-            options.readonly = !await instance.getContent()?.testStreamFile(path, "w");
-          }
-          else {
-            const qsysObject = Tools.parseQSysPath(path);
-            const writable = await instance.getContent()?.checkObject({ library: qsysObject.library, name: qsysObject.name, type: '*FILE' }, ["*UPD"]);
-            if (!writable) {
-              options.readonly = true;
-            }
+      const [library, name, member_extension] = path.split('/');
+      if (!options.readonly) {
+        if (path.startsWith('/')) {
+          options.readonly = !await instance.getContent()?.testStreamFile(path, "w");
+        }
+        else {
+          const qsysObject = Tools.parseQSysPath(path);
+          const writable = await instance.getContent()?.checkObject({ library: qsysObject.library, name: qsysObject.name, type: '*FILE' }, ["*UPD"]);
+          if (!writable) {
+            options.readonly = true;
           }
         }
-        const uri = getUriFromPath(path, options);
-      // }
+      }
+      const uri = getUriFromPath(path, options);
 
       try {
         await vscode.commands.executeCommand(`vscode.openWith`, uri, 'default', { selection: options.position } as vscode.TextDocumentShowOptions);
@@ -277,33 +275,33 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
           let resultSet: Tools.DB2Row[] = [];
 
           switch (selectionSplit.length) {
-            case 1:
-              filteredItems = schemaItems.filter(schema => schema.label.startsWith(filterText));
+          case 1:
+            filteredItems = schemaItems.filter(schema => schema.label.startsWith(filterText));
 
-              // Using `kind` didn't make any difference because it's sorted alphabetically on label
-              quickPick.items = await createQuickPickItemsList(
-                `Libraries`,
-                filteredItems,
-                `Recent`,
-                recentItems,
-                `Cached`,
-                listItems
-              );
+            // Using `kind` didn't make any difference because it's sorted alphabetically on label
+            quickPick.items = await createQuickPickItemsList(
+              `Libraries`,
+              filteredItems,
+              `Recent`,
+              recentItems,
+              `Cached`,
+              listItems
+            );
 
-              break;
+            break;
 
-            case 2:
-              // Create cache
-              quickPick.busy = true;
-              quickPick.items = [
-                {
-                  label: LOADING_LABEL,
-                  alwaysShow: true,
-                  description: 'Searching files..',
-                },
-              ]
+          case 2:
+            // Create cache
+            quickPick.busy = true;
+            quickPick.items = [
+              {
+                label: LOADING_LABEL,
+                alwaysShow: true,
+                description: 'Searching files..',
+              },
+            ]
 
-              resultSet = await content!.runSQL(`
+            resultSet = await content!.runSQL(`
                 select ifnull( cast( SYSTEM_TABLE_NAME as char( 10 ) for bit data ), '' ) as SYSTEM_TABLE_NAME
                      , ifnull( TABLE_TEXT, '' ) as TABLE_TEXT 
                   from QSYS2.SYSTABLES 
@@ -313,39 +311,39 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
                  order by 1
               `);
 
-              const listFile: vscode.QuickPickItem[] = resultSet.map(row => ({
-                label: selectionSplit[0] + '/' + String(row.SYSTEM_TABLE_NAME),
-                description: String(row.TABLE_TEXT)
-              }))
+            const listFile: vscode.QuickPickItem[] = resultSet.map(row => ({
+              label: selectionSplit[0] + '/' + String(row.SYSTEM_TABLE_NAME),
+              description: String(row.TABLE_TEXT)
+            }))
 
-              filteredItems = listFile.filter(file => file.label.startsWith(selectionSplit[0] + '/' + filterText));
+            filteredItems = listFile.filter(file => file.label.startsWith(selectionSplit[0] + '/' + filterText));
 
-              quickPick.items = await createQuickPickItemsList(
-                `Source files`,
-                filteredItems,
-                `Recent`,
-                recentItems,
-                `Cached`,
-                listItems
-              );
-              quickPick.busy = false;
+            quickPick.items = await createQuickPickItemsList(
+              `Source files`,
+              filteredItems,
+              `Recent`,
+              recentItems,
+              `Cached`,
+              listItems
+            );
+            quickPick.busy = false;
 
-              break;
+            break;
 
-            case 3:
-              // Create cache
-              quickPick.busy = true;
-              quickPick.items = [
-                {
-                  label: LOADING_LABEL,
-                  alwaysShow: true,
-                  description: 'Searching members..',
-                },
-              ]
+          case 3:
+            // Create cache
+            quickPick.busy = true;
+            quickPick.items = [
+              {
+                label: LOADING_LABEL,
+                alwaysShow: true,
+                description: 'Searching members..',
+              },
+            ]
 
-              filterText = filterText.endsWith(`.`) ? filterText.substring(0, filterText.length - 1) : filterText;
+            filterText = filterText.endsWith(`.`) ? filterText.substring(0, filterText.length - 1) : filterText;
 
-              resultSet = await content!.runSQL(`
+            resultSet = await content!.runSQL(`
                 select cast( SYSTEM_TABLE_MEMBER as char( 10 ) for bit data ) as SYSTEM_TABLE_MEMBER
                      , ifnull( PARTITION_TEXT, '' ) as PARTITION_TEXT
                      , ifnull( SOURCE_TYPE, '' ) as SOURCE_TYPE
@@ -356,27 +354,27 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
                  order by 1
               `);
 
-              const listMember = resultSet.map(row => ({
-                label: selectionSplit[0] + '/' + selectionSplit[1] + '/' + String(row.SYSTEM_TABLE_MEMBER) + '.' + String(row.SOURCE_TYPE),
-                description: String(row.PARTITION_TEXT)
-              }))
+            const listMember = resultSet.map(row => ({
+              label: selectionSplit[0] + '/' + selectionSplit[1] + '/' + String(row.SYSTEM_TABLE_MEMBER) + '.' + String(row.SOURCE_TYPE),
+              description: String(row.PARTITION_TEXT)
+            }))
 
-              filteredItems = listMember.filter(member => member.label.startsWith(selectionSplit[0] + '/' + selectionSplit[1] + '/' + filterText));
+            filteredItems = listMember.filter(member => member.label.startsWith(selectionSplit[0] + '/' + selectionSplit[1] + '/' + filterText));
 
-              quickPick.items = await createQuickPickItemsList(
-                `Members`,
-                filteredItems,
-                `Recent`,
-                recentItems,
-                `Cached`,
-                listItems
-              );
-              quickPick.busy = false;
+            quickPick.items = await createQuickPickItemsList(
+              `Members`,
+              filteredItems,
+              `Recent`,
+              recentItems,
+              `Cached`,
+              listItems
+            );
+            quickPick.busy = false;
 
-              break;
+            break;
 
-            default:
-              break;
+          default:
+            break;
           }
 
           // We remove the asterisk from the value so that the user can continue typing
@@ -504,19 +502,19 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
             } else {
               const result = await vscode.window.showWarningMessage(`The file must be saved to run Actions.`, `Save`, `Save automatically`, `Cancel`);
               switch (result) {
-                case `Save`:
-                  await editor.document.save();
-                  canRun = true;
-                  break;
-                case `Save automatically`:
-                  config.autoSaveBeforeAction = true;
-                  await ConnectionConfiguration.update(config);
-                  await editor.document.save();
-                  canRun = true;
-                  break;
-                default:
-                  canRun = false;
-                  break;
+              case `Save`:
+                await editor.document.save();
+                canRun = true;
+                break;
+              case `Save automatically`:
+                config.autoSaveBeforeAction = true;
+                await ConnectionConfiguration.update(config);
+                await editor.document.save();
+                canRun = true;
+                break;
+              default:
+                canRun = false;
+                break;
               }
             }
           }
@@ -567,19 +565,19 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
           if ([`member`, `streamfile`].includes(uri.scheme)) {
 
             switch (uri.scheme) {
-              case `member`:
-                const memberPath = uri.path.split(`/`);
-                if (memberPath.length === 4) {
-                  detail.lib = memberPath[1];
-                } else if (memberPath.length === 5) {
-                  detail.asp = memberPath[1];
-                  detail.lib = memberPath[2];
-                }
-                break;
-              case `streamfile`:
-                detail.asp = (config.sourceASP && config.sourceASP.length > 0) ? config.sourceASP : undefined;
-                detail.lib = config.currentLibrary;
-                break;
+            case `member`:
+              const memberPath = uri.path.split(`/`);
+              if (memberPath.length === 4) {
+                detail.lib = memberPath[1];
+              } else if (memberPath.length === 5) {
+                detail.asp = memberPath[1];
+                detail.lib = memberPath[2];
+              }
+              break;
+            case `streamfile`:
+              detail.asp = (config.sourceASP && config.sourceASP.length > 0) ? config.sourceASP : undefined;
+              detail.lib = config.currentLibrary;
+              break;
             }
 
             const pathDetail = path.parse(editor.document.uri.path);
@@ -648,7 +646,8 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
   instance.onEvent("connected", () => onConnected(context));
   instance.onEvent("disconnected", onDisconnected);
 
-  context.subscriptions.push(vscode.workspace.registerFileSystemProvider(`member`, new QSysFS(context), {
+  context.subscriptions.push(
+    vscode.workspace.registerFileSystemProvider(`member`, new QSysFS(context), {
     isCaseSensitive: false
   }), vscode.workspace.registerFileSystemProvider(`spooledfile`, new SplfFS(context), {
     isCaseSensitive: false

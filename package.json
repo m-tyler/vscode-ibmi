@@ -1572,6 +1572,20 @@
 				"icon": "$(collapse-all)"
 			},
 			{
+				"command": "Hawkeye_Pathfinder.closeSearchView",
+				"enablement": "code-for-ibmi:connected",
+				"title": "Close Hawkeye Results View",
+				"category": "Hawkeye",
+				"icon": "$(close)"
+			},
+			{
+				"command": "Hawkeye_Pathfinder.collapseSearchView",
+				"enablement": "code-for-ibmi:connected",
+				"title": "Collapse all Hawkeye Results",
+				"category": "Hawkeye",
+				"icon": "$(collapse-all)"
+			},
+			{
 				"command": "code-for-ibmi.sortIFSFilesByDate",
 				"title": "Date",
 				"category": "IBM i"
@@ -1791,6 +1805,11 @@
 					"id": "ibmi-search",
 					"title": "IBM i Search",
 					"icon": "$(search)"
+				},
+				{
+					"id": "Hawkeye-search",
+					"title": "Hawkeye Pathefinder Results",
+					"icon": "$(references)"
 				}
 			]
 		},
@@ -1849,6 +1868,13 @@
 					"id": "searchView",
 					"name": "Results",
 					"when": "code-for-ibmi:searchViewVisible"
+				}
+			],
+			"Hawkeye-search": [
+				{
+					"id": "HawkeyeSearchView",
+					"name": "Results",
+					"when": "code-for-ibmi:Hawkeye_Pathfinder.searchViewVisible"
 				}
 			]
 		},
@@ -2164,6 +2190,54 @@
 				{
 					"command": "code-for-ibmi.openSplfWithoutLineSpacing",
 					"when": "never"
+				},
+				{
+					"command": "code-for-ibmi.downloadSpooledfile",
+					"when": "never"
+				},
+				{
+					"command": "code-for-ibmi.deleteUserSpooledFiles",
+					"when": "never"
+				},
+				{
+					"command": "code-for-ibmi.sortUserSpooledFileFilter",
+					"when": "never"
+				},
+				{
+					"command": "code-for-ibmi.deleteSpooledFile",
+					"when": "never"
+				},
+				{
+					"command": "code-for-ibmi.deleteNamedSpooledFiles",
+					"when": "never"
+				},
+				{
+					"command": "code-for-ibmi.deleteFilteredSpooledFiles",
+					"when": "never"
+				},
+				{
+					"command": "code-for-ibmi.moveSpooledFile",
+					"when": "never"
+				},
+				{
+					"command": "code-for-ibmi.downloadSpooledfile",
+					"when": "never"
+				},
+				{
+					"command": "code-for-ibmi.openSplfWithLineSpacing",
+					"when": "never"
+				},
+				{
+					"command": "code-for-ibmi.openSplfWithoutLineSpacing",
+					"when": "never"
+				},
+				{
+					"command": "code-for-ibmi.filterSpooledFiles",
+					"when": "never"
+				},
+				{
+					"command": "code-for-ibmi.searchSpooledFiles",
+					"when": "never"
 				}
 			],
 			"view/title": [
@@ -2286,6 +2360,16 @@
 					"command": "code-for-ibmi.collapseSearchView",
 					"group": "navigation@1",
 					"when": "view == searchView"
+				},
+				{
+					"command": "Hawkeye_Pathfinder.closeSearchView",
+					"group": "navigation@2",
+					"when": "view == HawkeyeSearchView"
+				},
+				{
+					"command": "Hawkeye_Pathfinder.collapseSearchView",
+					"group": "navigation@1",
+					"when": "view == HawkeyeSearchView"
 				},
 				{
 					"command": "code-for-ibmi.addUserSpooledFileFilter",
