@@ -187,7 +187,6 @@ async function initialSetup(username: string) {
       config.objectFilters.push(
         {
           name: "Sandbox Sources",
-          filterType: 'simple',
           library: username,
           object: "*",
           types: [
@@ -199,7 +198,6 @@ async function initialSetup(username: string) {
         },
         {
           name: "Sandbox Object Filters",
-          filterType: 'simple',
           library: username,
           object: "*",
           types: [

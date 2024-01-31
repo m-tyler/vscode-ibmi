@@ -65,7 +65,6 @@ function setupBranchLibrary(currentBranch: string, content: IBMiContent, connect
           if (answer === `Yes`) {
             filters.push({
               name: currentBranch,
-              filterType: `simple`,
               library: newBranchLib,
               object: `*ALL`,
               types: [`*ALL`],
@@ -92,7 +91,6 @@ function setupBranchLibrary(currentBranch: string, content: IBMiContent, connect
                   if (answer === `Create filter`) {
                     filters.push({
                       name: currentBranch,
-                      filterType: `simple`,
                       library: newBranchLib,
                       object: `*ALL`,
                       types: [`*ALL`],
