@@ -107,28 +107,20 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
       console.log(path);
       options = options || {};
       options.readonly = options.readonly || instance.getContent()?.isProtectedPath(path);
-      let uri  = {};
-      if (path.toLocaleUpperCase().endsWith('.SPLF')) {
-        options = options || {};
-        options.readonly = true;
-        uri = getUriFromPath_Splf(path, options);
-      }
-      else {
-        if (!options.readonly) {
-          if (path.startsWith('/')) {
-            options.readonly = !await instance.getContent()?.testStreamFile(path, "w");
+      if (!options.readonly) {
+        if (path.startsWith('/')) {
+          options.readonly = !await instance.getContent()?.testStreamFile(path, "w");
+        }
+        else {
+          const qsysObject = Tools.parseQSysPath(path);
+          const writable = await instance.getContent()?.checkObject({ library: qsysObject.library, name: qsysObject.name, type: '*FILE' }, ["*UPD"]);
+          if (!writable) {
+            options.readonly = true;
           }
-          else {
-            const qsysObject = Tools.parseQSysPath(path);
-            const writable = await instance.getContent()?.checkObject({ library: qsysObject.library, name: qsysObject.name, type: '*FILE' }, ["*UPD"]);
-            if (!writable) {
-              options.readonly = true;
-            }
-          }
-          uri = getUriFromPath(path, options);
         }
       }
 
+      const uri = getUriFromPath(path, options);
       try {
         await vscode.commands.executeCommand(`vscode.openWith`, uri, 'default', { selection: options.position } as vscode.TextDocumentShowOptions);
 
@@ -661,7 +653,7 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
   clRunner.initialise(context);
 
   // Register git events based on workspace folders
-  if (vscode.workspace.workspaceFolders) {
+	if (vscode.workspace.workspaceFolders) {
     setupGitEventHandler(context);
   }
 

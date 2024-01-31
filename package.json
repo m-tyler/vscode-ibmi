@@ -1196,13 +1196,6 @@
 				"icon": "$(search)"
 			},
 			{
-				"command": "Hawkeye_Pathfinder.searchSourceFiles",
-				"enablement": "code-for-ibmi:connected",
-				"title": "Scan Source Files - Hawkeye",
-				"category": "Hawkeye",
-				"icon": "$(search-fuzzy)"
-			},
-			{
 				"command": "code-for-ibmi.filterSpooledFiles",
 				"enablement": "code-for-ibmi:connected",
 				"title": "Filter Spooled Files",
@@ -2465,11 +2458,6 @@
 					"group": "4_sourceFileStuff@1"
 				},
 				{
-					"command": "Hawkeye_Pathfinder.searchSourceFiles",
-					"when": "viewItem =~ /^SPF.*$/",
-					"group": "4_sourceFileStuff@2"
-				},
-				{
 					"submenu": "code-for-ibmi.sortMembers",
 					"when": "view == objectBrowser && (viewItem =~ /^SPF/ || viewItem =~ /^member/)",
 					"group": "5_sourceFileStuff@1"
@@ -2815,7 +2803,8 @@
 		"tar": "^6.1.13",
 		"tmp": "^0.2.1",
 		"vscode-diff": "^2.0.2",
-		"crc-32": "https://cdn.sheetjs.com/crc-32-latest/crc-32-latest.tgz"
+		"crc-32": "https://cdn.sheetjs.com/crc-32-latest/crc-32-latest.tgz",
+		"escape-string-regexp": "^5.0.0"
 	},
 	"extensionDependencies": [
 		"barrettotte.ibmi-languages",

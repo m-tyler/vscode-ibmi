@@ -2,7 +2,6 @@
 import { GlobalConfiguration } from './Configuration';
 import Instance from './Instance';
 import { Tools } from './Tools';
-import { CommandResult } from "../typings";
 
 export namespace Search {
   const QSYS_PATTERN = /(?:\/\w{1,10}\/QSYS\.LIB\/)|(?:\/QSYS\.LIB\/)|(?:\.LIB)|(?:\.FILE)|(?:\.MBR)/g;
@@ -12,7 +11,6 @@ export namespace Search {
     lines: Line[]
     readonly?: boolean
     label?: string
-    contextValue?: string
   }
 
   export interface Line {
