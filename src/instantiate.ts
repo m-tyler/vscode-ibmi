@@ -128,6 +128,7 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
       }
       const uri = getUriFromPath(path, options);
 
+      const uri = getUriFromPath(path, options);
       try {
         await vscode.commands.executeCommand(`vscode.openWith`, uri, 'default', { selection: options.position } as vscode.TextDocumentShowOptions);
 
@@ -661,7 +662,7 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
   clRunner.initialise(context);
 
   // Register git events based on workspace folders
-  if (vscode.workspace.workspaceFolders) {
+	if (vscode.workspace.workspaceFolders) {
     setupGitEventHandler(context);
   }
 

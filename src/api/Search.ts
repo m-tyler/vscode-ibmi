@@ -5,7 +5,6 @@
 import { GlobalConfiguration } from './Configuration';
 import Instance from './Instance';
 import { Tools } from './Tools';
-import { CommandResult } from "../typings";
 
 // const tmpFile = util.promisify(tmp.file);
 // const writeFileAsync = util.promisify(fs.writeFile);
@@ -18,7 +17,6 @@ export namespace Search {
     lines: Line[]
     readonly?: boolean
     label?: string
-    contextValue?: string
   }
 
   export interface Line {
