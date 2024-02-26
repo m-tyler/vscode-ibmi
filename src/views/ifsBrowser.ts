@@ -9,7 +9,7 @@ import { GlobalStorage } from "../api/Storage";
 import { Tools } from "../api/Tools";
 import { instance, setSearchResults } from "../instantiate";
 import { t } from "../locale";
-import { BrowserItem, BrowserItemParameters, FocusOptions, IFSFile, IFS_BROWSER_MIMETYPE, WithPath } from "../typings";
+import { BrowserItem, BrowserItemParameters, CommandResult, FocusOptions, IFSFile, IFS_BROWSER_MIMETYPE, OBJECT_BROWSER_MIMETYPE, WithPath } from "../typings";
 
 const URI_LIST_MIMETYPE = "text/uri-list";
 const URI_LIST_SEPARATOR = "\r\n";
@@ -100,11 +100,13 @@ class IFSItem extends BrowserItem implements WithPath {
   constructor(readonly file: IFSFile, parameters: BrowserItemParameters) {
     super(file.name, parameters);
     this.path = file.path;
-    this.tooltip = `${this.path}`
-      .concat(`${file.size !== undefined ? `\n` + t(`Size`) + `:\t\t${file.size}` : ``}`)
-      .concat(`${file.modified ? `\n` + t(`Modified`) + `:\t${new Date(file.modified.getTime() - file.modified.getTimezoneOffset() * 60 * 1000).toISOString().slice(0, 19).replace(`T`, ` `)}` : ``}`)
-      .concat(`${file.owner ? `\n` + t(`Owner`) + `:\t${file.owner.toUpperCase()}` : ``}`);
-  }
+    this.tooltip =  new vscode.MarkdownString(Tools.generateTooltipHtmlTable(this.path, {
+      size: file.size,
+      modified: file.modified ? new Date(file.modified.getTime() - file.modified.getTimezoneOffset() * 60 * 1000).toISOString().slice(0, 19).replace(`T`, ` `) : ``,
+      owner: file.owner ? file.owner.toUpperCase() : ``
+    }));
+    this.tooltip.supportHtml = true;
+    }
 
   sortBy(sort: SortOptions) {
     if (this.sort.order !== sort.order) {
@@ -184,6 +186,7 @@ class IFSShortcutItem extends IFSDirectoryItem {
     const protectedDir = isProtected(this.file.path);
     this.contextValue = `shortcut${protectedDir ? `_protected` : ``}`;
     this.iconPath = new vscode.ThemeIcon(protectedDir ? "lock-small" : "folder-library");
+    this.tooltip = ``;
   }
 }
 
@@ -196,7 +199,7 @@ class ErrorItem extends BrowserItem {
 
 class IFSBrowserDragAndDrop implements vscode.TreeDragAndDropController<IFSItem> {
   readonly dragMimeTypes = [URI_LIST_MIMETYPE, IFS_BROWSER_MIMETYPE];
-  readonly dropMimeTypes = [URI_LIST_MIMETYPE, IFS_BROWSER_MIMETYPE];
+  readonly dropMimeTypes = [URI_LIST_MIMETYPE, IFS_BROWSER_MIMETYPE, OBJECT_BROWSER_MIMETYPE];
 
   handleDrag(source: readonly IFSItem[], dataTransfer: vscode.DataTransfer, token: vscode.CancellationToken) {
     dataTransfer.set(IFS_BROWSER_MIMETYPE, new vscode.DataTransferItem(source));
@@ -209,8 +212,12 @@ class IFSBrowserDragAndDrop implements vscode.TreeDragAndDropController<IFSItem>
     if (target) {
       const toDirectory = (target.file.type === "streamfile" ? target.parent : target) as IFSDirectoryItem;
       const ifsBrowserItems = dataTransfer.get(IFS_BROWSER_MIMETYPE);
+      const objectBrowserItems = dataTransfer.get(OBJECT_BROWSER_MIMETYPE);
       if (ifsBrowserItems) {
         this.moveOrCopyItems(ifsBrowserItems.value as IFSItem[], toDirectory)
+      } else if (objectBrowserItems) {
+          const memberUris = (await objectBrowserItems.asString()).split(URI_LIST_SEPARATOR).map(uri => vscode.Uri.parse(uri));
+          this.copyMembers(memberUris, toDirectory)
       }
       else {
         const explorerItems = dataTransfer.get(URI_LIST_MIMETYPE);
@@ -262,6 +269,31 @@ class IFSBrowserDragAndDrop implements vscode.TreeDragAndDropController<IFSItem>
         } else {
           vscode.window.showErrorMessage(t(`ifsBrowser.uploadStreamfile.${action}.failed`, toDirectory.path, result.stderr));
         }
+      }
+    }
+  }
+
+  private async copyMembers(memberUris: vscode.Uri[], toDirectory: IFSDirectoryItem) {
+    const connection = instance.getConnection();
+    if (connection && memberUris && memberUris.length) {
+      try {
+        for (let uri of memberUris) {
+          let result;
+          const member = connection.parserMemberPath(uri.path);
+          const command: string = `CPYTOSTMF FROMMBR('${Tools.qualifyPath(member.library, member.file, member.name, member.asp)}') TOSTMF('${toDirectory.path}/${member.basename.toLocaleLowerCase()}') STMFCCSID(1208) ENDLINFMT(*LF)`;
+          result = await connection.runCommand({
+            command: command,
+            noLibList: true
+          });
+          if (result.code !== 0) {
+            throw(t(`ifsBrowser.copyToStreamfile.failed`, toDirectory.path, result!.stderr));
+          }
+        };
+
+        vscode.window.showInformationMessage(t(`ifsBrowser.copyToStreamfile.infoMessage`, memberUris.length, toDirectory.path));
+        toDirectory.refresh();
+      } catch (e: any) {
+        vscode.window.showErrorMessage(e || e.text);
       }
     }
   }
