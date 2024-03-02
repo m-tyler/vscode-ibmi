@@ -64,7 +64,7 @@ class HitSource extends vscode.TreeItem {
   private readonly _readonly?: boolean;
 
   constructor(readonly result: Search.Result, readonly term: string) {
-    super(result.label ? result.path : path.posix.basename(result.path), vscode.TreeItemCollapsibleState.Expanded);
+    super(result.label ? result.label : path.posix.basename(result.path), vscode.TreeItemCollapsibleState.Expanded);
 
     const hits = result.lines.length;
     this.contextValue = `hitSource`;

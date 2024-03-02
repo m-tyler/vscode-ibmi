@@ -11,22 +11,25 @@ export class HawkeyeSearchView implements TreeDataProvider<any> {
 
   constructor(context: vscode.ExtensionContext) {
     context.subscriptions.push(
-      vscode.commands.registerCommand(`Hawkeye_Pathfinder.refreshSearchView`, async () => {
+      vscode.commands.registerCommand(`Hawkeye-Pathfinder.refreshSearchView`, async () => {
         this.refresh();
       }),
 
-      vscode.commands.registerCommand(`Hawkeye_Pathfinder.closeSearchView`, async () => {
-        vscode.commands.executeCommand(`setContext`, `Hawkeye_Pathfinder.searchViewVisible`, false);
+      vscode.commands.registerCommand(`Hawkeye-Pathfinder.closeSearchView`, async () => {
+        vscode.commands.executeCommand(`setContext`, `Hawkeye-Pathfinder:searchViewVisible`, false);
       }),
 
-      vscode.commands.registerCommand(`Hawkeye_Pathfinder.collapseSearchView`, async () => {
+      vscode.commands.registerCommand(`Hawkeye-Pathfinder.collapseSearchView`, async () => {
         this.collapse();
+      }),
+      vscode.commands.registerCommand(`Hawkeye-Pathfinder.expandSearchView`, async () => {
+        this.expand();
       }),
     )
   }
 
   setViewVisible(visible: boolean) {
-    vscode.commands.executeCommand(`setContext`, `Hawkeye_Pathfinder.searchViewVisible`, visible);
+    vscode.commands.executeCommand(`setContext`, `Hawkeye-Pathfinder:searchViewVisible`, visible);
   }
 
   setResults(term: string, results: HawkeyeSearch.Result[]) {
@@ -35,7 +38,7 @@ export class HawkeyeSearchView implements TreeDataProvider<any> {
     this.refresh();
     this.setViewVisible(true);
 
-    vscode.commands.executeCommand(`HawkeyeSearchView.focus`)
+    vscode.commands.executeCommand(`hawkeyeSearchView.focus`)
   }
 
   refresh() {
@@ -47,7 +50,10 @@ export class HawkeyeSearchView implements TreeDataProvider<any> {
   }
 
   collapse() {
-    vscode.commands.executeCommand(`workbench.actions.treeView.searchView.collapseAll`);
+    vscode.commands.executeCommand(`workbench.actions.treeView.hawkeyeSearchView.collapseAll`);
+  }
+  expand() {
+    vscode.commands.executeCommand(`workbench.actions.treeView.hawkeyeSearchView.expandAll`);
   }
 
   async getChildren(hitSource: HitSource): Promise<vscode.TreeItem[]> {

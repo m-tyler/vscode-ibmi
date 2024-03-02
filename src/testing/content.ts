@@ -15,6 +15,7 @@ export const ContentSuite: TestSuite = {
       name: `Test memberResolve`, test: async () => {
         const content = instance.getContent();
 
+
         const member = await content?.memberResolve(`MATH`, [
           { library: `QSYSINC`, name: `MIH` }, // Doesn't exist here
           { library: `QSYSINC`, name: `H` } // Does exist
@@ -30,6 +31,7 @@ export const ContentSuite: TestSuite = {
         });
       }
     },
+
 
 
     {
@@ -51,7 +53,39 @@ export const ContentSuite: TestSuite = {
         });
       }
     },
+    {
+      name: `Test memberResolve (with invalid ASP)`, test: async () => {
+        const content = instance.getContent();
 
+        const member = await content?.memberResolve(`MATH`, [
+          { library: `QSYSINC`, name: `MIH` }, // Doesn't exist here
+          { library: `QSYSINC`, name: `H`, asp: `myasp` } // Does exist, but not in the ASP
+        ]);
+
+        assert.deepStrictEqual(member, {
+          asp: undefined,
+          library: `QSYSINC`,
+          file: `H`,
+          name: `MATH`,
+          extension: `MBR`,
+          basename: `MATH.MBR`
+        });
+      }
+    },
+
+    {
+      name: `Test memberResolve with bad name`, test: async () => {
+        const content = instance.getContent();
+
+        const member = await content?.memberResolve(`BOOOP`, [
+          { library: `QSYSINC`, name: `MIH` }, // Doesn't exist here
+          { library: `NOEXIST`, name: `SUP` }, // Doesn't exist here
+          { library: `QSYSINC`, name: `H` } // Doesn't exist here
+        ]);
+
+        assert.deepStrictEqual(member, undefined);
+      }
+    },
     {
       name: `Test memberResolve with bad name`, test: async () => {
         const content = instance.getContent();
@@ -600,6 +634,6 @@ export const ContentSuite: TestSuite = {
         assert.deepStrictEqual(result.OBJNAME, "UNITTEST");
         assert.deepStrictEqual(result.OBJTEXT, "Code for i test");
       }
-    },
+    }
   ]
 };

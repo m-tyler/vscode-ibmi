@@ -25,19 +25,11 @@ const objectIcons: Record<string, string> = {
 
 export default class SPLFBrowser implements vscode.TreeDataProvider<any> {
   private emitter: vscode.EventEmitter<any>;
-  private treeViewer: vscode.TreeView<any>;
   public onDidChangeTreeData: vscode.Event<any>;
 
   constructor(private context: vscode.ExtensionContext) {
     this.emitter = new vscode.EventEmitter();
     this.onDidChangeTreeData = this.emitter.event;
-    // this.treeViewer = vscode.window.createTreeView(
-    //   `splfBrowser`,
-    //   {
-    //     treeDataProvider: this,
-    //     showCollapseAll: true
-    //   }
-    // );
   }
   
   refresh(target?: any) {
@@ -135,15 +127,16 @@ export default class SPLFBrowser implements vscode.TreeDataProvider<any> {
     return item;
   }
 };
-export function initializeObjectBrowser(context: vscode.ExtensionContext) {
-  const objectBrowser = new SPLFBrowser();
+
+export function initializeSPLFBrowser(context: vscode.ExtensionContext) {
+  const splfBrowser = new SPLFBrowser();
   const objectTreeViewer = vscode.window.createTreeView(
-    `objectBrowser`, {
-    treeDataProvider: objectBrowser,
+    `splfBrowser`, {
+    treeDataProvider: splfBrowser,
     showCollapseAll: true
   });
 
-  instance.onEvent(`connected`, () => objectBrowser.refresh());
+  instance.onEvent(`connected`, () => splfBrowser.refresh());
 
 
     context.subscriptions.push(
@@ -765,8 +758,6 @@ export function initializeObjectBrowser(context: vscode.ExtensionContext) {
 
       })
     )
-  }
-
 }
 
 class UserSpooledFiles extends vscode.TreeItem {

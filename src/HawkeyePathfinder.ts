@@ -1,20 +1,14 @@
 import vscode, { TreeDataProvider } from "vscode";
 import { GlobalConfiguration } from "./api/Configuration";
 import { HawkeyeSearch } from "./api/HawkeyeSearch";
-import { HawkeyeSearchView } from "./views/HawkeyeSearchView";
-// import { instance } from "./instantiate";
 import { instance, setSearchResultsHwk } from "./instantiate";
 import { t } from "./locale";
 import { IBMiMember } from "./typings";
 
-// let HawkeyeSearchViewContext: HawkeyeSearchView;
-// export function setSearchResultsHwk(term: string, results: HawkeyeSearch.Result[]) {
-//   HawkeyeSearchViewContext.setResults(term, results);
-// }
 export function initializeHawkeyePathfinder(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
-    vscode.commands.registerCommand(`Hawkeye_Pathfinder.searchSourceFiles`, async (node) => {
+    vscode.commands.registerCommand(`Hawkeye-Pathfinder.searchSourceFiles`, async (node) => {
       const parameters = {
         path: node?.path,
         filter: node?.filter
@@ -89,8 +83,9 @@ export function initializeHawkeyePathfinder(context: vscode.ExtensionContext) {
                 progress.report({
                   message: t(`objectBrowser.HWKsearchSourceFile.progressMessage`, parameters.path)
                 });
-                // const members = await content.getMemberList(pathParts[0], pathParts[1], parameters.filter?.member);
-                const members = await content.getMemberList(`QGPL`, `QCLSRC`, parameters.filter?.member);
+                // const members = await content.get MemberList(pathParts[0], pathParts[1], parameters.filter?.member);
+                // const members = await content.get MemberList(`QGPL`, `QCLSRC`, parameters.filter?.member);
+                const members = await content.getMemberList({ library: `QGPL`, sourceFile: `QCLSRC`, members: parameters.filter?.member });
 
                 if (members.length > 0) {
                   // NOTE: if more messages are added, lower the timeout interval
@@ -176,7 +171,7 @@ export function initializeHawkeyePathfinder(context: vscode.ExtensionContext) {
         //Running from command.
       }
     }),
-    vscode.commands.registerCommand(`Hawkeye_Pathfinder.displayFileSetsUsed`, async (node) => {
+    vscode.commands.registerCommand(`Hawkeye-Pathfinder.displayFileSetsUsed`, async (node) => {
       const parameters = {
         path: node?.path,
         filter: node?.filter
@@ -252,8 +247,8 @@ export function initializeHawkeyePathfinder(context: vscode.ExtensionContext) {
                 progress.report({
                   message: t(`objectBrowser.HWKdisplayFileSetsUsed.progressMessage`, parameters.path)
                 });
-                // const members = await content.getMemberList(pathParts[0], pathParts[1], parameters.filter?.member);
-                // const members = await content.getMemberList(`QGPL`, `QCLSRC`, parameters.filter?.member);
+                // const members = await content.get MemberList(pathParts[0], pathParts[1], parameters.filter?.member);
+                // const members = await content.get MemberList(`QGPL`, `QCLSRC`, parameters.filter?.member);
                 // const members = 0;
 
                 // if (members.length > 0) {
@@ -312,6 +307,7 @@ export function initializeHawkeyePathfinder(context: vscode.ExtensionContext) {
                     return a.path.localeCompare(b.path);
                   });
                   // TODO: make this stand alone for HWK commands
+                  // setSearchResults(parameters.path, results);
                   setSearchResultsHwk(parameters.path, results);
 
                 } else {

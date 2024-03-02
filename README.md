@@ -29,10 +29,8 @@ Using this fork to add in Winco personalized changes to the extension.  For inst
   * Ctrl+Alt+O : Open Outline View
 
 
-[GitHub star the original repo 🌟](https://github.com/codefori/vscode-ibmi)
-https://github.com/codefori/vscode-ibmi
- 
- 
+[GitHub star this repo 🌟](https://github.com/codefori/vscode-ibmi)
+
 <img src="./icon.png" align="right">
 
 Maintain your RPGLE, CL, COBOL, C/CPP on IBM i right from Visual Studio Code. Edit and compile all ILE languages, view errors inline, content assist for RPGLE and CL, source date support, and much more. Code for IBM i has thousands of daily users and a rapidly increasing number of downloads. We embrace open-source so that we can best support our community.
@@ -61,6 +59,19 @@ Maintain your RPGLE, CL, COBOL, C/CPP on IBM i right from Visual Studio Code. Ed
 4. 'Run Extension' from vscode debug.
 
 ---
+
+### Contributors
+
+<a href="https://github.com/codefori/vscode-ibmi/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=codefori/vscode-ibmi" />
+</a>
+
+(Made with [contrib.rocks](https://contrib.rocks)).
+
+View [our "contributing" page](CONTRIBUTING.md) for our contribution guidelines and a full list of contributors.  🕶️
+
+I contain 
+- new content view for User Spooled Files.
 
 * Aldon project filter example 
   <img src="./Aldon-Filter.png" align="left">

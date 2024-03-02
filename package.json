@@ -3,7 +3,7 @@
 	"icon": "icon.png",
 	"displayName": "Code for IBM i",
 	"description": "Maintain your RPGLE, CL, COBOL, C/CPP on IBM i right from Visual Studio Code.",
-	"version": "2.6.5",
+	"version": "2.7.0",
 	"keywords": [
 		"ibmi",
 		"rpgle",
@@ -1196,18 +1196,32 @@
 				"icon": "$(search)"
 			},
 			{
-				"command": "Hawkeye_Pathfinder.searchSourceFiles",
+				"command": "Hawkeye-Pathfinder.searchSourceFiles",
 				"enablement": "code-for-ibmi:connected",
 				"title": "Scan Source Files ",
 				"category": "Hawkeye",
 				"icon": "$(search-fuzzy)"
 			},
 			{
-				"command": "Hawkeye_Pathfinder.displayFileSetsUsed",
+				"command": "Hawkeye-Pathfinder.displayFileSetsUsed",
 				"enablement": "code-for-ibmi:connected",
 				"title": "Display File Set Where Used ",
 				"category": "Hawkeye",
 				"icon": "$(search-fuzzy)"
+			},
+			{
+				"command": "Hawkeye-Pathfinder.closeSearchView",
+				"enablement": "code-for-ibmi:connected",
+				"title": "Close Hawkeye Results View",
+				"category": "Hawkeye",
+				"icon": "$(close)"
+			},
+			{
+				"command": "Hawkeye-Pathfinder.collapseSearchView",
+				"enablement": "code-for-ibmi:connected",
+				"title": "Collapse all Hawkeye Results",
+				"category": "Hawkeye",
+				"icon": "$(collapse-all)"
 			},
 			{
 				"command": "code-for-ibmi.filterSpooledFiles",
@@ -1572,20 +1586,6 @@
 				"icon": "$(collapse-all)"
 			},
 			{
-				"command": "Hawkeye_Pathfinder.closeSearchView",
-				"enablement": "code-for-ibmi:connected",
-				"title": "Close Hawkeye Results View",
-				"category": "Hawkeye",
-				"icon": "$(close)"
-			},
-			{
-				"command": "Hawkeye_Pathfinder.collapseSearchView",
-				"enablement": "code-for-ibmi:connected",
-				"title": "Collapse all Hawkeye Results",
-				"category": "Hawkeye",
-				"icon": "$(collapse-all)"
-			},
-			{
 				"command": "code-for-ibmi.sortIFSFilesByDate",
 				"title": "Date",
 				"category": "IBM i"
@@ -1774,16 +1774,12 @@
 				"mac": "alt+j"
 			},
 			{
-				"command": "vscode-rpgfree.rpgleFree",
-				"key": "shift+alt+v"
-			},
-			{
-				"command": "outline.focus",
-				"key": "ctrl+alt+o"
-			},
-			{
 				"command": "editor.action.transformToTitlecase",
 				"key": "alt+t"
+			},
+			{
+				"command": "vscode-rpgfree.rpgleFree",
+				"key": "shift+alt+v"
 			},
 			{
 				"command": "editor.action.transformToUppercase",
@@ -1792,6 +1788,10 @@
 			{
 				"command": "editor.action.transformToLowercase",
 				"key": "alt+i"
+			},
+			{
+				"command": "outline.focus",
+				"key": "ctrl+alt+o"
 			}
 		],
 		"viewsContainers": {
@@ -1872,9 +1872,9 @@
 			],
 			"Hawkeye-search": [
 				{
-					"id": "HawkeyeSearchView",
-					"name": "Results",
-					"when": "code-for-ibmi:Hawkeye_Pathfinder.searchViewVisible"
+					"id": "hawkeyeSearchView",
+					"name": "Pathfinder-Results",
+					"when": "Hawkeye-Pathfinder:searchViewVisible"
 				}
 			]
 		},
@@ -2362,14 +2362,14 @@
 					"when": "view == searchView"
 				},
 				{
-					"command": "Hawkeye_Pathfinder.closeSearchView",
+					"command": "Hawkeye-Pathfinder.closeSearchView",
 					"group": "navigation@2",
-					"when": "view == HawkeyeSearchView"
+					"when": "view == hawkeyeSearchView"
 				},
 				{
-					"command": "Hawkeye_Pathfinder.collapseSearchView",
+					"command": "Hawkeye-Pathfinder.collapseSearchView",
 					"group": "navigation@1",
-					"when": "view == HawkeyeSearchView"
+					"when": "view == hawkeyeSearchView"
 				},
 				{
 					"command": "code-for-ibmi.addUserSpooledFileFilter",
@@ -2554,6 +2554,11 @@
 					"command": "code-for-ibmi.searchSourceFile",
 					"when": "view == objectBrowser && viewItem =~ /^SPF.*$/",
 					"group": "4_sourceFileStuff@1"
+				},
+				{
+					"command": "Hawkeye-Pathfinder.searchSourceFiles",
+					"when": "viewItem =~ /^SPF.*$/",
+					"group": "4_sourceFileStuff@2"
 				},
 				{
 					"submenu": "code-for-ibmi.sortMembers",
