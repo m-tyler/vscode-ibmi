@@ -1,7 +1,10 @@
-/* VSC_getCopyMemberLocation
- */
+﻿;cl:chgcurlib ILEDITOR;
+;set current path ILEDITOR, SYSTEM PATH
+-- ;cl:chgcurlib [USER];
+-- ;set path [USER]
+-- ;select * from LIBRARY_LIST_INFO
  
-create or replace function ILEDITOR.VSC_getCopyMemberLocation 
+;create or replace function VSC_getCopyMemberLocation 
 (
     IN_FILE char(10)
    ,IN_MBR char(10)

@@ -1,4 +1,10 @@
-create or replace function ILEDITOR.VSC_getHawkeyeCrossRefList
+;cl:chgcurlib ILEDITOR;
+;set current path ILEDITOR, SYSTEM PATH
+-- ;cl:chgcurlib [USER];
+-- ;set path [USER]
+-- ;select * from LIBRARY_LIST_INFO
+
+;create or replace function VSC_getHawkeyeCrossRefList
 (
   IN_LIB  char(10)  
  ,IN_FILE char(10) 

@@ -1,4 +1,4 @@
-/*============================================================================*/ 
+﻿/*============================================================================*/ 
 /* SPECIFIC NAME..: VSC00APC83                                                */ 
 /* FUNCTION NAME..: VSC_getHawkeyeProgramObjectSourceListTF                   */ 
 /* AUTHOR.........: Matt Tyler                                                */ 
@@ -11,8 +11,12 @@
 /*----------------------------------------------------------------------------*/ 
 /* MOD#  PCR     PGMR   DATE   DESCRIPTION                                    */ 
 /*============================================================================*/ 
-set path *libl ; 
-create or replace function ILEDITOR.VSC_getHawkeyeProgramObjectSourceListTF
+;cl:chgcurlib ILEDITOR;
+;set current path ILEDITOR, SYSTEM PATH
+-- ;cl:chgcurlib [USER];
+-- ;set path [USER]
+-- ;select * from LIBRARY_LIST_INFO
+;create or replace function VSC_getHawkeyeProgramObjectSourceListTF
 ( 
  APITYP char(2)
 ,APIOPT char(2)
@@ -57,13 +61,13 @@ comment on specific function VSC00AFN84 is 'HWK - Return actual source for SQL D
 
 /* Testing code 
 */
-;select * from table ( ILEDITOR.VSC_getHawkeyeProgramObjectSourceListTF(APITYP => '20' ,APIOPT => '80',APIOB => 'PRPBATI0', APIOBL => 'WFIDTA', APIOBM => ' ', APIOBA => '*FILE') );
-;select * from table ( ILEDITOR.VSC_getHawkeyeProgramObjectSourceListTF(APITYP => '20' ,APIOPT => '80',APIOB => 'UTL25SCL', APIOBL => 'WFIOBJ', APIOBM => ' ', APIOBA => '*PGM ') );
+;select * from table ( VSC_getHawkeyeProgramObjectSourceListTF(APITYP => '20' ,APIOPT => '80',APIOB => 'PRPBATI0', APIOBL => 'WFIDTA', APIOBM => ' ', APIOBA => '*FILE') );
+;select * from table ( VSC_getHawkeyeProgramObjectSourceListTF(APITYP => '20' ,APIOPT => '80',APIOB => 'UTL25SCL', APIOBL => 'WFIOBJ', APIOBM => ' ', APIOBA => '*PGM ') );
 /*
-;select * from PGMT.VSC_T$DPO inner join table( ILEDITOR.VSC_getHawkeyeProgramObjectSourceListTF(APITYP => '20' ,APIOPT => '80',APIOB => PODOBJ, APIOBL => PODLIB, APIOBM => ' ', APIOBA => PODTYP) ) a on 1=1
+;select * from VSC_T$DPO inner join table( ILEDITOR.VSC_getHawkeyeProgramObjectSourceListTF(APITYP => '20' ,APIOPT => '80',APIOB => PODOBJ, APIOBL => PODLIB, APIOBM => ' ', APIOBA => PODTYP) ) a on 1=1
 -- where PODSFL = 'Z_INTSQL_Z'
 
-;update PGMT.VSC_T$DPO o 
+;update VSC_T$DPO o 
 set (PODSFL,PODSLB,PODSMB) = (select APISF,APISFL,APISFM from table ( ILEDITOR.VSC_getHawkeyeProgramObjectSourceListTF(APITYP => '20' ,APIOPT => '80',APIOB => o.PODOBJ, APIOBL => o.PODLIB, APIOBM => ' ', APIOBA => o.PODTYP) ))
 where PODSFL = 'Z_INTSQL_Z' 
 */

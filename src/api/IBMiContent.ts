@@ -511,7 +511,7 @@ export default class IBMiContent {
       let funcInfo :funcInfo = await this.whereisCustomFunc();
       if (funcInfo) {
         if (await this.checkObject({ library: funcInfo.funcSysLib, name: funcInfo.funcSysName, type: "*SRVPGM" })) {
-          queries.push(`create or replace table QTEMP.CODE4IFD (PHLIB,PHFILE,PHFILA,PHDTAT,PHTXT,PHNOMB) as (select PHLIB,PHFILE,PHFILA,PHDTAT,PHTXT,PHNOMB from table ( ${funcInfo.funcSysLib}.VSC_getSourceFileListCustom (IN_SRCF => '${object}' ,IN_MBR => '${member}', IN_LIB => '${library}' ,IN_MBR_TYPE => '${mbrtype}' ) )) with data on replace delete rows`);
+          queries.push(`create or replace table QTEMP.CODE4IFD (PHLIB,PHFILE,PHFILA,PHDTAT,PHTXT,PHNOMB,PHCSID, PHMXRL) as (select PHLIB,PHFILE,PHFILA,PHDTAT,PHTXT,PHNOMB,PHCSID ,PHMXRL from table ( ${funcInfo.funcSysLib}.VSC_getSourceFileListCustom (IN_SRCF => '${object}' ,IN_MBR => '${member}', IN_LIB => '${library}' ,IN_MBR_TYPE => '${mbrtype}' ) )) with data on replace delete rows`);
         }
       } else {
         queries.push(`CALL QSYS2.QCMDEXC('DSPFD FILE(${library}/${object}) TYPE(*ATR) FILEATR(*PF) OUTPUT(*OUTFILE) OUTFILE(QTEMP/CODE4IFD)')`);

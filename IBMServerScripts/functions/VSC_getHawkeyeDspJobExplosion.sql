@@ -1,4 +1,10 @@
-﻿create or replace function ILEDITOR.VSC_getHawkeyeDspJobExplosion
+﻿;cl:chgcurlib ILEDITOR;
+;set current path ILEDITOR, SYSTEM PATH
+-- ;cl:chgcurlib [USER];
+-- ;set path [USER]
+-- ;select * from LIBRARY_LIST_INFO
+
+;create or replace function VSC_getHawkeyeDspJobExplosion
 (
   IN_LIB  char(10)  
  ,IN_OBJ char(10) 
@@ -18,7 +24,9 @@ returns table (
 ,MBFILE varchar(10) 
 ,MBNAME varchar(10)
 ,MBSEU2 varchar(10) -- Member type longer version
-,MBMTXT varchar(180) 
+,MBMTXT varchar(180)
+,MBEXSTEP int 
+,MBEXLVL int 
 )
 
  language sql 
@@ -50,8 +58,12 @@ VSC00AFN85: begin
     begin
     end;
  
-    set cmdstring = 'DSPJOBEXP PGM(ILEDITOR/QTOOLS) OUTPUT(*OUTFILE) OUTFILE('||trim(user)||'/VSC_T$DJE) OUTMBR(*FIRST *REPLACE)';
+    set cmdstring = 'DSPJOBEXP PGM(QGPL/PROOF) OUTPUT(*OUTFILE) OUTFILE('||trim(user)||'/VSC_T$DJE) OUTMBR(*FIRST *REPLACE)';
     call qcmdexc( cmdstring );   
+    if SQLSTATE >= '02000' then 
+        set cmdstring = 'DSPJOBEXP PGM(QGPL/*ALL) OUTPUT(*OUTFILE) OUTFILE('||trim(user)||'/VSC_T$DJE) OUTMBR(*FIRST *REPLACE)';
+        call qcmdexc( cmdstring );  
+    end if; 
     set cmdstring = 'DSPJOBEXP PGM(' ||trim(IN_LIB) ||'/' ||trim(IN_OBJ)||') OUTPUT(*OUTFILE) OUTFILE('||trim(user)||'/VSC_T$DJE) OUTMBR(*FIRST *REPLACE)';
     call qcmdexc( cmdstring );
  
@@ -64,7 +76,6 @@ VSC00AFN85: begin
         ,listagg(distinct trim(right(EXDHOW,locate('-',EXDHOW)+2)), ':') 
             within group (order by EXDLIB ,EXDOBJ  ,EXDHOW ) as OPERATE_TYPS
         from VSC_T$DJE
---         where OUDHOW not in ('BIND','ENTMOD')
         where EXDHOW not in ('BIND')
         group by EXDLIB ,EXDOBJ ,left(EXDHOW,(case locate('-',EXDHOW) when 0 then length(EXDHOW) else locate('-',EXDHOW)-1 end)) 
     )
@@ -77,6 +88,7 @@ VSC00AFN85: begin
         ,VSC.EXDOBJ MBNAME
         ,case when EXDSFL <> '      '  then EXDATR  else '*NONE' end MBSEU2
         , trim((LANG_TYP ||OPERATE_TYPS))||' - '|| EXDTXT  MBMTXT
+        ,EXDS# MBEXSTEP,EXDL# MBEXLVL
     
     from VSC_T$DJE_ VSC inner join CONDENSE_HOW_USED CHU on VSC.EXDLIB = CHU.EXDLIB and VSC.EXDOBJ = CHU.EXDOBJ
     where EXHPGM=IN_OBJ and case when IN_LIB = '*ALL' then IN_LIB else EXHLIB end =IN_LIB 
@@ -84,19 +96,19 @@ VSC00AFN85: begin
     
 end VSC00AFN85;
 
--- ;select * from table(ILEDITOR.VSC_getHawkeyeObjecOUseList(IN_LIB=> 'WFIDTA',IN_OBJ=>'PRPTJCTB' ,IN_TLIB=>'PGMT' ,IN_TFILE=>'VSC_T12345')) x 
-;select * from table(ILEDITOR.VSC_getHawkeyeDspJobExplosion(IN_LIB=> 'WFIDTA',IN_OBJ=>'PRPTJCTB')) x order by MBLIB ,MBNAME
-;select * from table(ILEDITOR.VSC_getHawkeyeDspJobExplosion(IN_LIB=> 'WFIOBJ',IN_OBJ=>'EML10HCL')) x order by MBLIB ,MBNAME
+-- ;select * from table(VSC_getHawkeyeObjecOUseList(IN_LIB=> 'WFIDTA',IN_OBJ=>'PRPTJCTB' ,IN_TLIB=>'PGMT' ,IN_TFILE=>'VSC_T12345')) x 
+;select * from table(VSC_getHawkeyeDspJobExplosion(IN_LIB=> 'WFIDTA',IN_OBJ=>'PRPTJCTB')) x order by MBLIB ,MBNAME
+;select * from table(VSC_getHawkeyeDspJobExplosion(IN_LIB=> 'WFIOBJ',IN_OBJ=>'EML10HCL')) x order by MBLIB ,MBNAME
 
-;select * from table(ILEDITOR.VSC_getHawkeyeDspJobExplosion(IN_LIB=> 'WFIOBJ',IN_OBJ=>'HRM67ERG')) x order by MBLIB ,MBNAME
-;select * from table(ILEDITOR.VSC_getHawkeyeObjectUseList  (IN_LIB=> 'WFIOBJ',IN_OBJ=>'HRM67ERG')) x order by MBLIB ,MBNAME
-;select * from table(ILEDITOR.VSC_getHawkeyeObjectUseList  (IN_LIB=> 'WFIOBJ',IN_OBJ=>'EML10HCL')) x order by MBLIB ,MBNAME
-;select * from table(ILEDITOR.VSC_getHawkeyeObjectUseList  (IN_LIB=> 'WFIOBJ',IN_OBJ=>'EML10BCL')) x order by MBLIB ,MBNAME
+;select * from table(VSC_getHawkeyeDspJobExplosion(IN_LIB=> 'WFIOBJ',IN_OBJ=>'HRM67ERG')) x order by MBLIB ,MBNAME
+;select * from table(VSC_getHawkeyeObjectUseList  (IN_LIB=> 'WFIOBJ',IN_OBJ=>'HRM67ERG')) x order by MBLIB ,MBNAME
+;select * from table(VSC_getHawkeyeObjectUseList  (IN_LIB=> 'WFIOBJ',IN_OBJ=>'EML10HCL')) x order by MBLIB ,MBNAME
+;select * from table(VSC_getHawkeyeObjectUseList  (IN_LIB=> 'WFIOBJ',IN_OBJ=>'EML10BCL')) x order by MBLIB ,MBNAME
 
-;select * from table(ILEDITOR.VSC_getHawkeyeDspJobExplosion(IN_LIB=> '*ALL  ',IN_OBJ=>'PRINTPR')) x order by MBLIB ,MBNAME
-;select * from table(ILEDITOR.VSC_getHawkeyeDspJobExplosion(IN_LIB=> '*ALL  ',IN_OBJ=>'EML10HCL')) x order by MBLIB ,MBNAME
-;select * from table(ILEDITOR.VSC_getHawkeyeDspJobExplosion(IN_LIB=> '*ALL',IN_OBJ=>'PRP13ZRG')) x order by MBLIB ,MBNAME
-;select * from table(ILEDITOR.VSC_getHawkeyeDspJobExplosion(IN_LIB=> 'WFIOBJ',IN_OBJ=>'PRP13ZRG')) x order by MBLIB ,MBNAME
-;select * from table(ILEDITOR.VSC_getHawkeyeDspJobExplosion(IN_LIB=> '*ALL',IN_OBJ=>'PRP07HRG')) x order by MBLIB ,MBNAME
-;select * from table(ILEDITOR.VSC_getHawkeyeDspJobExplosion(IN_LIB=> '*ALL',IN_OBJ=>'KRN05CRG')) x order by MBLIB ,MBNAME
-;select * from table(ILEDITOR.VSC_getHawkeyeDspJobExplosion(IN_LIB=> ' ',IN_OBJ=>' ')) x 
+;select * from table(VSC_getHawkeyeDspJobExplosion(IN_LIB=> '*ALL  ',IN_OBJ=>'PRINTPR')) x order by MBLIB ,MBNAME
+;select * from table(VSC_getHawkeyeDspJobExplosion(IN_LIB=> '*ALL  ',IN_OBJ=>'EML10HCL')) x order by MBLIB ,MBNAME
+;select * from table(VSC_getHawkeyeDspJobExplosion(IN_LIB=> '*ALL',IN_OBJ=>'PRP13ZRG')) x order by MBLIB ,MBNAME
+;select * from table(VSC_getHawkeyeDspJobExplosion(IN_LIB=> 'WFIOBJ',IN_OBJ=>'PRP13ZRG')) x order by MBLIB ,MBNAME
+;select * from table(VSC_getHawkeyeDspJobExplosion(IN_LIB=> '*ALL',IN_OBJ=>'PRP07HRG')) x order by MBLIB ,MBNAME
+;select * from table(VSC_getHawkeyeDspJobExplosion(IN_LIB=> '*ALL',IN_OBJ=>'KRN05CRG')) x order by MBEXLVL, MBEXSTEP
+;select * from table(VSC_getHawkeyeDspJobExplosion(IN_LIB=> ' ',IN_OBJ=>' ')) x 

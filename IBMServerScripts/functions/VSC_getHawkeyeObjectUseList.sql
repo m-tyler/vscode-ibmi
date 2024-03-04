@@ -1,10 +1,15 @@
-﻿create or replace function ILEDITOR.VSC_getHawkeyeObjectUseList
+﻿;cl:chgcurlib ILEDITOR;
+;set current path ILEDITOR, SYSTEM PATH
+-- ;cl:chgcurlib [USER];
+-- ;set path [USER]
+-- ;select * from LIBRARY_LIST_INFO
+
+;create or replace function VSC_getHawkeyeObjectUseList
 (
   IN_LIB  char(10)
  ,IN_OBJ char(10)
  ,IN_MBR varchar(64) default null
- ,IN_MBR_TYPE varchar(64) default null
- ,IN_RUN_ME_CODE char(1) default null
+--  ,IN_MBR_TYPE varchar(64) default null
  ,IN_DEBUG_PARMS char(1) default null
 
        )
@@ -15,6 +20,8 @@ returns table (
 ,PHFILA varchar(10)
 ,PHDTAT char(1)
 ,PHTXT varchar(128)
+,MBRCDL int
+,MBASP int
 ,MBLIB varchar(10)
 ,MBFILE varchar(10)
 ,MBNAME varchar(10)
@@ -58,7 +65,7 @@ VSC00AFN82: begin
     set cmdstring = 'CLRPFM FILE('||trim(user)||'/VSC_T$DOU)';
     call qcmdexc( cmdstring );
 
-    If IN_LIB > ' '  and IN_OBJ > ' ' and IN_RUN_ME_CODE is not null then
+    If IN_LIB > ' '  and IN_OBJ > ' ' then
         set cmdstring = 'DSPOBJU OBJ(' ||trim(IN_LIB) ||'/' ||trim(IN_OBJ)||') OUTPUT(*OUTFILE) OUTFILE('||trim(user)||'/VSC_T$DOU) OUTMBR(*FIRST *REPLACE)';
         call qcmdexc( cmdstring );
     End if;
@@ -70,13 +77,14 @@ VSC00AFN82: begin
             within group (order by OUDLIB ,OUDPGM  ,OUDHOW ) as OPERATE_TYPS
         from VSC_T$DOU
         where OUDHOW not in ('BIND')
-        and IN_RUN_ME_CODE is not null
         group by OUDLIB ,OUDPGM ,left(OUDHOW,(case locate('-',OUDHOW) when 0 then length(OUDHOW) else locate('-',OUDHOW) end))
     )
     select distinct OUXREF
         ,case when OUDSLB = '    ' then '*NONE' else OUDSLB end PHLIB
         ,case when OUDSFL = '    ' then '*NONE' else OUDSFL end PHFILE
         ,'*PHY' PHFILA ,'S' PHDTAT ,OUHTXT PHTXT
+        ,ifnull(IASP_NUMBER,1)
+        ,ifnull(ROW_LENGTH,0)
         ,case when OUDSLB <> '      '  then OUDSLB  else VSC.OUDLIB end MBLIB
         ,case when OUDSFL = '    ' then '*NONE' else OUDSFL end MBFILE
         ,VSC.OUDPGM MBNAME
@@ -84,20 +92,21 @@ VSC00AFN82: begin
         , trim((LANG_TYP ||OPERATE_TYPS))||' - '|| OUDTXT  MBMTXT
 
     from VSC_T$DOU_ VSC inner join CONDENSE_HOW_USED CHU on VSC.OUDLIB = CHU.OUDLIB and VSC.OUDPGM = CHU.OUDPGM
+    left  join SYSTABLES on SYSTEM_TABLE_NAME = (case when OUDSFL = '    ' then '*NONE' else OUDSFL end)
+                        and SYSTEM_TABLE_SCHEMA = (case when OUDSLB <> '      '  then OUDSLB  else VSC.OUDLIB end )
     where OUHOBJ=IN_OBJ and case when IN_LIB = '*ALL' then IN_LIB else OUHLIB end =IN_LIB
-    and IN_RUN_ME_CODE is not null
     ;
 
 end VSC00AFN82;
 
 -- ;select * from table(VSC_getHawkeyeObjecOUseList(IN_LIB=> 'WFIDTA',IN_OBJ=>'PRPTJCTB' ,IN_TLIB=>'PGMT' ,IN_TFILE=>'VSC_T12345')) x
-;select * from table(ILEDITOR.VSC_getHawkeyeObjectUseList(IN_LIB=> 'WFIDTA',IN_OBJ=>'PRPTJCTB',IN_RUN_ME_CODE=>'Y')) x order by MBLIB ,MBNAME
-;select * from table(ILEDITOR.VSC_getHawkeyeObjectUseList(IN_LIB=> 'WFIDTA',IN_OBJ=>'PRPTJCTB'                    )) x order by MBLIB ,MBNAME
-;select * from table(ILEDITOR.VSC_getHawkeyeObjectUseList(IN_LIB=> 'WFIOBJ',IN_OBJ=>'EML10HCL',IN_RUN_ME_CODE=>'Y')) x order by MBLIB ,MBNAME
-;select * from table(ILEDITOR.VSC_getHawkeyeObjectUseList(IN_LIB=> '*ALL  ',IN_OBJ=>'PRINTPR',IN_RUN_ME_CODE=>'Y')) x order by MBLIB ,MBNAME
-;select * from table(ILEDITOR.VSC_getHawkeyeObjectUseList(IN_LIB=> '*ALL  ',IN_OBJ=>'EML10HCL',IN_RUN_ME_CODE='Y'>)) x order by MBLIB ,MBNAME
-;select * from table(ILEDITOR.VSC_getHawkeyeObjectUseList(IN_LIB=> '*ALL',IN_OBJ=>'PRP13ZRG',IN_RUN_ME_CODE=>'Y')) x order by MBLIB ,MBNAME
-;select * from table(ILEDITOR.VSC_getHawkeyeObjectUseList(IN_LIB=> 'WFIOBJ',IN_OBJ=>'PRP13ZRG',IN_RUN_ME_CODE=>'Y')) x order by MBLIB ,MBNAME
-;select * from table(ILEDITOR.VSC_getHawkeyeObjectUseList(IN_LIB=> '*ALL',IN_OBJ=>'PRP07HRG',IN_RUN_ME_CODE=>'Y')) x order by MBLIB ,MBNAME
-;select * from table(ILEDITOR.VSC_getHawkeyeObjectUseList(IN_LIB=> '*ALL',IN_OBJ=>'KRN05CRG',IN_RUN_ME_CODE=>'Y')) x order by MBLIB ,MBNAME
-;select * from table(ILEDITOR.VSC_getHawkeyeObjectUseList(IN_LIB=> ' ',IN_OBJ=>' ')) x
+;select * from table(VSC_getHawkeyeObjectUseList(IN_LIB=> 'WFIDTA',IN_OBJ=>'PRPTJCTB')) x order by MBLIB ,MBNAME
+;select * from table(VSC_getHawkeyeObjectUseList(IN_LIB=> 'WFIDTA',IN_OBJ=>'PRPTJCTB'                    )) x order by MBLIB ,MBNAME
+;select * from table(VSC_getHawkeyeObjectUseList(IN_LIB=> 'WFIOBJ',IN_OBJ=>'EML10HCL')) x order by MBLIB ,MBNAME
+;select * from table(VSC_getHawkeyeObjectUseList(IN_LIB=> '*ALL  ',IN_OBJ=>'PRINTPR')) x order by MBLIB ,MBNAME
+;select * from table(VSC_getHawkeyeObjectUseList(IN_LIB=> '*ALL  ',IN_OBJ=>'EML10HCL',IN_RUN_ME_CODE='Y'>)) x order by MBLIB ,MBNAME
+;select * from table(VSC_getHawkeyeObjectUseList(IN_LIB=> '*ALL',IN_OBJ=>'PRP13ZRG')) x order by MBLIB ,MBNAME
+;select * from table(VSC_getHawkeyeObjectUseList(IN_LIB=> 'WFIOBJ',IN_OBJ=>'PRP13ZRG')) x order by MBLIB ,MBNAME
+;select * from table(VSC_getHawkeyeObjectUseList(IN_LIB=> '*ALL',IN_OBJ=>'PRP07HRG')) x order by MBLIB ,MBNAME
+;select * from table(VSC_getHawkeyeObjectUseList(IN_LIB=> '*ALL',IN_OBJ=>'KRN05CRG')) x order by MBLIB ,MBNAME
+;select * from table(VSC_getHawkeyeObjectUseList(IN_LIB=> ' ',IN_OBJ=>' ')) x
