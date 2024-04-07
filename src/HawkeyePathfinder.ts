@@ -1,7 +1,8 @@
 import vscode, { TreeDataProvider } from "vscode";
 import { GlobalConfiguration } from "./api/Configuration";
 import { HawkeyeSearch } from "./api/HawkeyeSearch";
-import { instance, setSearchResultsHwk } from "./instantiate";
+// import { instance, setSearchResultsHwk } from "./instantiate";
+import { instance } from "./instantiate";
 import { t } from "./locale";
 import { IBMiMember } from "./typings";
 
@@ -83,9 +84,8 @@ export function initializeHawkeyePathfinder(context: vscode.ExtensionContext) {
                 progress.report({
                   message: t(`objectBrowser.HWKsearchSourceFile.progressMessage`, parameters.path)
                 });
-                // const members = await content.get MemberList(pathParts[0], pathParts[1], parameters.filter?.member);
-                // const members = await content.get MemberList(`QGPL`, `QCLSRC`, parameters.filter?.member);
-                const members = await content.getMemberList({ library: `QGPL`, sourceFile: `QCLSRC`, members: parameters.filter?.member });
+                parameters.filter.member = `${pathParts[2] || `*`}.${pathParts[3] || `*`}`;
+                const members = await content.getMemberList({ library: pathParts[0]?pathParts[0]:`QGPL`, sourceFile: pathParts[1]?pathParts[1]:`QCLSRC`, members: parameters.filter?.member });
 
                 if (members.length > 0) {
                   // NOTE: if more messages are added, lower the timeout interval
@@ -116,7 +116,7 @@ export function initializeHawkeyePathfinder(context: vscode.ExtensionContext) {
                   }, timeoutInternal);
                   // Hawkeye-Pathfinder-DSPSCNSRC
                   // returns results member name with member type as extension
-                  let results = await HawkeyeSearch.HwksearchMembers(instance, pathParts[0], pathParts[1], `${pathParts[2] || `*`}.${pathParts[3] || `*`}`, searchTerm, parameters?.filter?.protected);
+                  let results = await HawkeyeSearch.HwksearchMembers(instance, pathParts[0], pathParts[1], parameters.filter.member, searchTerm, parameters?.filter?.protected);
 
                   // Filter search result by member type filter.
                   if (results.length > 0 && parameters.filter?.memberTypeFilter) {

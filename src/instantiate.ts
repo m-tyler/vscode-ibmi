@@ -15,8 +15,8 @@ import { initGetNewLibl } from "./languages/clle/getnewlibl";
 import { SEUColorProvider } from "./languages/general/SEUColorProvider";
 import { Action, BrowserItem, DeploymentMethod, MemberItem, OpenEditableOptions, WithPath } from "./typings";
 import { SearchView } from "./views/searchView";
-import { HawkeyeSearch } from "./api/HawkeyeSearch";
-import { HawkeyeSearchView } from "./views/HawkeyeSearchView";
+// import { HawkeyeSearch } from "./api/HawkeyeSearch";
+// import { HawkeyeSearchView } from "./views/HawkeyeSearchView";
 import { ActionsUI } from './webviews/actions';
 import { VariablesUI } from "./webviews/variables";
 import { SplfFS } from "./filesystems/qsys/SplfFs";
@@ -54,10 +54,10 @@ export function setSearchResults(term: string, results: Search.Result[]) {
   searchViewContext.setResults(term, results);
 }
 
-let HawkeyeSearchViewContext: HawkeyeSearchView;
-export function setSearchResultsHwk(term: string, results: HawkeyeSearch.Result[]) {
-  HawkeyeSearchViewContext.setResults(term, results);
-}
+// let HawkeyeSearchViewContext: HawkeyeSearchView;
+// export function setSearchResultsHwk(term: string, results: HawkeyeSearch.Result[]) {
+//   HawkeyeSearchViewContext.setResults(term, results);
+// }
 
 export async function disconnect(): Promise<boolean> {
   let doDisconnect = true;
@@ -94,7 +94,7 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
 
   instance = new Instance(context);
   searchViewContext = new SearchView(context);
-  HawkeyeSearchViewContext = new HawkeyeSearchView(context);
+  // HawkeyeSearchViewContext = new HawkeyeSearchView(context);
 
   context.subscriptions.push(
     connectedBarItem,
@@ -108,7 +108,7 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
     }),
     onCodeForIBMiConfigurationChange("connectionSettings", updateConnectedBar),
     vscode.window.registerTreeDataProvider( `searchView`, searchViewContext ),
-    vscode.window.registerTreeDataProvider( `hawkeyeSearchView`, HawkeyeSearchViewContext ),
+    // vscode.window.registerTreeDataProvider( `hawkeyeSearchView`, HawkeyeSearchViewContext ),
     vscode.commands.registerCommand(`code-for-ibmi.openEditable`, async (path: string, options?: OpenEditableOptions) => {
       console.log(path);
       options = options || {};

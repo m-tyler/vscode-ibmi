@@ -1212,6 +1212,34 @@
 				"icon": "$(search)"
 			},
 			{
+				"command": "Hawkeye-Pathfinder.searchSourceFiles",
+				"enablement": "code-for-ibmi:connected",
+				"title": "Scan Source Files ",
+				"category": "Hawkeye",
+				"icon": "$(search-fuzzy)"
+			},
+			{
+				"command": "Hawkeye-Pathfinder.displayFileSetsUsed",
+				"enablement": "code-for-ibmi:connected",
+				"title": "Display File Set Where Used ",
+				"category": "Hawkeye",
+				"icon": "$(search-fuzzy)"
+			},
+			{
+				"command": "Hawkeye-Pathfinder.closeSearchView",
+				"enablement": "code-for-ibmi:connected",
+				"title": "Close Hawkeye Results View",
+				"category": "Hawkeye",
+				"icon": "$(close)"
+			},
+			{
+				"command": "Hawkeye-Pathfinder.collapseSearchView",
+				"enablement": "code-for-ibmi:connected",
+				"title": "Collapse all Hawkeye Results",
+				"category": "Hawkeye",
+				"icon": "$(collapse-all)"
+			},
+			{
 				"command": "code-for-ibmi.filterSpooledFiles",
 				"enablement": "code-for-ibmi:connected",
 				"title": "Filter Spooled Files",
@@ -1794,6 +1822,11 @@
 					"id": "ibmi-search",
 					"title": "IBM i Search",
 					"icon": "$(search)"
+				},
+				{
+					"id": "Hawkeye-search",
+					"title": "Hawkeye Pathefinder Results",
+					"icon": "$(references)"
 				}
 			]
 		},
@@ -1852,6 +1885,13 @@
 					"id": "searchView",
 					"name": "Results",
 					"when": "code-for-ibmi:searchViewVisible"
+				}
+			],
+			"Hawkeye-search": [
+				{
+					"id": "hawkeyeSearchView",
+					"name": "Pathfinder-Results",
+					"when": "Hawkeye-Pathfinder:searchViewVisible"
 				}
 			]
 		},
@@ -2331,6 +2371,16 @@
 					"when": "view == searchView"
 				},
 				{
+					"command": "Hawkeye-Pathfinder.closeSearchView",
+					"group": "navigation@2",
+					"when": "view == hawkeyeSearchView"
+				},
+				{
+					"command": "Hawkeye-Pathfinder.collapseSearchView",
+					"group": "navigation@1",
+					"when": "view == hawkeyeSearchView"
+				},
+				{
 					"command": "code-for-ibmi.addUserSpooledFileFilter",
 					"group": "navigation",
 					"when": "view == splfBrowser"
@@ -2518,6 +2568,11 @@
 					"command": "code-for-ibmi.searchSourceFile",
 					"when": "view == objectBrowser && viewItem =~ /^SPF.*$/",
 					"group": "4_sourceFileStuff@1"
+				},
+				{
+					"command": "Hawkeye-Pathfinder.searchSourceFiles",
+					"when": "viewItem =~ /^SPF.*$/",
+					"group": "4_sourceFileStuff@2"
 				},
 				{
 					"command": "code-for-ibmi.objectBrowser.delete",
