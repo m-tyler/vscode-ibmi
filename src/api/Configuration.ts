@@ -2,6 +2,7 @@ import os from "os";
 import * as vscode from 'vscode';
 import { DeploymentMethod } from '../typings';
 import { FilterType } from './Filter';
+import { DEFAULT_CERT_DIRECTORY } from "./debug/certificates";
 
 export type SourceDateMode = "edit" | "diff";
 export type DefaultOpenMode = "browse" | "edit";
@@ -54,6 +55,7 @@ export namespace ConnectionConfiguration {
     showDescInLibList: boolean;
     debugCertDirectory: string;
     debugPort: string;
+    debugSepPort: string;
     debugIsSecure: boolean;
     debugUpdateProductionFiles: boolean;
     debugEnableDebugTracing: boolean;
@@ -139,8 +141,9 @@ export namespace ConnectionConfiguration {
       connectringStringFor5250: parameters.connectringStringFor5250 || `localhost`,
       autoSaveBeforeAction: (parameters.autoSaveBeforeAction === true),
       showDescInLibList: (parameters.showDescInLibList === true),
-      debugCertDirectory: (parameters.debugCertDirectory || "/QIBM/ProdData/IBMiDebugService/bin/certs"),
+      debugCertDirectory: (parameters.debugCertDirectory || DEFAULT_CERT_DIRECTORY),
       debugPort: (parameters.debugPort || "8005"),
+      debugSepPort: (parameters.debugSepPort || "8008"),
       debugIsSecure: (parameters.debugIsSecure === true),
       debugUpdateProductionFiles: (parameters.debugUpdateProductionFiles === true),
       debugEnableDebugTracing: (parameters.debugEnableDebugTracing === true),
