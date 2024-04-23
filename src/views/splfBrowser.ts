@@ -32,7 +32,7 @@ export default class SPLFBrowser implements vscode.TreeDataProvider<any> {
     this.emitter = new vscode.EventEmitter();
     this.onDidChangeTreeData = this.emitter.event;
     this.treeViewer = vscode.window.createTreeView(
-      `splfBrowser`,
+      `splfBrowser-o`,
       {
         treeDataProvider: this,
         showCollapseAll: true
@@ -40,7 +40,7 @@ export default class SPLFBrowser implements vscode.TreeDataProvider<any> {
     );
 
     context.subscriptions.push(
-      vscode.commands.registerCommand(`code-for-ibmi.sortSPLFSFilesByName`, (/** @type {Object} */ SpooledFiles) => {
+      vscode.commands.registerCommand(`code-for-ibmi.sortSPLFSFilesByName-o`, (/** @type {Object} */ SpooledFiles) => {
         const spoolfile = SpooledFiles.parent ? SpooledFiles.parent : SpooledFiles;
         if (spoolfile.sort.order !== `name`) {
           spoolfile.sortBy({ order: `name`, ascending: true })
@@ -53,7 +53,7 @@ export default class SPLFBrowser implements vscode.TreeDataProvider<any> {
         this.treeViewer.reveal(spoolfile, { expand: true });
         this.refresh(spoolfile);
       }),
-      vscode.commands.registerCommand(`code-for-ibmi.sortSPLFSFilesByDate`, (/** @type {Object} */ SpooledFiles) => {
+      vscode.commands.registerCommand(`code-for-ibmi.sortSPLFSFilesByDate-o`, (/** @type {Object} */ SpooledFiles) => {
         const spoolfile = SpooledFiles.parent ? SpooledFiles.parent : SpooledFiles;
         if (spoolfile.sort.order !== `date`) {
           spoolfile.sortBy({ order: `date`, ascending: true })
@@ -66,10 +66,10 @@ export default class SPLFBrowser implements vscode.TreeDataProvider<any> {
         this.treeViewer.reveal(spoolfile, { expand: true });
         this.refresh(spoolfile);
       }),
-      vscode.commands.registerCommand(`code-for-ibmi.refreshSPLFBrowser`, async () => {
+      vscode.commands.registerCommand(`code-for-ibmi.refreshSPLFBrowser-o`, async () => {
         this.refresh();
       }),
-      vscode.commands.registerCommand(`code-for-ibmi.addUserSpooledFileFilter`, async (node) => {
+      vscode.commands.registerCommand(`code-for-ibmi.addUserSpooledFileFilter-o`, async (node) => {
         const config = getConfig();
         const connection = getConnection();
 
@@ -103,7 +103,7 @@ export default class SPLFBrowser implements vscode.TreeDataProvider<any> {
           // console.log(e);
         }
       }),
-      vscode.commands.registerCommand(`code-for-ibmi.deleteUserSpooledFileFilter`, async (node) => {
+      vscode.commands.registerCommand(`code-for-ibmi.deleteUserSpooledFileFilter-o`, async (node) => {
         const { instance } = (require(`../instantiate`));
         const config = getConfig();
 
@@ -137,7 +137,7 @@ export default class SPLFBrowser implements vscode.TreeDataProvider<any> {
           // console.log(e);
         }
       }),
-      vscode.commands.registerCommand(`code-for-ibmi.sortUserSpooledFileFilter`, async (node) => {
+      vscode.commands.registerCommand(`code-for-ibmi.sortUserSpooledFileFilter-o`, async (node) => {
         /** @type {ConnectionConfiguration.Parameters} */
         const config = getConfig();
 
@@ -159,7 +159,7 @@ export default class SPLFBrowser implements vscode.TreeDataProvider<any> {
           // console.log(e);
         }
       }),
-      vscode.commands.registerCommand(`code-for-ibmi.deleteSpooledFile`, async (node) => {
+      vscode.commands.registerCommand(`code-for-ibmi.deleteSpooledFile-o`, async (node) => {
         if (node) {
           //Running from right click
           let result = await vscode.window.showWarningMessage(t(`splfBrowser.deleteSpooledFile.warningMessage`, node.path), t(`Yes`), t(`Cancel`));
@@ -189,7 +189,7 @@ export default class SPLFBrowser implements vscode.TreeDataProvider<any> {
           //Running from command.
         }
       }),
-      vscode.commands.registerCommand(`code-for-ibmi.deleteNamedSpooledFiles`, async (node) => {
+      vscode.commands.registerCommand(`code-for-ibmi.deleteNamedSpooledFiles-o`, async (node) => {
         // TODO: make this function delete based on name or active filter
         if (node) {
           //Running from right click
@@ -254,7 +254,7 @@ export default class SPLFBrowser implements vscode.TreeDataProvider<any> {
           //Running from command.
         }
       }),
-      vscode.commands.registerCommand(`code-for-ibmi.deleteFilteredSpooledFiles`, async (node) => {
+      vscode.commands.registerCommand(`code-for-ibmi.deleteFilteredSpooledFiles-o`, async (node) => {
         // TODO: make this function delete based on name or active filter
         if (node) {
           //Running from right click
@@ -319,7 +319,7 @@ export default class SPLFBrowser implements vscode.TreeDataProvider<any> {
           //Running from command.
         }
       }),
-      vscode.commands.registerCommand(`code-for-ibmi.deleteUserSpooledFiles`, async (node) => {
+      vscode.commands.registerCommand(`code-for-ibmi.deleteUserSpooledFiles-o`, async (node) => {
         if (node) {
           //Running from right click
           let result = await vscode.window.showWarningMessage(t(`splfBrowser.deleteUserSpooledFiles.warningMessage`,node.user), t(`Yes`), t(`Cancel`));
@@ -354,7 +354,7 @@ export default class SPLFBrowser implements vscode.TreeDataProvider<any> {
           //Running from command.
         }
       }),
-      vscode.commands.registerCommand(`code-for-ibmi.moveSpooledFile`, async (node) => {
+      vscode.commands.registerCommand(`code-for-ibmi.moveSpooledFile-o`, async (node) => {
         if (node) {
           //Running from right click
 
@@ -385,7 +385,7 @@ export default class SPLFBrowser implements vscode.TreeDataProvider<any> {
           // console.log(this);
         }
       }),
-      vscode.commands.registerCommand(`code-for-ibmi.searchSpooledFiles`, async (node) => {
+      vscode.commands.registerCommand(`code-for-ibmi.searchSpooledFiles-o`, async (node) => {
         const connection = getConnection();
         const content = getContent();
         /** @type {ConnectionConfiguration.Parameters} */
@@ -395,7 +395,7 @@ export default class SPLFBrowser implements vscode.TreeDataProvider<any> {
         let searchName :any;
         let searchTerm :any;
         let searchWord :string;
-        if (node) {
+        if (node && node.contextValue == `spooledfile`) {
           searchUser = node.user;
           searchName = node.name;
           searchWord = node.parent.filter;
@@ -481,7 +481,7 @@ export default class SPLFBrowser implements vscode.TreeDataProvider<any> {
         }
 
       }),
-      vscode.commands.registerCommand(`code-for-ibmi.filterSpooledFiles`, async (node) => {
+      vscode.commands.registerCommand(`code-for-ibmi.filterSpooledFiles-o`, async (node) => {
         const content = getContent();
 
         let searchUser :any;
@@ -537,7 +537,7 @@ export default class SPLFBrowser implements vscode.TreeDataProvider<any> {
         }
 
       }),
-      vscode.commands.registerCommand(`code-for-ibmi.downloadSpooledfile`, async (node) => {
+      vscode.commands.registerCommand(`code-for-ibmi.downloadSpooledfile-o`, async (node) => {
         const config = getConfig();
         const contentApi = getContent();
         const connection = getConnection();
@@ -596,13 +596,13 @@ export default class SPLFBrowser implements vscode.TreeDataProvider<any> {
           //Running from command.
         }
       }),
-      vscode.commands.registerCommand("code-for-ibmi.openSplfWithLineSpacing", (node) => {
+      vscode.commands.registerCommand("code-for-ibmi.openSplfWithLineSpacing-o", (node) => {
         return vscode.commands.executeCommand("code-for-ibmi.openSpooledFile", node, true);
       }),
-      vscode.commands.registerCommand("code-for-ibmi.openSplfWithoutLineSpacing", (node) => {
+      vscode.commands.registerCommand("code-for-ibmi.openSplfWithoutLineSpacing-o", (node) => {
         return vscode.commands.executeCommand("code-for-ibmi.openSpooledFile", node, false);
       }),
-      vscode.commands.registerCommand("code-for-ibmi.openSpooledFile", (node,withSpacing:boolean) => {
+      vscode.commands.registerCommand("code-for-ibmi.openSpooledFile-o", (node,withSpacing:boolean) => {
         const readonly = true;
         // vscode.commands.executeCommand(`code-for-ibmi.openEditable`, item.path, { readonly });
         //1- Download content.

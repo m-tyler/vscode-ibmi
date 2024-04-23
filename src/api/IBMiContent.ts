@@ -1056,7 +1056,7 @@ export default class IBMiContent {
 
     const objQuery = `select count(*) USER_SPLF_COUNT
     from table (QSYS2.SPOOLED_FILE_INFO(USER_NAME => '${user}') ) SPE 
-    where FILE_AVAILABLE = '*FILEEND' ${splfName ? `and SPOOLED_FILE_NAME = ucase('${splfName}')` : ""} 
+    where FILE_AVAILABLE = '*FILEEND' ${splfName ? `and SPE.SPOOLED_FILE_NAME = ucase('${splfName}')` : ""} 
     group by JOB_USER` ;
     results = await this.runSQL(objQuery);
     // const resultSet = await new IBMiContent(this).runSQL(`SELECT * FROM QSYS2.ASP_INFO`);
