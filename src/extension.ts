@@ -48,7 +48,6 @@ export async function activate(context: ExtensionContext): Promise<CodeForIBMi> 
   initializeObjectBrowser(context)
   initializeIFSBrowser(context);
   new SPLFBrowser(context);
-  // initializeHawkeyePathfinder(context);
   
   context.subscriptions.push(    
     window.registerTreeDataProvider(

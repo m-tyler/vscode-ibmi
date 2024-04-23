@@ -2215,51 +2215,47 @@
 					"when": "never"
 				},
 				{
-					"command": "code-for-ibmi.downloadSpooledfile",
+					"command": "code-for-ibmi.downloadSpooledfile-o",
 					"when": "never"
 				},
 				{
-					"command": "code-for-ibmi.deleteUserSpooledFiles",
+					"command": "code-for-ibmi.deleteUserSpooledFiles-o",
 					"when": "never"
 				},
 				{
-					"command": "code-for-ibmi.sortUserSpooledFileFilter",
+					"command": "code-for-ibmi.sortUserSpooledFileFilter-o",
 					"when": "never"
 				},
 				{
-					"command": "code-for-ibmi.deleteSpooledFile",
+					"command": "code-for-ibmi.deleteSpooledFile-o",
 					"when": "never"
 				},
 				{
-					"command": "code-for-ibmi.deleteNamedSpooledFiles",
+					"command": "code-for-ibmi.deleteNamedSpooledFiles-o",
 					"when": "never"
 				},
 				{
-					"command": "code-for-ibmi.deleteFilteredSpooledFiles",
+					"command": "code-for-ibmi.deleteFilteredSpooledFiles-o",
 					"when": "never"
 				},
 				{
-					"command": "code-for-ibmi.moveSpooledFile",
+					"command": "code-for-ibmi.moveSpooledFile-o",
 					"when": "never"
 				},
 				{
-					"command": "code-for-ibmi.downloadSpooledfile",
+					"command": "code-for-ibmi.openSplfWithLineSpacing-o",
 					"when": "never"
 				},
 				{
-					"command": "code-for-ibmi.openSplfWithLineSpacing",
+					"command": "code-for-ibmi.openSplfWithoutLineSpacing-o",
 					"when": "never"
 				},
 				{
-					"command": "code-for-ibmi.openSplfWithoutLineSpacing",
+					"command": "code-for-ibmi.filterSpooledFiles-o",
 					"when": "never"
 				},
 				{
-					"command": "code-for-ibmi.filterSpooledFiles",
-					"when": "never"
-				},
-				{
-					"command": "code-for-ibmi.searchSpooledFiles",
+					"command": "code-for-ibmi.searchSpooledFiles-o",
 					"when": "never"
 				},
 				{

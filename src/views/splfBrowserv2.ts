@@ -129,7 +129,7 @@ export default class SPLFBrowser implements vscode.TreeDataProvider<any> {
 };
 
 export function initializeSPLFBrowser(context: vscode.ExtensionContext) {
-  const splfBrowser = new SPLFBrowser();
+  const splfBrowser = new SPLFBrowser(context);
   const objectTreeViewer = vscode.window.createTreeView(
     `splfBrowser`, {
     treeDataProvider: splfBrowser,
