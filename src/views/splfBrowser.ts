@@ -2,7 +2,6 @@ import fs from "fs";
 import os from "os";
 import util from "util";
 import path from "path";
-import tmp from 'tmp';
 import vscode from "vscode";
 import { GlobalConfiguration, ConnectionConfiguration } from '../api/Configuration';
 import { SplfSearch } from '../api/spooledFileSearch';
@@ -11,8 +10,7 @@ import { Tools } from '../api/Tools';
 import { instance, setSearchResults } from "../instantiate";
 import { t } from "../locale";
 import { IBMiSpooledFile } from '../typingsSplf';
-const tmpFile = util.promisify(tmp.file);
-const readFileAsync = util.promisify(fs.readFile);
+
 const writeFileAsync = util.promisify(fs.writeFile);
 
 

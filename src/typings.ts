@@ -121,7 +121,6 @@ export interface IBMiMember {
   lines?: number
   created?: Date
   changed?: Date
-  usercontent?: string
 }
 
 export interface IFSFile {

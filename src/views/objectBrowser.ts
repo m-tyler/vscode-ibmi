@@ -391,11 +391,8 @@ class ObjectBrowserMemberItem extends ObjectBrowserItem implements MemberItem {
       text: member.text,
       lines: member.lines,
       created: member.created?.toISOString().slice(0, 19).replace(`T`, ` `),
-      changed: member.changed?.toISOString().slice(0, 19).replace(`T`, ` `),
-      usercontent: member.usercontent
+      changed: member.changed?.toISOString().slice(0, 19).replace(`T`, ` `)
     }));
-    //, usercontent: member.usercontent?
-    //.concat(`${member.usercontent ? `\n${t("usercontent")}:\t${member.usercontent}` : ``}`)
     this.tooltip.supportHtml = true;
 
     this.sortBy = (sort: SortOptions) => parent.sortBy(sort);

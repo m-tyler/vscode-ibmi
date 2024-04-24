@@ -24,10 +24,7 @@ export type SortOptions = {
   order: "name" | "date"
   ascending?: boolean
 }
-interface funcInfo {
-  funcSysLib: string
-  funcSysName: string
-}
+
 export default class IBMiContent {
   private chgJobCCSID: string | undefined = undefined;
   constructor(readonly ibmi: IBMi) { }
@@ -336,12 +333,12 @@ export default class IBMiContent {
       resultSet.forEach(row => {
         const libraryName = String(row.SYSTEM_SCHEMA_NAME);
         switch (row.PORTION) {
-        case `CURRENT`:
-          result.currentLibrary = libraryName;
-          break;
-        case `USER`:
-          result.libraryList.push(libraryName);
-          break;
+          case `CURRENT`:
+            result.currentLibrary = libraryName;
+            break;
+          case `USER`:
+            result.libraryList.push(libraryName);
+            break;
         }
       })
 
@@ -525,8 +522,8 @@ export default class IBMiContent {
    * @param sortOrder
    * @returns an array of IBMiObject
    */
-  async getObjectList(filters: { library: string; object?: string; types?: string[]; filterType?: FilterType; member?: string; memberType?: string; }, sortOrder?: SortOrder): Promise<IBMiObject[]> {
-    const library = filters.library.toUpperCase();
+  async getObjectList(filters: { library: string; object?: string; types?: string[]; filterType?: FilterType }, sortOrder?: SortOrder): Promise<IBMiObject[]> {
+    const library = this.ibmi.upperCaseName(filters.library);
     if (!await this.checkObject({ library: "QSYS", name: library, type: "*LIB" })) {
       throw new Error(`Library ${library} does not exist.`);
     }
@@ -534,10 +531,6 @@ export default class IBMiContent {
     const singleEntry = filters.filterType !== 'regex' ? singleGenericName(filters.object) : undefined;
     const nameFilter = parseFilter(filters.object, filters.filterType);
     const object = filters.object && (nameFilter.noFilter || singleEntry) && filters.object !== `*` ? this.ibmi.upperCaseName(filters.object) : `*ALL`;
-    const member = (filters.member ? filters.member.toUpperCase() : filters.member);
-    const mbrtype = (filters.memberType ? filters.memberType.toUpperCase() : filters.memberType);
-    const { instance } = (require(`../instantiate`));
-
 
     const typeFilter = filters.types && filters.types.length > 1 ? (t: string) => filters.types?.includes(t) : undefined;
     const type = filters.types && filters.types.length === 1 && filters.types[0] !== '*' ? filters.types[0] : '*ALL';
@@ -548,18 +541,11 @@ export default class IBMiContent {
     const queries: string[] = [];
 
     if (!sourceFilesOnly) {
-      queries.push(`CALL QSYS2.QCMDEXC('DSPOBJD OBJ(${library}/${object}) OBJTYPE(${type}) OUTPUT(*OUTFILE) OUTFILE(QTEMP/CODE4IOBJD)')`);
+      queries.push(`@DSPOBJD OBJ(${library}/${object}) OBJTYPE(${type}) OUTPUT(*OUTFILE) OUTFILE(QTEMP/CODE4IOBJD)`);
     }
 
     if (withSourceFiles) {
-      let funcInfo :funcInfo = await this.whereisCustomFunc();
-      if (funcInfo) {
-        if (await this.checkObject({ library: funcInfo.funcSysLib, name: funcInfo.funcSysName, type: "*SRVPGM" })) {
-          queries.push(`create or replace table QTEMP.CODE4IFD (PHLIB,PHFILE,PHFILA,PHDTAT,PHTXT,PHNOMB,PHCSID, PHMXRL) as (select PHLIB,PHFILE,PHFILA,PHDTAT,PHTXT,PHNOMB,PHCSID ,PHMXRL from table ( ${funcInfo.funcSysLib}.VSC_getSourceFileListCustom (IN_SRCF => '${object}' ,IN_MBR => '${member}', IN_LIB => '${library}' ,IN_MBR_TYPE => '${mbrtype}' ) )) with data on replace delete rows`);
-        }
-      } else {
-        queries.push(`CALL QSYS2.QCMDEXC('DSPFD FILE(${library}/${object}) TYPE(*ATR) FILEATR(*PF) OUTPUT(*OUTFILE) OUTFILE(QTEMP/CODE4IFD)')`);
-      }
+      queries.push(`@DSPFD FILE(${library}/${object}) TYPE(*ATR) FILEATR(*PF) OUTPUT(*OUTFILE) OUTFILE(QTEMP/CODE4IFD)`);
     }
 
     let createOBJLIST;
@@ -669,21 +655,8 @@ export default class IBMiContent {
     const memberExtensionFilter = parseFilter(filter.extensions, filter.filterType);
     const singleMemberExtension = memberExtensionFilter.noFilter && filter.extensions && !filter.extensions.includes(",") ? this.ibmi.upperCaseName(filter.extensions).replace(/[*]/g, `%`) : undefined;
 
-    let statement = ``;
-
-    let funcInfo :funcInfo = await this.whereisCustomFunc();
-    if (funcInfo) {
-
-      if (await this.checkObject({ library: funcInfo.funcSysLib, name: funcInfo.funcSysName, type: "*SRVPGM" })) {
-        statement = `\n select MBMXRL RECORD_LENGTH,MBASP ASP,MBLIB LIBRARY,MBFILE SOURCE_FILE,MBNAME NAME,MBSEU2 TYPE,MBMTXT TEXT,MBNRCD LINES,CREATED CREATED,CHANGED CHANGED,USERCONTENT from table (${funcInfo.funcSysLib}.VSC_getMemberListCustom(IN_LIB => '${library}' 
-        ${sourceFile ? `,IN_SRCF => '${sourceFile}'` : ""}
-        ${singleMember ? `,IN_MBR =>  '${singleMember}'` : ""} 
-        ${singleMemberExtension ? `,IN_MBR_TYPE => '${singleMemberExtension}'` : ""} ))
-        Order By ${sort.order === 'name' ? 'NAME' : 'CHANGED'} ${!sort.ascending ? 'DESC' : 'ASC'}`;
-      }
-    } else {
-      statement =
-        `With MEMBERS As (
+    const statement =
+      `With MEMBERS As (
         SELECT
           rtrim(cast(a.system_table_schema as char(10) for bit data)) as LIBRARY,
           b.avgrowsize as RECORD_LENGTH,
@@ -691,7 +664,7 @@ export default class IBMiContent {
           rtrim(cast(a.system_table_name as char(10) for bit data)) AS SOURCE_FILE,
           rtrim(cast(b.system_table_member as char(10) for bit data)) as NAME,
           coalesce(rtrim(cast(b.source_type as varchar(10) for bit data)), '') as TYPE,
-          coalesce(rtrim(b.partition_text), '') as TEXT,
+          coalesce(rtrim(varchar(b.partition_text)), '') as TEXT,
           b.NUMBER_ROWS as LINES,
           extract(epoch from (b.CREATE_TIMESTAMP))*1000 as CREATED,
           extract(epoch from (b.LAST_SOURCE_UPDATE_TIMESTAMP))*1000 as CHANGED
@@ -706,15 +679,8 @@ export default class IBMiContent {
         ${singleMember ? `And NAME Like '${singleMember}'` : ''}
         ${singleMemberExtension ? `And TYPE Like '${singleMemberExtension}'` : ''}
       Order By ${sort.order === 'name' ? 'NAME' : 'CHANGED'} ${!sort.ascending ? 'DESC' : 'ASC'}`;
-    }
-    let results: Tools.DB2Row[];
-    if (this.config.enableSQL) {
-      results = await this.runSQL(statement);
-    }
-    else {
-      results = await this.getQTempTable([`Create Table QTEMP.MEMBERSLST As (${statement}) With DATA`], "MEMBERSLST");
-    }
 
+    const results = await this.runSQL(statement);
     if (results.length) {
       const asp = this.ibmi.aspInfo[Number(results[0].ASP)];
       return results.map(result => ({
@@ -728,7 +694,6 @@ export default class IBMiContent {
         lines: Number(result.LINES),
         created: new Date(result.CREATED ? Number(result.CREATED) : 0),
         changed: new Date(result.CHANGED ? Number(result.CHANGED) : 0)
-        ,usercontent: String(result.USERCONTENT)
       } as IBMiMember))
         .filter(member => memberFilter.test(member.name))
         .filter(member => memberExtensionFilter.test(member.extension));
@@ -920,9 +885,9 @@ export default class IBMiContent {
     var objQuery;
     let results: Tools.DB2Row[];
 
-    objQuery = `select SPE.SPOOLED_FILE_NAME, SPE.SPOOLED_FILE_NUMBER, SPE.STATUS, SPE.CREATION_TIMESTAMP, SPE.USER_DATA, SPE.SIZE, SPE.TOTAL_PAGES, SPE.QUALIFIED_JOB_NAME, SPE.JOB_NAME, SPE.JOB_USER, SPE.JOB_NUMBER, SPE.FORM_TYPE, SPE.OUTPUT_QUEUE_LIBRARY, SPE.OUTPUT_QUEUE, QE.PAGE_LENGTH from table (QSYS2.SPOOLED_FILE_INFO(USER_NAME => ucase('${user}')) ) SPE left join TABLE(QSYS2.OUTPUT_QUEUE_ENTRIES( OUTQ_LIB => OUTPUT_QUEUE_LIBRARY ,OUTQ_NAME=> OUTPUT_QUEUE, DETAILED_INFO => 'YES',IGNORE_ERRORS => 'YES' ) ) QE on QE.SPOOLED_FILE_NAME = SPE.SPOOLED_FILE_NAME and QE.JOB_NAME = SPE.QUALIFIED_JOB_NAME and QE.FILE_NUMBER = SPE.SPOOLED_FILE_NUMBER where SPE.FILE_AVAILABLE = '*FILEEND' ${splfName ? ` and SPE.SPOOLED_FILE_NAME = ucase('${splfName}')` : ""}`;
+    objQuery = `select SPE.SPOOLED_FILE_NAME, SPE.SPOOLED_FILE_NUMBER, SPE.STATUS, SPE.CREATION_TIMESTAMP, SPE.USER_DATA, SPE.SIZE, SPE.TOTAL_PAGES, SPE.QUALIFIED_JOB_NAME, SPE.JOB_NAME, SPE.JOB_USER, SPE.JOB_NUMBER, SPE.FORM_TYPE, SPE.OUTPUT_QUEUE_LIBRARY, SPE.OUTPUT_QUEUE, QE.PAGE_LENGTH from table (QSYS2.SPOOLED_FILE_INFO(USER_NAME => ucase('${user}')) ) SPE left join QSYS2.OUTPUT_QUEUE_ENTRIES QE on QE.SPOOLED_FILE_NAME = SPE.SPOOLED_FILE_NAME and QE.JOB_NAME = SPE.QUALIFIED_JOB_NAME and QE.FILE_NUMBER = SPE.SPOOLED_FILE_NUMBER where SPE.FILE_AVAILABLE = '*FILEEND' ${splfName ? ` and SPE.SPOOLED_FILE_NAME = ucase('${splfName}')` : ""}`;
     results = await this.runSQL(objQuery);
-
+    
     if (results.length === 0) {
       return [];
     }
@@ -935,9 +900,9 @@ export default class IBMiContent {
     else {
       sorter = (r1, r2) => r1.creation_timestamp.localeCompare(r2.creation_timestamp);
     }
-    let searchWords_ = searchWords?.split(' ') || [];
+    let searchWords_ = searchWords?.split(' ')||[];
     // console.log(searchWords_);
-
+    
     // return results
     let returnSplfList = results
       .map(object => ({
@@ -960,9 +925,9 @@ export default class IBMiContent {
       } as IBMiSpooledFile))
       .filter(obj => searchWords_.length === 0 || searchWords_.some(term => Object.values(obj).join(" ").includes(term)))
       .sort(sorter);
-
-    return returnSplfList;
-
+      
+      return returnSplfList;
+      
   }
   /**
   * Download the contents of a source member
@@ -974,11 +939,17 @@ export default class IBMiContent {
   * @param {string=} additionalPath 
   * @returns {string} a string containing spooled file data 
   */
-  async downloadSpooledFileContent(uriPath: string, name: string, qualified_job_name: string, splf_number: string, fileExtension: string, ctlchar?: string) {
+  async downloadSpooledFileContent(uriPath: string, name: string, qualified_job_name: string, splf_number: string, fileExtension: string, additionalPath?: string) {
     name = name.toUpperCase();
     qualified_job_name = qualified_job_name.toUpperCase();
 
     const tempRmt = this.getTempRemote(uriPath);
+    const tmpobj = await tmpFile();
+
+    const tmpName = path.basename(tempRmt);
+    const tmpFolder = path.dirname(tempRmt) + (additionalPath ? `/${additionalPath}` : ``);
+
+    // const path = homeDirectory +(folder !== undefined ? '/'+folder :'');
     const client = this.ibmi.client;
 
     let retried = false;
@@ -989,34 +960,26 @@ export default class IBMiContent {
       try {
         //If this command fails we need to try again after we delete the temp remote
         switch (fileExtension.toLowerCase()) {
-        case `pdf`:
-          fileEncoding = ``;
-          await this.ibmi.runCommand({
-            command: `CPYSPLF FILE(${name}) TOFILE(*TOSTMF) JOB(${qualified_job_name}) SPLNBR(${splf_number}) TOSTMF('${tempRmt}') WSCST(*PDF) STMFOPT(*REPLACE)\nDLYJOB DLY(1)`
-            , environment: `ile`
-          });
-          break;
-        // case `prtctl`:
-        //   const tempLib = this.config.tempLibrary;
-        //   const tempName = Tools.makeid();
-        //   await this.ibmi.runCommand({
-        //     command: `CPYSPLF FILE(${name}) TOFILE(${tempLib}/${tempName}) JOB(${qualified_job_name}) SPLNBR(${splf_number}) CTLCHAR(*PRTCTL) MBROPT(*REPLACE)\nDLYJOB DLY(1)\nCPYTOIMPF FROMFILE(${tempLib}/${tempName}) TOSTMF('${tempRmt}') MBROPT(*REPLACE) `
-        //     , environment: `ile`
-        //   });
-        //   break;            
-        default:
-          // With the use of CPYSPLF and CPY to create a text based stream file in 1208, there are possibilities that the data becomes corrupt
-          // in the tempRmt object
-          this.ibmi.sendCommand({
-            command: `rm -f ${tempRmt}`
-          });
+          case `pdf`:
+            fileEncoding = ``;
+            await this.ibmi.runCommand({
+              command: `CPYSPLF FILE(${name}) TOFILE(*TOSTMF) JOB(${qualified_job_name}) SPLNBR(${splf_number}) TOSTMF('${tempRmt}') WSCST(*PDF) STMFOPT(*REPLACE)\nDLYJOB DLY(1)`
+              , environment: `ile`
+            });
+            break;
+          default:
+            // With the use of CPYSPLF and CPY to create a text based stream file in 1208, there are possibilities that the data becomes corrupt
+            // in the tempRmt object
+            this.ibmi.sendCommand({
+              command: `rm -f ${tempRmt}`
+            });
 
-          // fileExtension = `txt`;
-          // DLYJOB to ensure the CPY command completes in time.
-          await this.ibmi.runCommand({
-            command: `CPYSPLF FILE(${name}) TOFILE(*TOSTMF) JOB(${qualified_job_name}) SPLNBR(${splf_number}) TOSTMF('${tempRmt}') WSCST(*NONE) STMFOPT(*REPLACE) ${ctlchar ? `CTLCHAR(*PRTCTL)` : ``}\nDLYJOB DLY(1)\nCPY OBJ('${tempRmt}') TOOBJ('${tempRmt}') TOCCSID(1208) DTAFMT(*TEXT) REPLACE(*YES)`
-            , environment: `ile`
-          });
+            // fileExtension = `txt`;
+            // DLYJOB to ensure the CPY command completes in time.
+            await this.ibmi.runCommand({
+              command: `CPYSPLF FILE(${name}) TOFILE(*TOSTMF) JOB(${qualified_job_name}) SPLNBR(${splf_number}) TOSTMF('${tempRmt}') WSCST(*NONE) STMFOPT(*REPLACE)\nDLYJOB DLY(1)\nCPY OBJ('${tempRmt}') TOOBJ('${tempRmt}') TOCCSID(1208) DTAFMT(*TEXT) REPLACE(*YES)`
+              , environment: `ile`
+            });
         }
       } catch (e) {
         if (String(e).startsWith(`CPDA08A`)) {
@@ -1032,9 +995,9 @@ export default class IBMiContent {
         }
       }
     }
-    return tempRmt;
-    // await client.getFile(tmpobj, tempRmt);
-    // return await readFileAsync(tmpobj, fileEncoding);
+
+    await client.getFile(tmpobj, tempRmt);
+    return await readFileAsync(tmpobj, fileEncoding);
 
   }
 
@@ -1207,22 +1170,4 @@ export default class IBMiContent {
 
     return cl;
   }
-  async whereisCustomFunc(): Promise<funcInfo> {
-    // async whereisCustomFunc() :Promise<{ funcSysLib: string; funcSysName: string; } | undefined> {
-    // Look for the custom function somewhere
-    const { instance } = (require(`../instantiate`));
-    let currentUser = '';
-    const connection = instance.getConnection();
-    if (connection) {
-      currentUser = connection.currentUser;
-    }
-    let funcLookupRS: Tools.DB2Row[];
-    let statement = `select SPECIFIC_SCHEMA,SPECIFIC_NAME from QSYS2.SYSFUNCS SF inner join table( values(1,'${currentUser}'),(2,'ILEDITOR') ) LL (Pos, ASCHEMA) on ASCHEMA = SPECIFIC_SCHEMA where ROUTINE_NAME = 'VSC_GETSOURCEFILELISTCUSTOM' limit 1`;
-    funcLookupRS = await this.runSQL(statement);
-    return {
-      funcSysLib: String(funcLookupRS[0].SPECIFIC_SCHEMA),
-      funcSysName: String(funcLookupRS[0].SPECIFIC_NAME)
-    }
-  }
-
 }
