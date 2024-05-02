@@ -6,10 +6,8 @@ import { IBMiSpooledFile} from "../../typingsSplf";
 import fs from 'fs';
 import os from 'os';
 import util from 'util';
-import tmp from 'tmp';
 // import path from 'path';
-const tmpFile = util.promisify(tmp.file);
-const readFileAsync = util.promisify(fs.readFile);
+
 const writeFileAsync = util.promisify(fs.writeFile);
 
 export function getSpooledFileUri(splf: IBMiSpooledFile, options?: QsysFsOptions) {
@@ -90,16 +88,12 @@ export class SplfFS implements vscode.FileSystemProvider {
       // path: `spooledfile://${splf.user}/${splf.queue}/${splf.name}~${splf.job_name}~${splf.job_user}~${splf.job_number}~${splf.number}.splf``,
       const lpath = uri.path.split(`/`);
       const lfilename = lpath[3].split(`~`);
-      const qualifiedJobName = lfilename[3] + '/' + lfilename[2] + '/' + lfilename[1];
-      const splfNumber = lfilename[4].replace(`.splf`, ``);
+      const qualified_job_name = lfilename[3] + '/' + lfilename[2] + '/' + lfilename[1];
+      // const qualified_job_name = lfilename;
+      const splf_number = lfilename[4].replace(`.splf`, ``);
       const name = lfilename[0];
 
-      // const spooledFileContent = await contentApi.downloadSpooledFileContent(uri.path, name, qualifiedJobName, splfNumber, `txt`);
-      const tempRmt               = await contentApi.downloadSpooledFileContent(uri.path, name, qualifiedJobName, splfNumber, `txt`);
-      const tmpobj = await tmpFile();
-      let fileEncoding = `utf8`;
-      await connection.client.getFile(tmpobj, tempRmt);
-      let spooledFileContent = await readFileAsync(tmpobj, fileEncoding);
+      const spooledFileContent = await contentApi.downloadSpooledFileContent(uri.path, name, qualified_job_name, splf_number, `txt`);
       if (spooledFileContent !== undefined) {
         return new Uint8Array(Buffer.from(spooledFileContent, `utf8`));
       }
