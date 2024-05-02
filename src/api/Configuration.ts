@@ -2,6 +2,7 @@ import os from "os";
 import * as vscode from 'vscode';
 import { DeploymentMethod } from '../typings';
 import { FilterType } from './Filter';
+import { DEFAULT_CERT_DIRECTORY } from "./debug/certificates";
 
 export type SourceDateMode = "edit" | "diff";
 export type DefaultOpenMode = "browse" | "edit";
@@ -36,6 +37,7 @@ export namespace ConnectionConfiguration {
     connectionProfiles: ConnectionProfile[];
     commandProfiles: CommandProfile[];
     autoSortIFSShortcuts: boolean;
+    enableSQL: boolean;
     tempLibrary: string;
     tempDir: string;
     sourceASP: string;
@@ -51,6 +53,7 @@ export namespace ConnectionConfiguration {
     connectringStringFor5250: string;
     autoSaveBeforeAction: boolean;
     showDescInLibList: boolean;
+    debugCertDirectory: string;
     debugPort: string;
     debugSepPort: string;
     debugIsSecure: boolean;
@@ -121,6 +124,7 @@ export namespace ConnectionConfiguration {
       autoSortIFSShortcuts: parameters.autoSortIFSShortcuts || false,
       homeDirectory: parameters.homeDirectory || `.`,
       /** Undefined means not created, so default to on */
+      enableSQL: (parameters.enableSQL === true || parameters.enableSQL === undefined),
       tempLibrary: parameters.tempLibrary || `ILEDITOR`,
       tempDir: parameters.tempDir || `/tmp`,
       currentLibrary: parameters.currentLibrary || ``,
@@ -137,6 +141,7 @@ export namespace ConnectionConfiguration {
       connectringStringFor5250: parameters.connectringStringFor5250 || `localhost`,
       autoSaveBeforeAction: (parameters.autoSaveBeforeAction === true),
       showDescInLibList: (parameters.showDescInLibList === true),
+      debugCertDirectory: (parameters.debugCertDirectory || DEFAULT_CERT_DIRECTORY),
       debugPort: (parameters.debugPort || "8005"),
       debugSepPort: (parameters.debugSepPort || "8008"),
       debugIsSecure: (parameters.debugIsSecure === true),

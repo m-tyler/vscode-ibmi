@@ -5,10 +5,9 @@ import { GlobalStorage } from '../../api/Storage';
 import { Tools } from "../../api/Tools";
 import { isManaged } from "../../api/debug";
 import * as certificates from "../../api/debug/certificates";
-import { isSEPSupported } from "../../api/debug/server";
 import { instance } from "../../instantiate";
-import { t } from "../../locale";
 import { ConnectionData, Server } from '../../typings';
+import { t } from "../../locale";
 
 const ENCODINGS = [`37`, `256`, `273`, `277`, `278`, `280`, `284`, `285`, `297`, `500`, `871`, `870`, `905`, `880`, `420`, `875`, `424`, `1026`, `290`, `win37`, `win256`, `win273`, `win277`, `win278`, `win280`, `win284`, `win285`, `win297`, `win500`, `win871`, `win870`, `win905`, `win880`, `win420`, `win875`, `win424`, `win1026`];
 
@@ -52,12 +51,13 @@ export class SettingsUI {
           }
         }
 
-        const restartFields = [`showDescInLibList`, `tempDir`, `debugCertDirectory`];
+        const restartFields = [`enableSQL`, `showDescInLibList`, `tempDir`, `debugCertDirectory`];
         let restart = false;
 
         const featuresTab = new Section();
         featuresTab
           .addCheckbox(`quickConnect`, `Quick Connect`, `When enabled, server settings from previous connection will be used, resulting in much quicker connection. If server settings are changed, right-click the connection in Connection Browser and select <code>Connect and Reload Server Settings</code> to refresh the cache.`, config.quickConnect)
+          .addCheckbox(`enableSQL`, `Enable SQL`, `Must be enabled to make the use of SQL and is enabled by default. If you find SQL isn't working for some reason, disable this. If your QCCSID system value is set to 65535, it is recommended that SQL is disabled. When disabled, will use import files where possible.`, config.enableSQL)
           .addCheckbox(`showDescInLibList`, `Show description of libraries in User Library List view`, `When enabled, library text and attribute will be shown in User Library List. It is recommended to also enable SQL for this.`, config.showDescInLibList)
           .addCheckbox(`showHiddenFiles`, `Show hidden files and directories in IFS browser.`, `When disabled, hidden files and directories (i.e. names starting with '.') will not be shown in the IFS browser, except for special config files.`, config.showHiddenFiles)
           .addCheckbox(`autoSortIFSShortcuts`, `Sort IFS shortcuts automatically`, `Automatically sort the shortcuts in IFS browser when shortcut is added or removed.`, config.autoSortIFSShortcuts)
@@ -174,40 +174,23 @@ export class SettingsUI {
 
         const debuggerTab = new Section();
         if (connection && connection.remoteFeatures[`startDebugService.sh`]) {
-          debuggerTab.addParagraph(`The following values have been read from the debug service configuration.`);
-          const debugServiceConfig: Map<string, string> = new Map()
-            .set("Debug port", config.debugPort);
-
-          if (await isSEPSupported()) {
-            debugServiceConfig.set("SEP debug port", config.debugSepPort)
-          }
-          debuggerTab.addParagraph(`<ul>${Array.from(debugServiceConfig.entries()).map(([label, value]) => `<li><code>${label}</code>: ${value}</li>`).join("")}</ul>`);
-
-          debuggerTab.addCheckbox(`debugUpdateProductionFiles`, `Update production files`, `Determines whether the job being debugged can update objects in production (<code>*PROD</code>) libraries.`, config.debugUpdateProductionFiles)
+          debuggerTab
+            .addInput(`debugPort`, `Debug port`, `Default secure port is <code>8005</code>. Tells the client which port the debug service is running on.`, { default: config.debugPort, minlength: 1, maxlength: 5, regexTest: `^\\d+$` })
+            .addInput(`debugSepPort`, `SEP debug port`, `Default secure port is <code>8008</code>. Tells the client which port the debug service for SEP is running on.`, { default: config.debugSepPort, minlength: 1, maxlength: 5, regexTest: `^\\d+$` })
+            .addCheckbox(`debugUpdateProductionFiles`, `Update production files`, `Determines whether the job being debugged can update objects in production (<code>*PROD</code>) libraries.`, config.debugUpdateProductionFiles)
             .addCheckbox(`debugEnableDebugTracing`, `Debug trace`, `Tells the debug service to send more data to the client. Only useful for debugging issues in the service. Not recommended for general debugging.`, config.debugEnableDebugTracing);
 
           if (!isManaged()) {
             debuggerTab
               .addHorizontalRule()
-              .addCheckbox(`debugIsSecure`, `Debug securely`, `Tells the debug service to authenticate by server and client certificates. Ensure that the client certificate is imported when enabled.`, config.debugIsSecure);
-            if (await certificates.remoteCertificatesExists()) {
-              let localCertificateIssue;
-              try {
-                await certificates.checkClientCertificate(connection);
-              }
-              catch (error) {
-                localCertificateIssue = `${String(error)}. Debugging securely will not function correctly.`;
-              }
-              debuggerTab.addParagraph(`<b>${localCertificateIssue || "Client certificate for service has been imported and matches remote certificate."}</b>`)
-                .addParagraph(`To debug securely, Visual Studio Code needs access to a certificate to connect to the Debug Service. Each server can have unique certificates. This client certificate should exist at <code>${certificates.getLocalCertPath(connection)}</code>`);
-              if (!localCertificateIssue) {
-                debuggerTab.addButtons({ id: `import`, label: `Download client certificate` })
-              }
-            }
-            else {
-              debuggerTab.addParagraph(`The service certificate doesn't exist or is incomplete; it must be generated before the debug service can be started.`)
-                .addButtons({ id: `generate`, label: `Generate service certificate` })
-            }
+              .addCheckbox(`debugIsSecure`, `Debug securely`, `Tells the debug service to authenticate by server and client certificates. Ensure that the client certificate is imported when enabled.`, config.debugIsSecure)
+              .addInput(`debugCertDirectory`, `Certificate directory`, `This remote path is only used when starting the Debug Service and or for downloading an existing client certificate. This directory must be accessible to all users who wish to start the Debug Service (<code>debug_service.pfx</code>) or download an existing client certificate (<code>debug_service.crt</code>). Optionally, you can import one below.`, { default: config.debugCertDirectory });
+
+            const localCertExists = await certificates.localClientCertExists(connection);
+
+            debuggerTab
+              .addParagraph(`<b>${localCertExists ? `Client certificate for server has been imported.` : `No local client certificate exists. Debugging securely will not function correctly.`}</b>` + ` To debug securely, Visual Studio Code needs access to a certificate to connect to the Debug Service. Each server can have unique certificates. This client certificate should exist at <code>${certificates.getLocalCertPath(connection)}</code>`)
+              .addButtons({ id: `import`, label: `Import new certificate` })
           }
         } else if (connection) {
           debuggerTab.addParagraph('Enable the debug service to change these settings');
@@ -254,10 +237,6 @@ export class SettingsUI {
             switch (button) {
               case `import`:
                 vscode.commands.executeCommand(`code-for-ibmi.debug.setup.local`);
-                break;
-
-              case `generate`:
-                vscode.commands.executeCommand(`code-for-ibmi.debug.setup.remote`);
                 break;
 
               case `clearAllowedExts`:

@@ -2,6 +2,7 @@ import fs from "fs";
 import os from "os";
 import util from "util";
 import path from "path";
+import tmp from 'tmp';
 import vscode from "vscode";
 import { GlobalConfiguration, ConnectionConfiguration } from '../api/Configuration';
 import { SplfSearch } from '../api/spooledFileSearch';
@@ -10,7 +11,8 @@ import { Tools } from '../api/Tools';
 import { instance, setSearchResults } from "../instantiate";
 import { t } from "../locale";
 import { IBMiSpooledFile } from '../typingsSplf';
-
+const tmpFile = util.promisify(tmp.file);
+const readFileAsync = util.promisify(fs.readFile);
 const writeFileAsync = util.promisify(fs.writeFile);
 
 
@@ -93,7 +95,7 @@ export default class SPLFBrowser implements vscode.TreeDataProvider<any> {
               usersSpooledFile.push(newUserSplfs);
               config.usersSpooledFile = usersSpooledFile;
               await ConnectionConfiguration.update(config);
-              vscode.commands.executeCommand(`code-for-ibmi.sortUserSpooledFileFilter-o`);
+              vscode.commands.executeCommand(`code-for-ibmi.sortUserSpooledFileFilter`);
               if (GlobalConfiguration.get(`autoRefresh`)) this.refresh();
             }
           }
@@ -595,14 +597,14 @@ export default class SPLFBrowser implements vscode.TreeDataProvider<any> {
         }
       }),
       vscode.commands.registerCommand("code-for-ibmi.openSplfWithLineSpacing-o", (node) => {
-        return vscode.commands.executeCommand("code-for-ibmi.openSpooledFile-o", node, true);
+        return vscode.commands.executeCommand("code-for-ibmi.openSpooledFile", node, true);
       }),
       vscode.commands.registerCommand("code-for-ibmi.openSplfWithoutLineSpacing-o", (node) => {
-        return vscode.commands.executeCommand("code-for-ibmi.openSpooledFile-o", node, false);
+        return vscode.commands.executeCommand("code-for-ibmi.openSpooledFile", node, false);
       }),
       vscode.commands.registerCommand("code-for-ibmi.openSpooledFile-o", (node,withSpacing:boolean) => {
         const readonly = true;
-        // vscode.commands.executeCommand(`code-for-ibmi.openEditable-o`, item.path, { readonly });
+        // vscode.commands.executeCommand(`code-for-ibmi.openEditable`, item.path, { readonly });
         //1- Download content.
         //2- read through content, looking for *PRTCTL values in position 0-3
         //3- Add lines based on *PRTCTL values

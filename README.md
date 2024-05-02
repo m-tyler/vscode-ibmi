@@ -26,10 +26,9 @@ Using this fork to add in Winco personalized changes to the extension.  For inst
 
 Maintain your RPGLE, CL, COBOL, C/CPP on IBM i right from Visual Studio Code. Edit and compile all ILE languages, view errors inline, content assist for RPGLE and CL, source date support, and much more. Code for IBM i has thousands of daily users and a rapidly increasing number of downloads. We embrace open-source so that we can best support our community.
 
-* [Install from Marketplace](https://marketplace.visualstudio.com/items?itemName=HalcyonTechLtd.code-for-ibmi) 💻
-* [Install the extension pack](https://marketplace.visualstudio.com/items?itemName=HalcyonTechLtd.ibm-i-development-pack) for RPGLE, CL and COBOL support 📦
+* [Install original from Marketplace](https://marketplace.visualstudio.com/items?itemName=HalcyonTechLtd.code-for-ibmi) 💻
 * [Watch some tutorials](https://www.youtube.com/playlist?list=PLNl31cqBafCp-ml8WqPeriHWLD1bkg7KL) 📺
-* [View our documentation](https://codefori.github.io/docs/#/) 📘
+* [View Codefori documentation](https://codefori.github.io/docs/#/) 📘
 * [See previous releases](https://github.com/codefori/vscode-ibmi/releases) 🔎
 * Build from source (see below!) 🔨
 * [Use our IBM i API in your own extension](https://codefori.github.io/docs/#/pages/api/extending) 🛠

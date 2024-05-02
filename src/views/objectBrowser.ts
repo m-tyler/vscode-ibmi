@@ -257,7 +257,6 @@ class ObjectBrowserSourcePhysicalFileItem extends ObjectBrowserItem implements O
   }
 
   async getChildren(): Promise<BrowserItem[] | undefined> {
-    const connection = getConnection();
     const content = getContent();
 
     const writable = await content.checkObject({
@@ -282,9 +281,9 @@ class ObjectBrowserSourcePhysicalFileItem extends ObjectBrowserItem implements O
     } catch (e: any) {
       console.log(e);
 
-      // Work around since we can't get the member list if the users CCSID is not setup.
+      // Work around since we can't get the member list if the users QCCSID is not setup.
       const config = getConfig();
-      if (connection.enableSQL) {
+      if (config.enableSQL) {
         if (e && e.message && e.message.includes(`CCSID`)) {
           vscode.window.showErrorMessage(`Error getting member list. Disabling SQL and refreshing. It is recommended you reload. ${e.message}`, `Reload`).then(async (value) => {
             if (value === `Reload`) {
@@ -292,7 +291,7 @@ class ObjectBrowserSourcePhysicalFileItem extends ObjectBrowserItem implements O
             }
           });
 
-          connection.enableSQL = false;
+          config.enableSQL = false;
           await ConnectionConfiguration.update(config);
           return this.getChildren();
         }
@@ -392,8 +391,11 @@ class ObjectBrowserMemberItem extends ObjectBrowserItem implements MemberItem {
       text: member.text,
       lines: member.lines,
       created: member.created?.toISOString().slice(0, 19).replace(`T`, ` `),
-      changed: member.changed?.toISOString().slice(0, 19).replace(`T`, ` `)
+      changed: member.changed?.toISOString().slice(0, 19).replace(`T`, ` `),
+      usercontent: member.usercontent
     }));
+    //, usercontent: member.usercontent?
+    //.concat(`${member.usercontent ? `\n${t("usercontent")}:\t${member.usercontent}` : ``}`)
     this.tooltip.supportHtml = true;
 
     this.sortBy = (sort: SortOptions) => parent.sortBy(sort);

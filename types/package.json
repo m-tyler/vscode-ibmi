@@ -1,6 +1,10 @@
 {
   "name": "@halcyontech/vscode-ibmi-types",
+<<<<<<< HEAD
   "version": "2.10.0",
+=======
+  "version": "2.9.0",
+>>>>>>> parent of 63f2308f (Merge branch 'UserSplfs' into WincoItems)
   "description": "Types for vscode-ibmi",
   "typings": "./typings.d.ts",
   "scripts": {
