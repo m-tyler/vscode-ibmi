@@ -87,7 +87,6 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
 
   instance = new Instance(context);
   searchViewContext = new SearchView(context);
-  // HawkeyeSearchViewContext = new HawkeyeSearchView(context);
 
   context.subscriptions.push(
     connectedBarItem,
@@ -101,7 +100,6 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
     }),
     onCodeForIBMiConfigurationChange("connectionSettings", updateConnectedBar),
     vscode.window.registerTreeDataProvider( `searchView`, searchViewContext ),
-    // vscode.window.registerTreeDataProvider( `hawkeyeSearchView`, HawkeyeSearchViewContext ),
     vscode.commands.registerCommand(`code-for-ibmi.openEditable`, async (path: string, options?: OpenEditableOptions) => {
       console.log(path);
       options = options || {};
