@@ -54,7 +54,7 @@ export async function disconnect(): Promise<boolean> {
 
   for (const document of vscode.workspace.textDocuments) {
     // This code will check that sources are saved before closing
-    if (!document.isClosed && [`member`, `streamfile`, `object`, `spooledfile`].includes(document.uri.scheme)) {
+    if (!document.isClosed && [`member`, `streamfile`, `object`, `spooledfile-o`].includes(document.uri.scheme)) {
       if (document.isDirty) {
         if (doDisconnect) {
           if (await vscode.window.showTextDocument(document).then(() => vscode.window.showErrorMessage(`Cannot disconnect while files have not been saved.`, 'Disconnect anyway'))) {
@@ -711,7 +711,7 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(vscode.workspace.registerFileSystemProvider(`member`, new QSysFS(context), {
     isCaseSensitive: false
-  }), vscode.workspace.registerFileSystemProvider(`spooledfile`, new SplfFS(context), {
+  }), vscode.workspace.registerFileSystemProvider(`spooledfile-o`, new SplfFS(context), {
     isCaseSensitive: false
   }));
 
@@ -769,7 +769,7 @@ async function onDisconnected() {
       group.tabs.forEach(tab => {
         if (tab.input instanceof vscode.TabInputText) {
           const uri = tab.input.uri;
-          if ([`member`, `streamfile`, `object`, `spooledfile`].includes(uri.scheme)) {
+          if ([`member`, `streamfile`, `object`, `spooledfile-o`].includes(uri.scheme)) {
             vscode.window.tabGroups.close(tab);
           }
         }

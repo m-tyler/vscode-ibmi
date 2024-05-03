@@ -34,8 +34,7 @@
 	"activationEvents": [
 		"onStartupFinished",
 		"onFileSystem:member",
-		"onFileSystem:streamfile",
-		"onFileSystem:SplfFs-o"
+		"onFileSystem:streamfile"
 	],
 	"main": "./dist/extension.js",
 	"contributes": {
