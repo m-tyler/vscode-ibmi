@@ -595,7 +595,7 @@ export function initializeSPLFBrowser(context: vscode.ExtensionContext) {
         searchTerm = await vscode.window.showInputBox({
           // prompt: `Filter ${searchUser}'s spooled files. Delete value to clear filter.`,
           prompt: t(`splfBrowser.filterSpooledFiles.prompt`, searchUser),
-          value: `${node.contextValue == `spooledfile` ? node.parent.filter : node.filter}`
+          value: `${node.contextValue == `spooledfile-o` ? node.parent.filter : node.filter}`
         });
 
         if (searchTerm) {
@@ -612,7 +612,7 @@ export function initializeSPLFBrowser(context: vscode.ExtensionContext) {
               searchTerm = searchTerm.toLocaleUpperCase();
               const splfnum = await content.getUserSpooledFileCount(searchUser);
               if (Number(splfnum) > 0) {
-                if (node.contextValue == `spooledfile`) {
+                if (node.contextValue == `spooledfile-o`) {
                   node.parent.addFilter(searchTerm);
                   this.refresh(node.parent);
                 } else {

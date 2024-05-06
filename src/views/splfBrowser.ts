@@ -395,7 +395,7 @@ export default class SPLFBrowser implements vscode.TreeDataProvider<any> {
         let searchName :any;
         let searchTerm :any;
         let searchWord :string;
-        if (node && node.contextValue == `spooledfile`) {
+        if (node && node.contextValue == `spooledfile-o`) {
           searchUser = node.user;
           searchName = node.name;
           searchWord = node.parent.filter;
@@ -495,7 +495,7 @@ export default class SPLFBrowser implements vscode.TreeDataProvider<any> {
         searchTerm = await vscode.window.showInputBox({
           // prompt: `Filter ${searchUser}'s spooled files. Delete value to clear filter.`,
           prompt: t(`splfBrowser.filterSpooledFiles.prompt`, searchUser),
-          value: `${node.contextValue == `spooledfile` ?node.parent.filter :node.filter}`
+          value: `${node.contextValue == `spooledfile-o` ?node.parent.filter :node.filter}`
         });
 
         if (searchTerm) {
@@ -512,7 +512,7 @@ export default class SPLFBrowser implements vscode.TreeDataProvider<any> {
               searchTerm = searchTerm.toLocaleUpperCase();
               const splfnum = await content.getUserSpooledFileCount(searchUser);
               if (Number(splfnum) > 0) {
-                if (node.contextValue == `spooledfile`) {
+                if (node.contextValue == `spooledfile-o`) {
                   node.parent.addFilter(searchTerm);
                   this.refresh(node.parent);
                 } else {

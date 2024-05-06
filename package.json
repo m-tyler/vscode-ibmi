@@ -3,11 +3,7 @@
 	"icon": "icon.png",
 	"displayName": "Code for IBM i",
 	"description": "Maintain your RPGLE, CL, COBOL, C/CPP on IBM i right from Visual Studio Code.",
-<<<<<<< HEAD
 	"version": "2.10.0",
-=======
-	"version": "2.9.0",
->>>>>>> parent of 63f2308f (Merge branch 'UserSplfs' into WincoItems)
 	"keywords": [
 		"ibmi",
 		"rpgle",
@@ -38,8 +34,7 @@
 	"activationEvents": [
 		"onStartupFinished",
 		"onFileSystem:member",
-		"onFileSystem:streamfile",
-		"onFileSystem:SplfFs-o"
+		"onFileSystem:streamfile"
 	],
 	"main": "./dist/extension.js",
 	"contributes": {

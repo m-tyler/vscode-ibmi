@@ -21,7 +21,7 @@ export function getUriFromPath_Splf(path: string, options?: QsysFsOptions) {
 
 export function getUriFromPath(path: string, options?: QsysFsOptions) {
   const query = stringify(options as ParsedUrlQueryInput);
-  return vscode.Uri.parse(path).with({ scheme: `spooledfile`, path: `/${path}`, query });
+  return vscode.Uri.parse(path).with({ scheme: `spooledfile-o`, path: `/${path}`, query });
 }
 
 export function getFilePermission(uri: vscode.Uri): FilePermission | undefined {
