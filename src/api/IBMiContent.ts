@@ -5,12 +5,12 @@ import tmp from 'tmp';
 import util from 'util';
 import { window } from 'vscode';
 import { ObjectTypes } from '../filesystems/qsys/Objects';
-import { CommandResult, IBMiError, IBMiMember, IBMiObject, IFSFile, QsysPath } from '../typings';
-import { IBMiSpooledFile } from '../typingsSplf';
+import { AttrOperands, CommandResult, IBMiError, IBMiMember, IBMiObject, IFSFile, QsysPath } from '../typings';
 import { ConnectionConfiguration } from './Configuration';
 import { FilterType, parseFilter, singleGenericName } from './Filter';
 import { default as IBMi } from './IBMi';
 import { Tools } from './Tools';
+import { IBMiSpooledFile } from '../typingsSplf';
 const tmpFile = util.promisify(tmp.file);
 const readFileAsync = util.promisify(fs.readFile);
 const writeFileAsync = util.promisify(fs.writeFile);
@@ -528,41 +528,22 @@ export default class IBMiContent {
 
     let createOBJLIST: string[];
     if (sourceFilesOnly) {
-      let funcInfo: funcInfo = await this.whereisCustomFunc();
-      if (funcInfo && await this.checkObject({ library: funcInfo.funcSysLib, name: funcInfo.funcSysName, type: "*SRVPGM" })) {
-        createOBJLIST = [`select PHFILE name,`,
-          `'*FILE' as type,`,
-          `'PF'    as ATTRIBUTE,`,
-          `PHTXT   as TEXT,`,
-          `1       as IS_SOURCE,`,
-          `PHNOMB  as NB_NBR,`,
-          `PHMXRL  as SOLURCE_LENGTH,`,
-          `PHCSID  as CCSID`,
-          `from table ( ${funcInfo.funcSysLib}.VSC_getSourceFileListCustom (`,
-          `  IN_LIB => '${library}'`,
-          `, IN_SRCF => '${objectFilter}'`,
-          `, IN_MBR => '${member}'`,
-          `, IN_MBR_TYPE => '${mbrtype}'`,
-          ` ) )`
-        ];
-      } else {
-        //DSPFD only
-        createOBJLIST = [
-          `select `,
-          `  t.SYSTEM_TABLE_NAME as NAME,`,
-          `  '*FILE'             as TYPE,`,
-          `  'PF'                as ATTRIBUTE,`,
-          `  t.TABLE_TEXT        as TEXT,`,
-          `  1                   as IS_SOURCE,`,
-          `  p.NUMBER_PARTITIONS as NB_MBR,`,
-          `  t.ROW_LENGTH        as SOURCE_LENGTH,`,
-          `  c.CCSID             as CCSID`,
-          `from QSYS2.SYSTABLES as t`,
-          `     join QSYS2.SYSTABLESTAT as p on ( t.SYSTEM_TABLE_SCHEMA, t.SYSTEM_TABLE_NAME ) = ( p.SYSTEM_TABLE_SCHEMA, p.SYSTEM_TABLE_NAME )`,
-          `     join QSYS2.SYSCOLUMNS as c on ( t.SYSTEM_TABLE_SCHEMA, t.SYSTEM_TABLE_NAME, 3 ) = ( c.SYSTEM_TABLE_SCHEMA, c.SYSTEM_TABLE_NAME, c.ORDINAL_POSITION )`,
-          `where t.table_schema = '${library}' and t.file_type = 'S'${objectNameLike()}`,
-        ];
-      }
+      //DSPFD only
+      createOBJLIST = [
+        `select `,
+        `  t.SYSTEM_TABLE_NAME as NAME,`,
+        `  '*FILE'             as TYPE,`,
+        `  'PF'                as ATTRIBUTE,`,
+        `  t.TABLE_TEXT        as TEXT,`,
+        `  1                   as IS_SOURCE,`,
+        `  p.NUMBER_PARTITIONS as NB_MBR,`,
+        `  t.ROW_LENGTH        as SOURCE_LENGTH,`,
+        `  c.CCSID             as CCSID`,
+        `from QSYS2.SYSTABLES as t`,
+        `     join QSYS2.SYSTABLESTAT as p on ( t.SYSTEM_TABLE_SCHEMA, t.SYSTEM_TABLE_NAME ) = ( p.SYSTEM_TABLE_SCHEMA, p.SYSTEM_TABLE_NAME )`,
+        `     join QSYS2.SYSCOLUMNS as c on ( t.SYSTEM_TABLE_SCHEMA, t.SYSTEM_TABLE_NAME, 3 ) = ( c.SYSTEM_TABLE_SCHEMA, c.SYSTEM_TABLE_NAME, c.ORDINAL_POSITION )`,
+        `where t.table_schema = '${library}' and t.file_type = 'S'${objectNameLike()}`,
+      ];
     } else if (!withSourceFiles) {
       //DSPOBJD only
       createOBJLIST = [
@@ -590,12 +571,8 @@ export default class IBMiContent {
         `    'PF'                as ATTRIBUTE,`,
         `    t.TABLE_TEXT        as TEXT,`,
         `    1                   as IS_SOURCE,`,
-        `    p.NUMBER_PARTITIONS as NB_MBR,`,
-        `    t.ROW_LENGTH        as SOURCE_LENGTH,`,
-        `    c.CCSID             as CCSID`,
+        `    t.ROW_LENGTH        as SOURCE_LENGTH`,
         `  from QSYS2.SYSTABLES as t`,
-        `       join QSYS2.SYSTABLESTAT as p on ( t.SYSTEM_TABLE_SCHEMA, t.SYSTEM_TABLE_NAME ) = ( p.SYSTEM_TABLE_SCHEMA, p.SYSTEM_TABLE_NAME )`,
-        `       join QSYS2.SYSCOLUMNS as c on ( t.SYSTEM_TABLE_SCHEMA, t.SYSTEM_TABLE_NAME, 3 ) = ( c.SYSTEM_TABLE_SCHEMA, c.SYSTEM_TABLE_NAME, c.ORDINAL_POSITION )`,
         `  where t.table_schema = '${library}' and t.file_type = 'S'${objectNameLike()}`,
         `), OBJD as (`,
         `  select `,
@@ -617,9 +594,7 @@ export default class IBMiContent {
         `  o.ATTRIBUTE,`,
         `  o.TEXT,`,
         `  case when s.IS_SOURCE is not null then s.IS_SOURCE else o.IS_SOURCE end as IS_SOURCE,`,
-        `  s.NB_MBR,`,
         `  s.SOURCE_LENGTH,`,
-        `  s.CCSID,`,
         `  o.SIZE,`,
         `  o.CREATED,`,
         `  o.CHANGED,`,
@@ -637,10 +612,8 @@ export default class IBMiContent {
       type: String(object.TYPE),
       attribute: String(object.ATTRIBUTE),
       text: String(object.TEXT || ""),
-      memberCount: object.NB_MBR !== undefined ? Number(object.NB_MBR) : undefined,
       sourceFile: Boolean(object.IS_SOURCE),
       sourceLength: object.SOURCE_LENGTH !== undefined ? Number(object.SOURCE_LENGTH) : undefined,
-      CCSID: object.CCSID !== undefined ? Number(object.CCSID) : undefined,
       size: Number(object.SIZE),
       created: new Date(Number(object.CREATED)),
       changed: new Date(Number(object.CHANGED)),
@@ -1241,22 +1214,4 @@ export default class IBMiContent {
 
     return cl;
   }
-  async whereisCustomFunc(): Promise<funcInfo> {
-    // async whereisCustomFunc() :Promise<{ funcSysLib: string; funcSysName: string; } | undefined> {
-    // Look for the custom function somewhere
-    const { instance } = (require(`../instantiate`));
-    let currentUser = '';
-    const connection = instance.getConnection();
-    if (connection) {
-      currentUser = connection.currentUser;
-    }
-    let funcLookupRS: Tools.DB2Row[];
-    let statement = `select SPECIFIC_SCHEMA,SPECIFIC_NAME from QSYS2.SYSFUNCS SF inner join table( values(1,'${currentUser}'),(2,'ILEDITOR') ) LL (Pos, ASCHEMA) on ASCHEMA = SPECIFIC_SCHEMA where ROUTINE_NAME = 'VSC_GETSOURCEFILELISTCUSTOM' limit 1`;
-    funcLookupRS = await this.runSQL(statement);
-    return {
-      funcSysLib: String(funcLookupRS[0].SPECIFIC_SCHEMA),
-      funcSysName: String(funcLookupRS[0].SPECIFIC_NAME)
-    }
-  }
-
 }
