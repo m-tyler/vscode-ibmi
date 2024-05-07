@@ -13,7 +13,7 @@ const readFileAsync = util.promisify(fs.readFile);
 const writeFileAsync = util.promisify(fs.writeFile);
 
 export function getSpooledFileUri(splf: IBMiSpooledFile, options?: QsysFsOptions) {
-  return getUriFromPath(`${splf.user}/${splf.queue}/${splf.name}~${splf.job_name}~${splf.job_user}~${splf.job_number}~${splf.number}.splf`, options);
+  return getUriFromPath_Splf(`${splf.user}/${splf.queue}/${splf.name}~${splf.job_name}~${splf.job_user}~${splf.job_number}~${splf.number}.splf`, options);
 }
 export function getUriFromPath_Splf(path: string, options?: QsysFsOptions) {
   return getUriFromPath(path, options);
