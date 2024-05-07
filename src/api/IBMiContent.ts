@@ -160,7 +160,7 @@ export default class IBMiContent {
       if (this.ibmi.dangerousVariants && new RegExp(`[${this.ibmi.variantChars.local}]`).test(path)) {
         copyResult = { code: 0, stdout: '', stderr: '' };
         try {
-          await this.runSQL([
+          await this.ibmi.runSQL([
             `@QSYS/CPYF FROMFILE(${library}/${sourceFile}) TOFILE(QTEMP/QTEMPSRC) FROMMBR(${member}) TOMBR(TEMPMEMBER) MBROPT(*REPLACE) CRTFILE(*YES);`,
             `@QSYS/CPYTOSTMF FROMMBR('${Tools.qualifyPath("QTEMP", "QTEMPSRC", "TEMPMEMBER", undefined)}') TOSTMF('${tempRmt}') STMFOPT(*REPLACE) STMFCCSID(1208) DBFCCSID(${this.config.sourceFileCCSID});`
           ].join("\n"));
@@ -186,21 +186,21 @@ export default class IBMiContent {
         if (!retry) {
           const messageID = String(copyResult.stdout).substring(0, 7);
           switch (messageID) {
-            case "CPDA08A":
-              //We need to try again after we delete the temp remote
-              const result = await this.ibmi.sendCommand({ command: `rm -rf ${tempRmt}`, directory: `.` });
-              retry = !result.code || result.code === 0;
-              break;
-            case "CPFA0A9":
-              //The member may be located on SYSBAS
-              if (asp) {
-                path = Tools.qualifyPath(library, sourceFile, member);
-                retry = true;
-              }
-              break;
-            default:
-              retry = false;
-              break;
+          case "CPDA08A":
+            //We need to try again after we delete the temp remote
+            const result = await this.ibmi.sendCommand({ command: `rm -rf ${tempRmt}`, directory: `.` });
+            retry = !result.code || result.code === 0;
+            break;
+          case "CPFA0A9":
+            //The member may be located on SYSBAS
+            if (asp) {
+              path = Tools.qualifyPath(library, sourceFile, member);
+              retry = true;
+            }
+            break;
+          default:
+            retry = false;
+            break;
           }
         }
 
@@ -235,7 +235,7 @@ export default class IBMiContent {
         if (this.ibmi.dangerousVariants && new RegExp(`[${this.ibmi.variantChars.local}]`).test(path)) {
           copyResult = { code: 0, stdout: '', stderr: '' };
           try {
-            await this.runSQL([
+            await this.ibmi.runSQL([
               `@QSYS/CPYF FROMFILE(${library}/${sourceFile}) FROMMBR(${member}) TOFILE(QTEMP/QTEMPSRC) TOMBR(TEMPMEMBER) MBROPT(*REPLACE) CRTFILE(*YES);`,
               `@QSYS/CPYFRMSTMF FROMSTMF('${tempRmt}') TOMBR('${Tools.qualifyPath("QTEMP", "QTEMPSRC", "TEMPMEMBER", undefined)}') MBROPT(*REPLACE) STMFCCSID(1208) DBFCCSID(${this.config.sourceFileCCSID})`,
               `@QSYS/CPYF FROMFILE(QTEMP/QTEMPSRC) FROMMBR(TEMPMEMBER) TOFILE(${library}/${sourceFile}) TOMBR(${member}) MBROPT(*REPLACE);`
@@ -285,7 +285,7 @@ export default class IBMiContent {
    * @returns result set
    */
   runStatements(...statements: string[]): Promise<Tools.DB2Row[]> {
-    return this.runSQL(statements.map(s => s.trimEnd().endsWith(`;`) ? s : `${s};`).join(`\n`));
+    return this.ibmi.runSQL(statements.map(s => s.trimEnd().endsWith(`;`) ? s : `${s};`).join(`\n`));
   }
 
   /**
@@ -295,29 +295,10 @@ export default class IBMiContent {
    *
    * @param statements
    * @returns a Result set
+   * @deprecated Use {@linkcode IBMi.runSQL IBMi.runSQL} instead
    */
-  async runSQL(statements: string): Promise<Tools.DB2Row[]> {
-    const { 'QZDFMDB2.PGM': QZDFMDB2 } = this.ibmi.remoteFeatures;
-
-    if (QZDFMDB2) {
-      if (this.chgJobCCSID === undefined) {
-        this.chgJobCCSID = (this.ibmi.qccsid < 1 || this.ibmi.qccsid === 65535) && this.ibmi.defaultCCSID > 0 ? `@CHGJOB CCSID(${this.ibmi.defaultCCSID});\n` : '';
-      }
-
-      const output = await this.ibmi.sendCommand({
-        command: `LC_ALL=EN_US.UTF-8 system "call QSYS/QZDFMDB2 PARM('-d' '-i' '-t')"`,
-        stdin: Tools.fixSQL(`${this.chgJobCCSID}${statements}`)
-      })
-
-      if (output.stdout) {
-        return Tools.db2Parse(output.stdout);
-      } else {
-        throw new Error(`There was an error running the SQL statement.`);
-      }
-
-    } else {
-      throw new Error(`There is no way to run SQL on this system.`);
-    }
+  runSQL(statements: string) {
+    return this.ibmi.runSQL(statements);
   }
 
   /**
@@ -326,7 +307,7 @@ export default class IBMiContent {
   async getLibraryListFromCommand(ileCommand: string): Promise<{ currentLibrary: string; libraryList: string[]; } | undefined> {
     if (this.ibmi.remoteFeatures[`GETNEWLIBL.PGM`]) {
       const tempLib = this.config.tempLibrary;
-      const resultSet = await this.runSQL(`CALL ${tempLib}.GETNEWLIBL('${ileCommand.replace(new RegExp(`'`, 'g'), `''`)}')`);
+      const resultSet = await this.ibmi.runSQL(`CALL ${tempLib}.GETNEWLIBL('${ileCommand.replace(new RegExp(`'`, 'g'), `''`)}')`);
 
       let result = {
         currentLibrary: `QGPL`,
@@ -361,8 +342,8 @@ export default class IBMiContent {
   async getTable(library: string, file: string, member?: string, deleteTable?: boolean): Promise<Tools.DB2Row[]> {
     if (!member) member = file; //Incase mbr is the same file
 
-    if (file === member && this.config.enableSQL) {
-      const data = await this.runSQL(`SELECT * FROM ${library}.${file}`);
+    if (file === member && this.ibmi.enableSQL) {
+      const data = await this.ibmi.runSQL(`SELECT * FROM ${library}.${file}`);
 
       if (deleteTable && this.config.autoClearTempData) {
         await this.ibmi.runCommand({
@@ -429,7 +410,7 @@ export default class IBMiContent {
   async getLibraryList(libraries: string[]): Promise<IBMiObject[]> {
     let results: Tools.DB2Row[];
 
-    if (this.config.enableSQL) {
+    if (this.ibmi.enableSQL) {
       const statement = `
         select os.OBJNAME as ODOBNM
              , coalesce(os.OBJTEXT, '') as ODOBTX
@@ -437,7 +418,7 @@ export default class IBMiContent {
           from table( SYSTOOLS.SPLIT( INPUT_LIST => '${libraries.toString()}', DELIMITER => ',' ) ) libs
              , table( QSYS2.OBJECT_STATISTICS( OBJECT_SCHEMA => 'QSYS', OBJTYPELIST => '*LIB', OBJECT_NAME => libs.ELEMENT ) ) os
       `;
-      results = await this.runSQL(statement);
+      results = await this.ibmi.runSQL(statement);
     } else {
       results = await this.getQTempTable(libraries.map(library => `@DSPOBJD OBJ(QSYS/${library}) OBJTYPE(*LIB) DETAIL(*TEXTATR) OUTPUT(*OUTFILE) OUTFILE(QTEMP/LIBLIST) OUTMBR(*FIRST *ADD)`), "LIBLIST");
       if (results.length === 1 && !results[0].ODOBNM?.toString().trim()) {
@@ -449,7 +430,7 @@ export default class IBMiContent {
     const objects = results.map(object => ({
       library: 'QSYS',
       type: '*LIB',
-      name: this.config.enableSQL ? object.ODOBNM : this.ibmi.sysNameInLocal(String(object.ODOBNM)),
+      name: this.ibmi.enableSQL ? object.ODOBNM : this.ibmi.sysNameInLocal(String(object.ODOBNM)),
       attribute: object.ODOBAT,
       text: object.ODOBTX
     } as IBMiObject));
@@ -526,18 +507,18 @@ export default class IBMiContent {
    * @returns an array of IBMiObject
    */
   async getObjectList(filters: { library: string; object?: string; types?: string[]; filterType?: FilterType; member?: string; memberType?: string; }, sortOrder?: SortOrder): Promise<IBMiObject[]> {
-    const library = filters.library.toUpperCase();
+    const library = this.ibmi.upperCaseName(filters.library);
     if (!await this.checkObject({ library: "QSYS", name: library, type: "*LIB" })) {
       throw new Error(`Library ${library} does not exist.`);
     }
 
     const singleEntry = filters.filterType !== 'regex' ? singleGenericName(filters.object) : undefined;
     const nameFilter = parseFilter(filters.object, filters.filterType);
-    const object = filters.object && (nameFilter.noFilter || singleEntry) && filters.object !== `*` ? this.ibmi.upperCaseName(filters.object) : `*ALL`;
+    const objectFilter = filters.object && (nameFilter.noFilter || singleEntry) && filters.object !== `*` ? this.ibmi.upperCaseName(filters.object) : `*ALL`;
+    const objectNameLike = () => objectFilter ? ` and t.SYSTEM_TABLE_NAME ${(objectFilter.includes('*') ? ` like ` : ` = `)} '${objectFilter.replace('*', '%')}'` : '';
+    const objectName = () => objectFilter ? `, OBJECT_NAME => '${objectFilter}'` : '';
     const member = (filters.member ? filters.member.toUpperCase() : filters.member);
     const mbrtype = (filters.memberType ? filters.memberType.toUpperCase() : filters.memberType);
-    const { instance } = (require(`../instantiate`));
-
 
     const typeFilter = filters.types && filters.types.length > 1 ? (t: string) => filters.types?.includes(t) : undefined;
     const type = filters.types && filters.types.length === 1 && filters.types[0] !== '*' ? filters.types[0] : '*ALL';
@@ -545,101 +526,129 @@ export default class IBMiContent {
     const sourceFilesOnly = filters.types && filters.types.length === 1 && filters.types.includes(`*SRCPF`);
     const withSourceFiles = ['*ALL', '*SRCPF', '*FILE'].includes(type);
 
-    const queries: string[] = [];
-
-    if (!sourceFilesOnly) {
-      queries.push(`CALL QSYS2.QCMDEXC('DSPOBJD OBJ(${library}/${object}) OBJTYPE(${type}) OUTPUT(*OUTFILE) OUTFILE(QTEMP/CODE4IOBJD)')`);
-    }
-
-    if (withSourceFiles) {
-      let funcInfo :funcInfo = await this.whereisCustomFunc();
-      if (funcInfo) {
-        if (await this.checkObject({ library: funcInfo.funcSysLib, name: funcInfo.funcSysName, type: "*SRVPGM" })) {
-          queries.push(`create or replace table QTEMP.CODE4IFD (PHLIB,PHFILE,PHFILA,PHDTAT,PHTXT,PHNOMB,PHCSID, PHMXRL) as (select PHLIB,PHFILE,PHFILA,PHDTAT,PHTXT,PHNOMB,PHCSID ,PHMXRL from table ( ${funcInfo.funcSysLib}.VSC_getSourceFileListCustom (IN_SRCF => '${object}' ,IN_MBR => '${member}', IN_LIB => '${library}' ,IN_MBR_TYPE => '${mbrtype}' ) )) with data on replace delete rows`);
-        }
-      } else {
-        queries.push(`CALL QSYS2.QCMDEXC('DSPFD FILE(${library}/${object}) TYPE(*ATR) FILEATR(*PF) OUTPUT(*OUTFILE) OUTFILE(QTEMP/CODE4IFD)')`);
-      }
-    }
-
-    let createOBJLIST;
+    let createOBJLIST: string[];
     if (sourceFilesOnly) {
-      //DSPFD only
-      createOBJLIST = `select PHFILE as NAME, ` +
-        `'*FILE' as TYPE, ` +
-        `PHFILA as ATTRIBUTE, ` +
-        `PHTXT as TEXT, ` +
-        `1 as IS_SOURCE, ` +
-        `PHNOMB as NB_MBR, ` +
-        'PHMXRL as SOURCE_LENGTH, ' +
-        'PHCSID as CCSID ' +
-        `from QTEMP.CODE4IFD where PHDTAT = 'S'`;
+      let funcInfo: funcInfo = await this.whereisCustomFunc();
+      if (funcInfo && await this.checkObject({ library: funcInfo.funcSysLib, name: funcInfo.funcSysName, type: "*SRVPGM" })) {
+        createOBJLIST = [`select PHFILE name,`,
+          `'*FILE' as type,`,
+          `'PF'    as ATTRIBUTE,`,
+          `PHTXT   as TEXT,`,
+          `1       as IS_SOURCE,`,
+          `PHNOMB  as NB_NBR,`,
+          `PHMXRL  as SOLURCE_LENGTH,`,
+          `PHCSID  as CCSID`,
+          `from table ( ${funcInfo.funcSysLib}.VSC_getSourceFileListCustom (`,
+          `  IN_LIB => '${library}'`,
+          `, IN_SRCF => '${objectFilter}'`,
+          `, IN_MBR => '${member}'`,
+          `, IN_MBR_TYPE => '${mbrtype}'`,
+          ` ) )`
+        ];
+      } else {
+        //DSPFD only
+        createOBJLIST = [
+          `select `,
+          `  t.SYSTEM_TABLE_NAME as NAME,`,
+          `  '*FILE'             as TYPE,`,
+          `  'PF'                as ATTRIBUTE,`,
+          `  t.TABLE_TEXT        as TEXT,`,
+          `  1                   as IS_SOURCE,`,
+          `  p.NUMBER_PARTITIONS as NB_MBR,`,
+          `  t.ROW_LENGTH        as SOURCE_LENGTH,`,
+          `  c.CCSID             as CCSID`,
+          `from QSYS2.SYSTABLES as t`,
+          `     join QSYS2.SYSTABLESTAT as p on ( t.SYSTEM_TABLE_SCHEMA, t.SYSTEM_TABLE_NAME ) = ( p.SYSTEM_TABLE_SCHEMA, p.SYSTEM_TABLE_NAME )`,
+          `     join QSYS2.SYSCOLUMNS as c on ( t.SYSTEM_TABLE_SCHEMA, t.SYSTEM_TABLE_NAME, 3 ) = ( c.SYSTEM_TABLE_SCHEMA, c.SYSTEM_TABLE_NAME, c.ORDINAL_POSITION )`,
+          `where t.table_schema = '${library}' and t.file_type = 'S'${objectNameLike()}`,
+        ];
+      }
     } else if (!withSourceFiles) {
       //DSPOBJD only
-      createOBJLIST = `select ODOBNM as NAME, ` +
-        `ODOBTP as TYPE, ` +
-        `ODOBAT as ATTRIBUTE, ` +
-        `ODOBTX as TEXT, ` +
-        `0 as IS_SOURCE, ` +
-        `ODOBSZ as SIZE, ` +
-        `ODCCEN, ` +
-        `ODCDAT, ` +
-        `ODCTIM, ` +
-        `ODLCEN, ` +
-        `ODLDAT, ` +
-        `ODLTIM, ` +
-        `ODOBOW as OWNER, ` +
-        `ODCRTU as CREATED_BY, ` +
-        `ODSIZU as SIZE_IN_UNITS, ` +
-        `ODBPUN as BYTES_PER_UNIT ` +
-        `from QTEMP.CODE4IOBJD`;
+      createOBJLIST = [
+        `select `,
+        `  OBJNAME          as NAME,`,
+        `  OBJTYPE          as TYPE,`,
+        `  OBJATTRIBUTE     as ATTRIBUTE,`,
+        `  OBJTEXT          as TEXT,`,
+        `  0                as IS_SOURCE,`,
+        `  OBJSIZE          as SIZE,`,
+        `  extract(epoch from (OBJCREATED))*1000       as CREATED,`,
+        `  extract(epoch from (CHANGE_TIMESTAMP))*1000 as CHANGED,`,
+        `  OBJOWNER         as OWNER,`,
+        `  OBJDEFINER       as CREATED_BY`,
+        `from table(QSYS2.OBJECT_STATISTICS(OBJECT_SCHEMA => '${library.padEnd(10)}', OBJTYPELIST => '${type}'${objectName()}))`,
+      ];
     }
     else {
       //Both DSPOBJD and DSPFD
-      createOBJLIST = `select ODOBNM as NAME, ` +
-        `ODOBTP as TYPE, ` +
-        `ODOBAT as ATTRIBUTE, ` +
-        `ODOBTX as TEXT, ` +
-        `Case When PHDTAT = 'S' Then 1 Else 0 End as IS_SOURCE, ` +
-        `PHNOMB as NB_MBR, ` +
-        'PHMXRL as SOURCE_LENGTH, ' +
-        'PHCSID as CCSID, ' +
-        `ODOBSZ as SIZE, ` +
-        `ODCCEN, ` +
-        `ODCDAT, ` +
-        `ODCTIM, ` +
-        `ODLCEN, ` +
-        `ODLDAT, ` +
-        `ODLTIM, ` +
-        `ODOBOW as OWNER, ` +
-        `ODCRTU as CREATED_BY, ` +
-        `ODSIZU as SIZE_IN_UNITS, ` +
-        `ODBPUN as BYTES_PER_UNIT ` +
-        `from QTEMP.CODE4IOBJD  ` +
-        `left join QTEMP.CODE4IFD on PHFILE = ODOBNM And PHDTAT = 'S'`;
+      createOBJLIST = [
+        `with SRCPF as (`,
+        `  select `,
+        `    t.SYSTEM_TABLE_NAME as NAME,`,
+        `    '*FILE'             as TYPE,`,
+        `    'PF'                as ATTRIBUTE,`,
+        `    t.TABLE_TEXT        as TEXT,`,
+        `    1                   as IS_SOURCE,`,
+        `    p.NUMBER_PARTITIONS as NB_MBR,`,
+        `    t.ROW_LENGTH        as SOURCE_LENGTH,`,
+        `    c.CCSID             as CCSID`,
+        `  from QSYS2.SYSTABLES as t`,
+        `       join QSYS2.SYSTABLESTAT as p on ( t.SYSTEM_TABLE_SCHEMA, t.SYSTEM_TABLE_NAME ) = ( p.SYSTEM_TABLE_SCHEMA, p.SYSTEM_TABLE_NAME )`,
+        `       join QSYS2.SYSCOLUMNS as c on ( t.SYSTEM_TABLE_SCHEMA, t.SYSTEM_TABLE_NAME, 3 ) = ( c.SYSTEM_TABLE_SCHEMA, c.SYSTEM_TABLE_NAME, c.ORDINAL_POSITION )`,
+        `  where t.table_schema = '${library}' and t.file_type = 'S'${objectNameLike()}`,
+        `), OBJD as (`,
+        `  select `,
+        `    OBJNAME           as NAME,`,
+        `    OBJTYPE           as TYPE,`,
+        `    OBJATTRIBUTE      as ATTRIBUTE,`,
+        `    OBJTEXT           as TEXT,`,
+        `    0                 as IS_SOURCE,`,
+        `    OBJSIZE           as SIZE,`,
+        `    extract(epoch from (OBJCREATED))*1000       as CREATED,`,
+        `    extract(epoch from (CHANGE_TIMESTAMP))*1000 as CHANGED,`,
+        `    OBJOWNER          as OWNER,`,
+        `    OBJDEFINER        as CREATED_BY`,
+        `  from table(QSYS2.OBJECT_STATISTICS(OBJECT_SCHEMA => '${library.padEnd(10)}', OBJTYPELIST => '${type}'${objectName()}))`,
+        `  )`,
+        `select`,
+        `  o.NAME,`,
+        `  o.TYPE,`,
+        `  o.ATTRIBUTE,`,
+        `  o.TEXT,`,
+        `  case when s.IS_SOURCE is not null then s.IS_SOURCE else o.IS_SOURCE end as IS_SOURCE,`,
+        `  s.NB_MBR,`,
+        `  s.SOURCE_LENGTH,`,
+        `  s.CCSID,`,
+        `  o.SIZE,`,
+        `  o.CREATED,`,
+        `  o.CHANGED,`,
+        `  o.OWNER,`,
+        `  o.CREATED_BY`,
+        `from OBJD o left join SRCPF s on o.NAME = s.NAME`,
+      ];
     }
 
-    queries.push(`create table QTEMP.OBJLIST as (${createOBJLIST}) with data`);
+    const objects = (await this.runStatements(createOBJLIST.join(`\n`)));
 
-    const objects = (await this.getQTempTable(queries, "OBJLIST"));
     return objects.map(object => ({
       library,
       name: this.ibmi.sysNameInLocal(String(object.NAME)),
       type: String(object.TYPE),
       attribute: String(object.ATTRIBUTE),
-      text: String(object.TEXT),
+      text: String(object.TEXT || ""),
       memberCount: object.NB_MBR !== undefined ? Number(object.NB_MBR) : undefined,
       sourceFile: Boolean(object.IS_SOURCE),
       sourceLength: object.SOURCE_LENGTH !== undefined ? Number(object.SOURCE_LENGTH) : undefined,
       CCSID: object.CCSID !== undefined ? Number(object.CCSID) : undefined,
-      size: Number(object.SIZE) !== 9999999999 ? Number(object.SIZE) : Number(object.SIZE_IN_UNITS) * Number(object.BYTES_PER_UNIT),
-      created: this.getDspObjDdDate(String(object.ODCCEN), String(object.ODCDAT), String(object.ODCTIM)),
-      changed: this.getDspObjDdDate(String(object.ODLCEN), String(object.ODLDAT), String(object.ODLTIM)),
+      size: Number(object.SIZE),
+      created: new Date(Number(object.CREATED)),
+      changed: new Date(Number(object.CHANGED)),
       created_by: object.CREATED_BY,
       owner: object.OWNER,
     } as IBMiObject))
       .filter(object => !typeFilter || typeFilter(object.type))
-      .filter(object => nameFilter.test(object.name))
+      .filter(object => objectFilter || nameFilter.test(object.name))
       .sort((a, b) => {
         if (a.library.localeCompare(b.library) != 0) {
           return a.library.localeCompare(b.library)
@@ -671,11 +680,11 @@ export default class IBMiContent {
 
     let statement = ``;
 
-    let funcInfo :funcInfo = await this.whereisCustomFunc();
+    let funcInfo: funcInfo = await this.whereisCustomFunc();
     if (funcInfo) {
 
       if (await this.checkObject({ library: funcInfo.funcSysLib, name: funcInfo.funcSysName, type: "*SRVPGM" })) {
-        statement = `\n select MBMXRL RECORD_LENGTH,MBASP ASP,MBLIB LIBRARY,MBFILE SOURCE_FILE,MBNAME NAME,MBSEU2 TYPE,MBMTXT TEXT,MBNRCD LINES,CREATED CREATED,CHANGED CHANGED,USERCONTENT from table (${funcInfo.funcSysLib}.VSC_getMemberListCustom(IN_LIB => '${library}' 
+        statement = `\n select MBLIB LIBRARY,MBMXRL RECORD_LENGTH,MBASP ASP,MBFILE SOURCE_FILE,MBNAME NAME,MBSEU2 TYPE,MBMTXT TEXT,MBNRCD LINES,CREATED CREATED,CHANGED CHANGED,USERCONTENT from table (${funcInfo.funcSysLib}.VSC_getMemberListCustom(IN_LIB => '${library}' 
         ${sourceFile ? `,IN_SRCF => '${sourceFile}'` : ""}
         ${singleMember ? `,IN_MBR =>  '${singleMember}'` : ""} 
         ${singleMemberExtension ? `,IN_MBR_TYPE => '${singleMemberExtension}'` : ""} ))
@@ -691,7 +700,7 @@ export default class IBMiContent {
           rtrim(cast(a.system_table_name as char(10) for bit data)) AS SOURCE_FILE,
           rtrim(cast(b.system_table_member as char(10) for bit data)) as NAME,
           coalesce(rtrim(cast(b.source_type as varchar(10) for bit data)), '') as TYPE,
-          coalesce(rtrim(b.partition_text), '') as TEXT,
+          coalesce(rtrim(varchar(b.partition_text)), '') as TEXT,
           b.NUMBER_ROWS as LINES,
           extract(epoch from (b.CREATE_TIMESTAMP))*1000 as CREATED,
           extract(epoch from (b.LAST_SOURCE_UPDATE_TIMESTAMP))*1000 as CHANGED
@@ -708,12 +717,12 @@ export default class IBMiContent {
       Order By ${sort.order === 'name' ? 'NAME' : 'CHANGED'} ${!sort.ascending ? 'DESC' : 'ASC'}`;
     }
     let results: Tools.DB2Row[];
-    if (this.config.enableSQL) {
-      results = await this.runSQL(statement);
-    }
-    else {
-      results = await this.getQTempTable([`Create Table QTEMP.MEMBERSLST As (${statement}) With DATA`], "MEMBERSLST");
-    }
+    // if (this.config.enableSQL) {
+    results = await this.ibmi.runSQL(statement);
+    // }
+    // else {
+    //   results = await this.getQTempTable([`Create Table QTEMP.MEMBERSLST As (${statement}) With DATA`], "MEMBERSLST");
+    // }
 
     if (results.length) {
       const asp = this.ibmi.aspInfo[Number(results[0].ASP)];
@@ -728,13 +737,52 @@ export default class IBMiContent {
         lines: Number(result.LINES),
         created: new Date(result.CREATED ? Number(result.CREATED) : 0),
         changed: new Date(result.CHANGED ? Number(result.CHANGED) : 0)
-        ,usercontent: String(result.USERCONTENT)
+        , usercontent: String(result.USERCONTENT)
       } as IBMiMember))
         .filter(member => memberFilter.test(member.name))
         .filter(member => memberExtensionFilter.test(member.extension));
     }
     else {
       return [];
+    }
+  }
+
+  /**
+   *
+   * @param filter: the criterias used to list the members
+   * @returns
+   */
+  async getMemberInfo(library: string, sourceFile: string, member: string): Promise<IBMiMember | undefined> {
+    if (this.ibmi.remoteFeatures[`GETMBRINFO.SQL`]) {
+      const tempLib = this.config.tempLibrary;
+      const statement = `select * from table(${tempLib}.GETMBRINFO('${library}', '${sourceFile}', '${member}'))`;
+
+      let results: Tools.DB2Row[] = [];
+      if (this.config.enableSQL) {
+        try {
+          results = await this.runSQL(statement);
+        } catch (e) { }; // Ignore errors, will return undefined.
+      }
+      else {
+        results = await this.getQTempTable([`create table QTEMP.MEMBERINFO as (${statement}) with data`], "MEMBERINFO");
+      }
+
+      if (results.length === 1 && results[0].ISSOURCE === 'Y') {
+        const result = results[0];
+        const asp = this.ibmi.aspInfo[Number(results[0].ASP)];
+        return {
+          library: result.LIBRARY,
+          file: result.FILE,
+          name: result.MEMBER,
+          extension: result.EXTENSION,
+          text: result.DESCRIPTION,
+          created: new Date(result.CREATED ? Number(result.CREATED) : 0),
+          changed: new Date(result.CHANGED ? Number(result.CHANGED) : 0)
+        } as IBMiMember
+      }
+      else {
+        return undefined;
+      }
     }
   }
 
@@ -921,7 +969,7 @@ export default class IBMiContent {
     let results: Tools.DB2Row[];
 
     objQuery = `select SPE.SPOOLED_FILE_NAME, SPE.SPOOLED_FILE_NUMBER, SPE.STATUS, SPE.CREATION_TIMESTAMP, SPE.USER_DATA, SPE.SIZE, SPE.TOTAL_PAGES, SPE.QUALIFIED_JOB_NAME, SPE.JOB_NAME, SPE.JOB_USER, SPE.JOB_NUMBER, SPE.FORM_TYPE, SPE.OUTPUT_QUEUE_LIBRARY, SPE.OUTPUT_QUEUE, QE.PAGE_LENGTH from table (QSYS2.SPOOLED_FILE_INFO(USER_NAME => ucase('${user}')) ) SPE left join TABLE(QSYS2.OUTPUT_QUEUE_ENTRIES( OUTQ_LIB => OUTPUT_QUEUE_LIBRARY ,OUTQ_NAME=> OUTPUT_QUEUE, DETAILED_INFO => 'YES',IGNORE_ERRORS => 'YES' ) ) QE on QE.SPOOLED_FILE_NAME = SPE.SPOOLED_FILE_NAME and QE.JOB_NAME = SPE.QUALIFIED_JOB_NAME and QE.FILE_NUMBER = SPE.SPOOLED_FILE_NUMBER where SPE.FILE_AVAILABLE = '*FILEEND' ${splfName ? ` and SPE.SPOOLED_FILE_NAME = ucase('${splfName}')` : ""}`;
-    results = await this.runSQL(objQuery);
+    results = await this.ibmi.runSQL(objQuery);
 
     if (results.length === 0) {
       return [];
@@ -1087,7 +1135,7 @@ export default class IBMiContent {
     return userText;
   }
 
- 
+
   /**
    * Fix Comments in an SQL string so that the comments always start at position 0 of the line.
    * Required to work with QZDFMDB2.
@@ -1127,20 +1175,6 @@ export default class IBMiContent {
   }
 
   /**
-   * @param century; century code (1=20xx, 0=19xx)
-   * @param dateString: string in YYMMDD
-   * @param timeString: string in HHMMSS
-   * @returns date
-   */
-  getDspObjDdDate(century: string = `0`, MMDDYY: string = `010101`, HHMMSS: string = `000000`): Date {
-    let year: string, month: string, day: string, hours: string, minutes: string, seconds: string;
-    let YYMMDD: string = MMDDYY.slice(4,).concat(MMDDYY.slice(0, 4));
-    let dateString: string = (century === `1` ? `20` : `19`).concat(YYMMDD.padStart(6, `0`)).concat(HHMMSS.padStart(6, `0`));
-    [, year, month, day, hours, minutes, seconds] = /(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/.exec(dateString) || [];
-    return new Date(Date.UTC(Number(year), Number(month) - 1, Number(day), Number(hours), Number(minutes), Number(seconds)));
-  }
-
-  /**
    * Return `true` if `remotePath` denotes a directory
    *
    * @param remotePath: a remote IFS path
@@ -1163,7 +1197,7 @@ export default class IBMiContent {
     })).code === 0;
   }
 
-  async testStreamFile(path: string, right: "r" | "w" | "x") {
+  async testStreamFile(path: string, right: "f" | "d" | "r" | "w" | "x") {
     return (await this.ibmi.sendCommand({ command: `test -${right} ${Tools.escapePath(path)}` })).code === 0;
   }
 
