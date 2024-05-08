@@ -1228,7 +1228,6 @@ export default class IBMiContent {
     return Number((await this.ibmi.sendCommand({ command: `ls | wc -l`, directory })).stdout.trim());
   }
   async whereisCustomFunc(): Promise<funcInfo> {
-    // async whereisCustomFunc() :Promise<{ funcSysLib: string; funcSysName: string; } | undefined> {
     // Look for the custom function somewhere
     const { instance } = (require(`../instantiate`));
     let currentUser = '';
