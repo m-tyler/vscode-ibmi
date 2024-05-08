@@ -11,6 +11,7 @@ import { FilterType, parseFilter, singleGenericName } from './Filter';
 import { default as IBMi } from './IBMi';
 import { Tools } from './Tools';
 import { IBMiSpooledFile } from '../typingsSplf';
+import { getCustomObjectListQuery, getCustomMemberListQuery } from './IBMiContentCustom';
 const tmpFile = util.promisify(tmp.file);
 const readFileAsync = util.promisify(fs.readFile);
 const writeFileAsync = util.promisify(fs.writeFile);
@@ -528,7 +529,8 @@ export default class IBMiContent {
 
     let createOBJLIST: string[];
     if (sourceFilesOnly) {
-      createOBJLIST = await this.getCustomObjectListQuery(filters);
+      // createOBJLIST = await this.getCustomObjectListQuery(filters);
+      createOBJLIST = await getCustomObjectListQuery(filters);
       //DSPFD only
       if (createOBJLIST.length == 0) {
         createOBJLIST = [
@@ -652,7 +654,8 @@ export default class IBMiContent {
 
     let statement = ``;
 
-    statement = await this.getCustomMemberListQuery({
+    // statement = await this.getCustomMemberListQuery({
+    statement = await getCustomMemberListQuery({
       library: library,
       sourceFile: sourceFile,
       members: singleMember,
@@ -1226,66 +1229,6 @@ export default class IBMiContent {
 
   async countFiles(directory: string) {
     return Number((await this.ibmi.sendCommand({ command: `ls | wc -l`, directory })).stdout.trim());
-  }
-  async whereisCustomFunc(): Promise<funcInfo> {
-    // Look for the custom function somewhere
-    const { instance } = (require(`../instantiate`));
-    let currentUser = '';
-    const connection = instance.getConnection();
-    if (connection) {
-      currentUser = connection.currentUser;
-    }
-    let funcLookupRS: Tools.DB2Row[];
-    let statement = `select SPECIFIC_SCHEMA,SPECIFIC_NAME from QSYS2.SYSFUNCS SF inner join table( values(1,'${currentUser}'),(2,'ILEDITOR') ) LL (Pos, ASCHEMA) on ASCHEMA = SPECIFIC_SCHEMA where ROUTINE_NAME = 'VSC_GETSOURCEFILELISTCUSTOM' limit 1`;
-    funcLookupRS = await this.runSQL(statement);
-    return {
-      funcSysLib: String(funcLookupRS[0].SPECIFIC_SCHEMA),
-      funcSysName: String(funcLookupRS[0].SPECIFIC_NAME)
-    }
-  }
-
-  async getCustomObjectListQuery(filters: { library: string; object?: string; types?: string[]; filterType?: FilterType; member?: string; memberType?: string; }
-                                , sortOrder?: SortOrder): Promise<string[]> {
-    let theStatement: string[];
-    let funcInfo: funcInfo = await this.whereisCustomFunc();
-    if (funcInfo && await this.checkObject({ library: funcInfo.funcSysLib, name: funcInfo.funcSysName, type: "*SRVPGM" })
-      && (/^(#PCR|$HWK)$/.test(filters.member!))
-    ) {
-      theStatement = [`select PHFILE name,`,
-        `'*FILE' as type,`,
-        `'PF'    as ATTRIBUTE,`,
-        `PHTXT   as TEXT,`,
-        `1       as IS_SOURCE,`,
-        `PHNOMB  as NB_NBR,`,
-        `PHMXRL  as SOLURCE_LENGTH,`,
-        `PHCSID  as CCSID`,
-        `from table ( ${funcInfo.funcSysLib}.VSC_getSourceFileListCustom (`,
-        `  IN_LIB => '${filters.library}'`,
-        `, IN_SRCF => '${filters.object}'`,
-        `, IN_MBR => '${filters.member}'`,
-        `, IN_MBR_TYPE => '${filters.memberType}'`,
-        ` ) )`
-      ];
-    } 
-    return [];
-  }
-
-  async getCustomMemberListQuery(filter: { library: string, sourceFile: string, members?: string, extensions?: string, sort?: SortOptions, filterType?: FilterType }): Promise<string> {
-    let theStatement = ``;
-    let funcInfo: funcInfo = await this.whereisCustomFunc();
-    if (funcInfo) {
-
-      if (await this.checkObject({ library: funcInfo.funcSysLib, name: funcInfo.funcSysName, type: "*SRVPGM" })
-          && (/^(#PCR|$HWK)$/.test(filter.members!))
-      ) {
-        theStatement = `\n select MBLIB LIBRARY,MBMXRL RECORD_LENGTH,MBASP ASP,MBFILE SOURCE_FILE,MBNAME NAME,MBSEU2 TYPE,MBMTXT TEXT,MBNRCD LINES,CREATED CREATED,CHANGED CHANGED,USERCONTENT from table (${funcInfo.funcSysLib}.VSC_getMemberListCustom(IN_LIB => '${filter.library}' 
-        ${filter.sourceFile ? `,IN_SRCF => '${filter.sourceFile}'` : ""}
-        ${filter.members ? `,IN_MBR =>  '${filter.members}'` : ""} 
-        ${filter.extensions ? `,IN_MBR_TYPE => '${filter.extensions}'` : ""} ))
-        Order By ${filter.sort?.order === 'name' ? 'NAME' : 'CHANGED'} ${!filter.sort?.ascending ? 'DESC' : 'ASC'}`;
-      }
-    }
-    return theStatement;
   }
 
 }
