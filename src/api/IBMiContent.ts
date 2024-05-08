@@ -538,7 +538,7 @@ export default class IBMiContent {
           `  'PF'                as ATTRIBUTE,`,
           `  t.TABLE_TEXT        as TEXT,`,
           `  1                   as IS_SOURCE,`,
-          `  t.ROW_LENGTH        as SOURCE_LENGTH,`,
+          `  t.ROW_LENGTH        as SOURCE_LENGTH `,
           `from QSYS2.SYSTABLES as t`,
           `where t.table_schema = '${library}' and t.file_type = 'S'${objectNameLike()}`,
         ];
@@ -1249,7 +1249,9 @@ export default class IBMiContent {
                                 , sortOrder?: SortOrder): Promise<string[]> {
     let theStatement: string[];
     let funcInfo: funcInfo = await this.whereisCustomFunc();
-    if (funcInfo && await this.checkObject({ library: funcInfo.funcSysLib, name: funcInfo.funcSysName, type: "*SRVPGM" })) {
+    if (funcInfo && await this.checkObject({ library: funcInfo.funcSysLib, name: funcInfo.funcSysName, type: "*SRVPGM" })
+      && (/^(#PCR|$HWK)$/.test(filters.member!))
+    ) {
       theStatement = [`select PHFILE name,`,
         `'*FILE' as type,`,
         `'PF'    as ATTRIBUTE,`,
@@ -1265,8 +1267,8 @@ export default class IBMiContent {
         `, IN_MBR_TYPE => '${filters.memberType}'`,
         ` ) )`
       ];
-    } else {theStatement = [``];}
-    return theStatement;
+    } 
+    return [];
   }
 
   async getCustomMemberListQuery(filter: { library: string, sourceFile: string, members?: string, extensions?: string, sort?: SortOptions, filterType?: FilterType }): Promise<string> {
@@ -1274,7 +1276,9 @@ export default class IBMiContent {
     let funcInfo: funcInfo = await this.whereisCustomFunc();
     if (funcInfo) {
 
-      if (await this.checkObject({ library: funcInfo.funcSysLib, name: funcInfo.funcSysName, type: "*SRVPGM" })) {
+      if (await this.checkObject({ library: funcInfo.funcSysLib, name: funcInfo.funcSysName, type: "*SRVPGM" })
+          && (/^(#PCR|$HWK)$/.test(filter.members!))
+      ) {
         theStatement = `\n select MBLIB LIBRARY,MBMXRL RECORD_LENGTH,MBASP ASP,MBFILE SOURCE_FILE,MBNAME NAME,MBSEU2 TYPE,MBMTXT TEXT,MBNRCD LINES,CREATED CREATED,CHANGED CHANGED,USERCONTENT from table (${funcInfo.funcSysLib}.VSC_getMemberListCustom(IN_LIB => '${filter.library}' 
         ${filter.sourceFile ? `,IN_SRCF => '${filter.sourceFile}'` : ""}
         ${filter.members ? `,IN_MBR =>  '${filter.members}'` : ""} 
