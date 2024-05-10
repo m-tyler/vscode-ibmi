@@ -57,11 +57,7 @@ function getContent() {
     let funcInfo: funcInfo = await whereisCustomFunc();
     let sqlFuncExist = await getContent().checkObject({ library: funcInfo.funcSysLib, name: funcInfo.funcSysName, type: "*SRVPGM" });
     let specialMember = (/^(#PCR|\$HWK)/.test(filters.member!));
-    if (funcInfo 
-      && sqlFuncExist
-      && specialMember
-      // && await getContent().checkObject({ library: funcInfo.funcSysLib, name: funcInfo.funcSysName, type: "*SRVPGM" })
-      // && (/^(#PCR|$HWK)$/.test(filters.member!))
+    if (funcInfo && sqlFuncExist && specialMember
     ) {
       theStatement = [`select PHFILE name,`,
         `'*FILE' as type,`,
@@ -69,7 +65,7 @@ function getContent() {
         `PHTXT   as TEXT,`,
         `1       as IS_SOURCE,`,
         `PHNOMB  as NB_NBR,`,
-        `PHMXRL  as SOLURCE_LENGTH,`,
+        `PHMXRL  as SOURCE_LENGTH,`,
         `PHCSID  as CCSID`,
         `from table ( ${funcInfo.funcSysLib}.VSC_getSourceFileListCustom (`,
         `  IN_LIB => '${filters.library}'`,
@@ -90,10 +86,7 @@ function getContent() {
       let sqlFuncExist = await getContent().checkObject({ library: funcInfo.funcSysLib, name: funcInfo.funcSysName, type: "*SRVPGM" });
       let specialMember = (/^(#PCR|\$HWK)/.test(filter.members!));
 
-      if (sqlFuncExist
-        && specialMember
-        // await getContent().checkObject({ library: funcInfo.funcSysLib, name: funcInfo.funcSysName, type: "*SRVPGM" })
-        //   && (/^(#PCR|\$HWK)/.test(filter.members!))
+      if (sqlFuncExist && specialMember
       ) {
         theStatement = `\n select MBLIB LIBRARY,MBMXRL RECORD_LENGTH,MBASP ASP,MBFILE SOURCE_FILE,MBNAME NAME,MBSEU2 TYPE,MBMTXT TEXT,MBNRCD LINES,CREATED CREATED,CHANGED CHANGED,USERCONTENT from table (${funcInfo.funcSysLib}.VSC_getMemberListCustom(IN_LIB => '${filter.library}' 
         ${filter.sourceFile ? `,IN_SRCF => '${filter.sourceFile}'` : ""}

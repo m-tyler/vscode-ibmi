@@ -515,9 +515,10 @@ export default class IBMiContent {
 
     const singleEntry = filters.filterType !== 'regex' ? singleGenericName(filters.object) : undefined;
     const nameFilter = parseFilter(filters.object, filters.filterType);
-    const objectFilter = filters.object && (nameFilter.noFilter || singleEntry) && filters.object !== `*` ? this.ibmi.upperCaseName(filters.object) : `*ALL`;
+    const objectFilter = filters.object && (nameFilter.noFilter || singleEntry) && filters.object !== `*` ? this.ibmi.upperCaseName(filters.object) : undefined;
     const objectNameLike = () => objectFilter ? ` and t.SYSTEM_TABLE_NAME ${(objectFilter.includes('*') ? ` like ` : ` = `)} '${objectFilter.replace('*', '%')}'` : '';
     const objectName = () => objectFilter ? `, OBJECT_NAME => '${objectFilter}'` : '';
+    
     const member = (filters.member ? filters.member.toUpperCase() : filters.member);
     const mbrtype = (filters.memberType ? filters.memberType.toUpperCase() : filters.memberType);
 
@@ -530,7 +531,13 @@ export default class IBMiContent {
     let createOBJLIST: string[];
     if (sourceFilesOnly) {
       // createOBJLIST = await this.getCustomObjectListQuery(filters);
-      createOBJLIST = await getCustomObjectListQuery(filters);
+      createOBJLIST = await getCustomObjectListQuery( { 
+        library: library,
+        object: objectFilter,
+        types: filters.types,
+        filterType: filters.filterType, 
+        member:  member,
+        memberType: mbrtype } );
       //DSPFD only
       if (createOBJLIST.length == 0) {
         createOBJLIST = [
@@ -1103,34 +1110,6 @@ export default class IBMiContent {
     return userText;
   }
 
-
-  /**
-   * Fix Comments in an SQL string so that the comments always start at position 0 of the line.
-   * Required to work with QZDFMDB2.
-   * @param inSql; sql statement
-   * @returns correctly formattted sql string containing comments
-   */
-  private fixCommentsInSQLString(inSql: string): string {
-    const newLine: string = `\n`;
-    let parsedSql: string = ``;
-
-    inSql.split(newLine)
-      .forEach(item => {
-        let goodLine = item + newLine;
-
-        const pos = item.search(`--`);
-        if (pos > 0) {
-          goodLine = item.slice(0, pos) +
-            newLine +
-            item.slice(pos) +
-            newLine;
-        }
-        parsedSql += goodLine;
-
-      });
-
-    return parsedSql;
-  }
 
   /**
    * @param errorsString; several lines of `code:text`...
