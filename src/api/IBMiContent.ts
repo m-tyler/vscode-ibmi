@@ -12,6 +12,7 @@ import { default as IBMi } from './IBMi';
 import { Tools } from './Tools';
 import { IBMiSpooledFile } from '../typingsSplf';
 import { getCustomObjectListQuery, getCustomMemberListQuery } from './IBMiContentCustom';
+import * as vscode from "vscode";
 const tmpFile = util.promisify(tmp.file);
 const readFileAsync = util.promisify(fs.readFile);
 const writeFileAsync = util.promisify(fs.writeFile);
@@ -736,7 +737,9 @@ export default class IBMiContent {
       if (this.config.enableSQL) {
         try {
           results = await this.runSQL(statement);
-        } catch (e) { }; // Ignore errors, will return undefined.
+        } catch (e) {
+          vscode.window.showWarningMessage(`error ${e} `);
+         }; // Ignore errors, will return undefined.
       }
       else {
         results = await this.getQTempTable([`create table QTEMP.MEMBERINFO as (${statement}) with data`], "MEMBERINFO");
@@ -758,6 +761,9 @@ export default class IBMiContent {
       else {
         return undefined;
       }
+    }
+    else {
+      vscode.window.showWarningMessage(`GETMBRINFO.SQL, not found in ibmi.remoteFeatures[]. `);
     }
   }
 

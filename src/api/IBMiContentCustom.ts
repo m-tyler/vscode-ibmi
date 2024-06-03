@@ -57,6 +57,7 @@ function getContent() {
     let funcInfo: funcInfo = await whereisCustomFunc();
     let sqlFuncExist = await getContent().checkObject({ library: funcInfo.funcSysLib, name: funcInfo.funcSysName, type: "*SRVPGM" });
     let specialMember = (/^(#PCR|\$HWK)/.test(filters.member!));
+    if (!filters.object) {filters.object='*'} 
     if (funcInfo && sqlFuncExist && specialMember
     ) {
       theStatement = [`select PHFILE name,`,
