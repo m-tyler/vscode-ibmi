@@ -66,6 +66,7 @@ export const en: Locale = {
   'USER_DIRECTORY': 'User directory',
   'CURRENT_HEAP_SIZE': 'Current memory',
   'MAX_HEAP_SIZE': 'Maximum allowed memory',
+  'USERCONTENT':'User Content',
   // Sandbox:
   'sandbox.input.user.title': `User for server`,
   'sandbox.input.user.prompt': `Enter username for {0}`,
