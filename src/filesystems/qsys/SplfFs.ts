@@ -42,7 +42,7 @@ export function isProtectedFilter(filter?: string): boolean {
   return filter && instance.getConfig()?.objectFilters.find(f => f.name === filter)?.protected || false;
 }
 
-export class SplfFS implements vscode.FileSystemProvider {
+export class SplfFS_Old implements vscode.FileSystemProvider {
 
   private emitter = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
   onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]> = this.emitter.event;

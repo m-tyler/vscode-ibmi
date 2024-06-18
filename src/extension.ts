@@ -29,7 +29,7 @@ import { initializeDebugBrowser } from "./views/debugView";
 import { HelpView } from "./views/helpView";
 import { initializeIFSBrowser } from "./views/ifsBrowser";
 import { initializeObjectBrowser } from "./views/objectBrowser";
-import SPLFBrowser from "./views/splfBrowser";
+import SPLFBrowser_Old from "./views/splfBrowser";
 import { SettingsUI } from "./webviews/settings";
 
 export async function activate(context: ExtensionContext): Promise<CodeForIBMi> {
@@ -50,7 +50,7 @@ export async function activate(context: ExtensionContext): Promise<CodeForIBMi> 
   initializeObjectBrowser(context)
   initializeIFSBrowser(context);
   initializeDebugBrowser(context);
-  new SPLFBrowser(context);
+  new SPLFBrowser_Old(context);
   
   context.subscriptions.push(
     window.registerTreeDataProvider(

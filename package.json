@@ -3089,13 +3089,13 @@
 	},
 	"scripts": {
 		"lint": "eslint src/**/*.js --no-error-on-unmatched-pattern",
-		"pretest": "npm run lint",
+		"pretest": "npm.cmd run lint",
 		"package": "vsce package",
 		"build": "rm -rf dist && tsc",
 		"vscode:prepublish": "webpack --mode production",
 		"webpack": "webpack --mode development",
 		"webpack-dev": "webpack --mode development --watch",
-		"typings": "npx -p typescript tsc ./src/extension.ts --declaration --allowJs --emitDeclarationOnly --outDir types --esModuleInterop -t es2021 --moduleResolution node"
+		"typings": "npx.cmd -p typescript tsc ./src/extension.ts --declaration --allowJs --emitDeclarationOnly --outDir types --esModuleInterop -t es2021 --moduleResolution node"
 	},
 	"devDependencies": {
 		"@types/glob": "^7.1.3",

@@ -83,18 +83,18 @@ class ObjectBrowser implements vscode.TreeDataProvider<BrowserItem> {
       if (from === objectFilters.length && [`DOWN`, `BOTTOM`].includes(filterMovement)) throw `Filter ${filterName} is at bottom of list`;
 
       switch (filterMovement) {
-        case `TOP`:
-          to = 0;
-          break;
-        case `UP`:
-          to = from - 1;
-          break;
-        case `DOWN`:
-          to = from + 1;
-          break;
-        case `BOTTOM`:
-          to = objectFilters.length;
-          break;
+      case `TOP`:
+        to = 0;
+        break;
+      case `UP`:
+        to = from - 1;
+        break;
+      case `DOWN`:
+        to = from + 1;
+        break;
+      case `BOTTOM`:
+        to = objectFilters.length;
+        break;
       }
 
       const filter = objectFilters[from];
@@ -1049,12 +1049,12 @@ export function initializeObjectBrowser(context: vscode.ExtensionContext) {
         await vscode.window.showInformationMessage(t(`objectBrowser.createLibrary.infoMessage`), t(`Yes`), t(`No`))
           .then(async result => {
             switch (result) {
-              case t(`Yes`):
-                await vscode.commands.executeCommand(`code-for-ibmi.addToLibraryList`, { library: newLibrary });
-                if (autoRefresh) {
-                  vscode.commands.executeCommand(`code-for-ibmi.refreshLibraryListView`);
-                }
-                break;
+            case t(`Yes`):
+              await vscode.commands.executeCommand(`code-for-ibmi.addToLibraryList`, { library: newLibrary });
+              if (autoRefresh) {
+                vscode.commands.executeCommand(`code-for-ibmi.refreshLibraryListView`);
+              }
+              break;
             }
           });
       }
