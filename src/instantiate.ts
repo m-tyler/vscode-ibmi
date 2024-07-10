@@ -18,7 +18,7 @@ import { Action, BrowserItem, DeploymentMethod, MemberItem, OpenEditableOptions,
 import { SearchView } from "./views/searchView";
 import { ActionsUI } from './webviews/actions';
 import { VariablesUI } from "./webviews/variables";
-import { SplfFS_Old, getUriFromPath_Splf } from "./filesystems/qsys/SplfFs";
+// import { SplfFS_Old, getUriFromPath_Splf } from "./filesystems/qsys/SplfFs";
 import { t } from './locale';
 
 export let instance: Instance;
@@ -736,8 +736,6 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
   instance.onEvent("disconnected", onDisconnected);
 
   context.subscriptions.push(vscode.workspace.registerFileSystemProvider(`member`, new QSysFS(context), {
-    isCaseSensitive: false
-  }), vscode.workspace.registerFileSystemProvider(`spooledfile-o`, new SplfFS_Old(context), {
     isCaseSensitive: false
   }));
 
