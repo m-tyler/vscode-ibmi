@@ -10,7 +10,7 @@ import { ConnectionConfiguration } from './Configuration';
 import { FilterType, parseFilter, singleGenericName } from './Filter';
 import { default as IBMi } from './IBMi';
 import { Tools } from './Tools';
-import { IBMiSpooledFile } from '../typingsSplf';
+// import { IBMiSpooledFile } from '../typingsSplf';
 import { getCustomObjectListQuery, getCustomMemberListQuery } from './IBMiContentCustom';
 import * as vscode from "vscode";
 const tmpFile = util.promisify(tmp.file);
@@ -911,171 +911,171 @@ export default class IBMiContent {
     return undefined;
   }
 
-  /**
-  * @param {string} user 
-  * @param {string} sortOrder
-  * @param {string=} splfName
-  * @returns {Promise<IBMiSpooledFile[]>}
-  */
-  async getUserSpooledFileFilter(user: string, sort: SortOptions = { order: "date" }, splfName?: string, searchWords?: string): Promise<IBMiSpooledFile[]> {
-    // const connection = instance.getConnection();
-    // const config = instance.getConfig();
-    // const content = instance.getContent();
+  // /**
+  // * @param {string} user 
+  // * @param {string} sortOrder
+  // * @param {string=} splfName
+  // * @returns {Promise<IBMiSpooledFile[]>}
+  // */
+  // async getUserSpooledFileFilter(user: string, sort: SortOptions = { order: "date" }, splfName?: string, searchWords?: string): Promise<IBMiSpooledFile[]> {
+  //   // const connection = instance.getConnection();
+  //   // const config = instance.getConfig();
+  //   // const content = instance.getContent();
 
-    // sort.order = sort.order === '?' ? 'name' : sort.order;
-    // sort = sort.order || { order: 'name' };
-    user = user.toUpperCase();
+  //   // sort.order = sort.order === '?' ? 'name' : sort.order;
+  //   // sort = sort.order || { order: 'name' };
+  //   user = user.toUpperCase();
 
-    const tempLib = this.config.tempLibrary;
-    const tempName = Tools.makeid();
-    var objQuery;
-    let results: Tools.DB2Row[];
+  //   const tempLib = this.config.tempLibrary;
+  //   const tempName = Tools.makeid();
+  //   var objQuery;
+  //   let results: Tools.DB2Row[];
 
-    objQuery = `select SPE.SPOOLED_FILE_NAME, SPE.SPOOLED_FILE_NUMBER, SPE.STATUS, SPE.CREATION_TIMESTAMP, SPE.USER_DATA, SPE.SIZE, SPE.TOTAL_PAGES, SPE.QUALIFIED_JOB_NAME, SPE.JOB_NAME, SPE.JOB_USER, SPE.JOB_NUMBER, SPE.FORM_TYPE, SPE.OUTPUT_QUEUE_LIBRARY, SPE.OUTPUT_QUEUE, QE.PAGE_LENGTH from table (QSYS2.SPOOLED_FILE_INFO(USER_NAME => ucase('${user}')) ) SPE left join TABLE(QSYS2.OUTPUT_QUEUE_ENTRIES( OUTQ_LIB => OUTPUT_QUEUE_LIBRARY ,OUTQ_NAME=> OUTPUT_QUEUE, DETAILED_INFO => 'YES',IGNORE_ERRORS => 'YES' ) ) QE on QE.SPOOLED_FILE_NAME = SPE.SPOOLED_FILE_NAME and QE.JOB_NAME = SPE.QUALIFIED_JOB_NAME and QE.FILE_NUMBER = SPE.SPOOLED_FILE_NUMBER where SPE.FILE_AVAILABLE = '*FILEEND' ${splfName ? ` and SPE.SPOOLED_FILE_NAME = ucase('${splfName}')` : ""}`;
-    results = await this.ibmi.runSQL(objQuery);
+  //   objQuery = `select SPE.SPOOLED_FILE_NAME, SPE.SPOOLED_FILE_NUMBER, SPE.STATUS, SPE.CREATION_TIMESTAMP, SPE.USER_DATA, SPE.SIZE, SPE.TOTAL_PAGES, SPE.QUALIFIED_JOB_NAME, SPE.JOB_NAME, SPE.JOB_USER, SPE.JOB_NUMBER, SPE.FORM_TYPE, SPE.OUTPUT_QUEUE_LIBRARY, SPE.OUTPUT_QUEUE, QE.PAGE_LENGTH from table (QSYS2.SPOOLED_FILE_INFO(USER_NAME => ucase('${user}')) ) SPE left join TABLE(QSYS2.OUTPUT_QUEUE_ENTRIES( OUTQ_LIB => OUTPUT_QUEUE_LIBRARY ,OUTQ_NAME=> OUTPUT_QUEUE, DETAILED_INFO => 'YES',IGNORE_ERRORS => 'YES' ) ) QE on QE.SPOOLED_FILE_NAME = SPE.SPOOLED_FILE_NAME and QE.JOB_NAME = SPE.QUALIFIED_JOB_NAME and QE.FILE_NUMBER = SPE.SPOOLED_FILE_NUMBER where SPE.FILE_AVAILABLE = '*FILEEND' ${splfName ? ` and SPE.SPOOLED_FILE_NAME = ucase('${splfName}')` : ""}`;
+  //   results = await this.ibmi.runSQL(objQuery);
 
-    if (results.length === 0) {
-      return [];
-    }
-    results = results.sort((a, b) => String(a.MBSPOOLED_FILE_NAMENAME).localeCompare(String(b.SPOOLED_FILE_NAME)));
+  //   if (results.length === 0) {
+  //     return [];
+  //   }
+  //   results = results.sort((a, b) => String(a.MBSPOOLED_FILE_NAMENAME).localeCompare(String(b.SPOOLED_FILE_NAME)));
 
-    let sorter: (r1: IBMiSpooledFile, r2: IBMiSpooledFile) => number;
-    if (sort.order === 'name') {
-      sorter = (r1, r2) => r1.name.localeCompare(r2.name);
-    }
-    else {
-      sorter = (r1, r2) => r1.creation_timestamp.localeCompare(r2.creation_timestamp);
-    }
-    let searchWords_ = searchWords?.split(' ') || [];
-    // console.log(searchWords_);
+  //   let sorter: (r1: IBMiSpooledFile, r2: IBMiSpooledFile) => number;
+  //   if (sort.order === 'name') {
+  //     sorter = (r1, r2) => r1.name.localeCompare(r2.name);
+  //   }
+  //   else {
+  //     sorter = (r1, r2) => r1.creation_timestamp.localeCompare(r2.creation_timestamp);
+  //   }
+  //   let searchWords_ = searchWords?.split(' ') || [];
+  //   // console.log(searchWords_);
 
-    // return results
-    let returnSplfList = results
-      .map(object => ({
-        user: user,
-        name: this.ibmi.sysNameInLocal(String(object.SPOOLED_FILE_NAME)),
-        number: Number(object.SPOOLED_FILE_NUMBER),
-        status: this.ibmi.sysNameInLocal(String(object.STATUS)),
-        creation_timestamp: object.CREATION_TIMESTAMP,
-        user_data: this.ibmi.sysNameInLocal(String(object.USER_DATA)),
-        size: Number(object.SIZE),
-        total_pages: Number(object.TOTAL_PAGES),
-        page_length: Number(object.PAGE_LENGTH),
-        qualified_job_name: this.ibmi.sysNameInLocal(String(object.QUALIFIED_JOB_NAME)),
-        job_name: this.ibmi.sysNameInLocal(String(object.JOB_NAME)),
-        job_user: this.ibmi.sysNameInLocal(String(object.JOB_USER)),
-        job_number: String(object.JOB_NUMBER),
-        form_type: this.ibmi.sysNameInLocal(String(object.FORM_TYPE)),
-        queue_library: this.ibmi.sysNameInLocal(String(object.OUTPUT_QUEUE_LIBRARY)),
-        queue: this.ibmi.sysNameInLocal(String(object.OUTPUT_QUEUE)),
-      } as IBMiSpooledFile))
-      .filter(obj => searchWords_.length === 0 || searchWords_.some(term => Object.values(obj).join(" ").includes(term)))
-      .sort(sorter);
+  //   // return results
+  //   let returnSplfList = results
+  //     .map(object => ({
+  //       user: user,
+  //       name: this.ibmi.sysNameInLocal(String(object.SPOOLED_FILE_NAME)),
+  //       number: Number(object.SPOOLED_FILE_NUMBER),
+  //       status: this.ibmi.sysNameInLocal(String(object.STATUS)),
+  //       creation_timestamp: object.CREATION_TIMESTAMP,
+  //       user_data: this.ibmi.sysNameInLocal(String(object.USER_DATA)),
+  //       size: Number(object.SIZE),
+  //       total_pages: Number(object.TOTAL_PAGES),
+  //       page_length: Number(object.PAGE_LENGTH),
+  //       qualified_job_name: this.ibmi.sysNameInLocal(String(object.QUALIFIED_JOB_NAME)),
+  //       job_name: this.ibmi.sysNameInLocal(String(object.JOB_NAME)),
+  //       job_user: this.ibmi.sysNameInLocal(String(object.JOB_USER)),
+  //       job_number: String(object.JOB_NUMBER),
+  //       form_type: this.ibmi.sysNameInLocal(String(object.FORM_TYPE)),
+  //       queue_library: this.ibmi.sysNameInLocal(String(object.OUTPUT_QUEUE_LIBRARY)),
+  //       queue: this.ibmi.sysNameInLocal(String(object.OUTPUT_QUEUE)),
+  //     } as IBMiSpooledFile))
+  //     .filter(obj => searchWords_.length === 0 || searchWords_.some(term => Object.values(obj).join(" ").includes(term)))
+  //     .sort(sorter);
 
-    return returnSplfList;
+  //   return returnSplfList;
 
-  }
-  /**
-  * Download the contents of a source member
-  * @param {string} uriPath 
-  * @param {string} name 
-  * @param {string} qualified_job_name 
-  * @param {string} splf_number 
-  * @param {string} fileExtension 
-  * @param {string=} additionalPath 
-  * @returns {string} a string containing spooled file data 
-  */
-  async downloadSpooledFileContent(uriPath: string, name: string, qualified_job_name: string, splf_number: string, fileExtension: string, ctlchar?: string) {
-    name = name.toUpperCase();
-    qualified_job_name = qualified_job_name.toUpperCase();
+  // }
+  // /**
+  // * Download the contents of a source member
+  // * @param {string} uriPath 
+  // * @param {string} name 
+  // * @param {string} qualified_job_name 
+  // * @param {string} splf_number 
+  // * @param {string} fileExtension 
+  // * @param {string=} additionalPath 
+  // * @returns {string} a string containing spooled file data 
+  // */
+  // async downloadSpooledFileContent(uriPath: string, name: string, qualified_job_name: string, splf_number: string, fileExtension: string, ctlchar?: string) {
+  //   name = name.toUpperCase();
+  //   qualified_job_name = qualified_job_name.toUpperCase();
 
-    const tempRmt = this.getTempRemote(uriPath);
-    const client = this.ibmi.client;
+  //   const tempRmt = this.getTempRemote(uriPath);
+  //   const client = this.ibmi.client;
 
-    let retried = false;
-    let retry = 1;
-    let fileEncoding = `utf8`;
-    while (retry > 0) {
-      retry--;
-      try {
-        //If this command fails we need to try again after we delete the temp remote
-        switch (fileExtension.toLowerCase()) {
-        case `pdf`:
-          fileEncoding = ``;
-          await this.ibmi.runCommand({
-            command: `CPYSPLF FILE(${name}) TOFILE(*TOSTMF) JOB(${qualified_job_name}) SPLNBR(${splf_number}) TOSTMF('${tempRmt}') WSCST(*PDF) STMFOPT(*REPLACE)\nDLYJOB DLY(1)`
-            , environment: `ile`
-          });
-          break;
-        // case `prtctl`:
-        //   const tempLib = this.config.tempLibrary;
-        //   const tempName = Tools.makeid();
-        //   await this.ibmi.runCommand({
-        //     command: `CPYSPLF FILE(${name}) TOFILE(${tempLib}/${tempName}) JOB(${qualified_job_name}) SPLNBR(${splf_number}) CTLCHAR(*PRTCTL) MBROPT(*REPLACE)\nDLYJOB DLY(1)\nCPYTOIMPF FROMFILE(${tempLib}/${tempName}) TOSTMF('${tempRmt}') MBROPT(*REPLACE) `
-        //     , environment: `ile`
-        //   });
-        //   break;            
-        default:
-          // With the use of CPYSPLF and CPY to create a text based stream file in 1208, there are possibilities that the data becomes corrupt
-          // in the tempRmt object
-          this.ibmi.sendCommand({
-            command: `rm -f ${tempRmt}`
-          });
+  //   let retried = false;
+  //   let retry = 1;
+  //   let fileEncoding = `utf8`;
+  //   while (retry > 0) {
+  //     retry--;
+  //     try {
+  //       //If this command fails we need to try again after we delete the temp remote
+  //       switch (fileExtension.toLowerCase()) {
+  //       case `pdf`:
+  //         fileEncoding = ``;
+  //         await this.ibmi.runCommand({
+  //           command: `CPYSPLF FILE(${name}) TOFILE(*TOSTMF) JOB(${qualified_job_name}) SPLNBR(${splf_number}) TOSTMF('${tempRmt}') WSCST(*PDF) STMFOPT(*REPLACE)\nDLYJOB DLY(1)`
+  //           , environment: `ile`
+  //         });
+  //         break;
+  //       // case `prtctl`:
+  //       //   const tempLib = this.config.tempLibrary;
+  //       //   const tempName = Tools.makeid();
+  //       //   await this.ibmi.runCommand({
+  //       //     command: `CPYSPLF FILE(${name}) TOFILE(${tempLib}/${tempName}) JOB(${qualified_job_name}) SPLNBR(${splf_number}) CTLCHAR(*PRTCTL) MBROPT(*REPLACE)\nDLYJOB DLY(1)\nCPYTOIMPF FROMFILE(${tempLib}/${tempName}) TOSTMF('${tempRmt}') MBROPT(*REPLACE) `
+  //       //     , environment: `ile`
+  //       //   });
+  //       //   break;            
+  //       default:
+  //         // With the use of CPYSPLF and CPY to create a text based stream file in 1208, there are possibilities that the data becomes corrupt
+  //         // in the tempRmt object
+  //         this.ibmi.sendCommand({
+  //           command: `rm -f ${tempRmt}`
+  //         });
 
-          // fileExtension = `txt`;
-          // DLYJOB to ensure the CPY command completes in time.
-          await this.ibmi.runCommand({
-            command: `CPYSPLF FILE(${name}) TOFILE(*TOSTMF) JOB(${qualified_job_name}) SPLNBR(${splf_number}) TOSTMF('${tempRmt}') WSCST(*NONE) STMFOPT(*REPLACE) ${ctlchar ? `CTLCHAR(*PRTCTL)` : ``}\nDLYJOB DLY(1)\nCPY OBJ('${tempRmt}') TOOBJ('${tempRmt}') TOCCSID(1208) DTAFMT(*TEXT) REPLACE(*YES)`
-            , environment: `ile`
-          });
-        }
-      } catch (e) {
-        if (String(e).startsWith(`CPDA08A`)) {
-          if (!retried) {
-            await this.ibmi.sendCommand({ command: `rm -f ${tempRmt}`, directory: `.` });
-            retry++;
-            retried = true;
-          } else {
-            throw e;
-          }
-        } else {
-          throw e;
-        }
-      }
-    }
-    return tempRmt;
-    // await client.getFile(tmpobj, tempRmt);
-    // return await readFileAsync(tmpobj, fileEncoding);
+  //         // fileExtension = `txt`;
+  //         // DLYJOB to ensure the CPY command completes in time.
+  //         await this.ibmi.runCommand({
+  //           command: `CPYSPLF FILE(${name}) TOFILE(*TOSTMF) JOB(${qualified_job_name}) SPLNBR(${splf_number}) TOSTMF('${tempRmt}') WSCST(*NONE) STMFOPT(*REPLACE) ${ctlchar ? `CTLCHAR(*PRTCTL)` : ``}\nDLYJOB DLY(1)\nCPY OBJ('${tempRmt}') TOOBJ('${tempRmt}') TOCCSID(1208) DTAFMT(*TEXT) REPLACE(*YES)`
+  //           , environment: `ile`
+  //         });
+  //       }
+  //     } catch (e) {
+  //       if (String(e).startsWith(`CPDA08A`)) {
+  //         if (!retried) {
+  //           await this.ibmi.sendCommand({ command: `rm -f ${tempRmt}`, directory: `.` });
+  //           retry++;
+  //           retried = true;
+  //         } else {
+  //           throw e;
+  //         }
+  //       } else {
+  //         throw e;
+  //       }
+  //     }
+  //   }
+  //   return tempRmt;
+  //   // await client.getFile(tmpobj, tempRmt);
+  //   // return await readFileAsync(tmpobj, fileEncoding);
 
-  }
+  // }
 
-  /**
-  * @param {string} user
-  * @param {string=} splfName
-  * @returns {Promise<String>} a string with the count of spooled file for user
-  */
-  async getUserSpooledFileCount(user: string, splfName?: string, searchWord?: string): Promise<String> {
-    // const connection = instance.getConnection();
-    // const config = instance.getConfig();
-    // const content = instance.getContent();
+  // /**
+  // * @param {string} user
+  // * @param {string=} splfName
+  // * @returns {Promise<String>} a string with the count of spooled file for user
+  // */
+  // async getUserSpooledFileCount(user: string, splfName?: string, searchWord?: string): Promise<String> {
+  //   // const connection = instance.getConnection();
+  //   // const config = instance.getConfig();
+  //   // const content = instance.getContent();
 
-    user = user.toUpperCase();
+  //   user = user.toUpperCase();
 
-    // const tempLib = this.config.tempLibrary;
-    // const tempName = Tools.makeid();
-    let results: Tools.DB2Row[];
+  //   // const tempLib = this.config.tempLibrary;
+  //   // const tempName = Tools.makeid();
+  //   let results: Tools.DB2Row[];
 
-    const objQuery = `select count(*) USER_SPLF_COUNT
-    from table (QSYS2.SPOOLED_FILE_INFO(USER_NAME => '${user}') ) SPE 
-    where FILE_AVAILABLE = '*FILEEND' ${splfName ? `and SPE.SPOOLED_FILE_NAME = ucase('${splfName}')` : ""} 
-    group by JOB_USER` ;
-    results = await this.runSQL(objQuery);
-    // const resultSet = await new IBMiContent(this).runSQL(`SELECT * FROM QSYS2.ASP_INFO`);
-    if (results.length === 0) {
-      return ` ${user} user has no spooled files`;
-    }
-    return String(results[0].USER_SPLF_COUNT);
-  }
+  //   const objQuery = `select count(*) USER_SPLF_COUNT
+  //   from table (QSYS2.SPOOLED_FILE_INFO(USER_NAME => '${user}') ) SPE 
+  //   where FILE_AVAILABLE = '*FILEEND' ${splfName ? `and SPE.SPOOLED_FILE_NAME = ucase('${splfName}')` : ""} 
+  //   group by JOB_USER` ;
+  //   results = await this.runSQL(objQuery);
+  //   // const resultSet = await new IBMiContent(this).runSQL(`SELECT * FROM QSYS2.ASP_INFO`);
+  //   if (results.length === 0) {
+  //     return ` ${user} user has no spooled files`;
+  //   }
+  //   return String(results[0].USER_SPLF_COUNT);
+  // }
   /**
   * @param {string} user
   * @returns a promised string for user profile text 
@@ -1232,6 +1232,7 @@ export default class IBMiContent {
       lines: member.lines,
       created: member.created?.toISOString().slice(0, 19).replace(`T`, ` `),
       changed: member.changed?.toISOString().slice(0, 19).replace(`T`, ` `)
+      ,usercontent: member.usercontent
     }));
     tooltip.supportHtml = true;
     return tooltip;
