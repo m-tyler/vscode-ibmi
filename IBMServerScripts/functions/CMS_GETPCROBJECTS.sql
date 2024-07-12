@@ -1,16 +1,16 @@
-﻿/*============================================================================*/ 
-/* SPECIFIC NAME..: CMS00AFN01                                                */ 
-/* FUNCTION NAME..: CMS_GETPCROBJECTS                                         */ 
-/* AUTHOR.........: Matt Tyler                                                */ 
-/* DATE...........: 06/07/2022                                                */ 
-/* PCR #..........: XXXXX 00                                                  */ 
-/* FUNCTION/DESC..: Return list of objects checked out to PCR                 */ 
-/*                                                                            */ 
-/*----------------------------------------------------------------------------*/ 
-/*   MODIFICATIONS:                                                           */ 
-/*----------------------------------------------------------------------------*/ 
-/* MOD#  PCR     PGMR   DATE   DESCRIPTION                                    */ 
-/*============================================================================*/ 
+﻿/*============================================================================ 
+   SPECIFIC NAME..: CMS00AFN01                                                 
+   FUNCTION NAME..: CMS_GETPCROBJECTS                                          
+   AUTHOR.........: Matt Tyler                                                 
+   DATE...........: 06/07/2022                                                 
+   PCR #..........: XXXXX 00                                                   
+   FUNCTION/DESC..: Return list of objects checked out to PCR                  
+                                                                               
+  ---------------------------------------------------------------------------- 
+     MODIFICATIONS:                                                            
+  ---------------------------------------------------------------------------- 
+   MOD#  PCR     PGMR   DATE   DESCRIPTION                                     
+  ============================================================================*/ 
 set path *libl ; 
 create or replace function ILEDITOR.CMS_GETPCROBJECTS
 ( IN_TASK char(10) default '*NA' -- *USERDFT, *NA, *ANY, *NOT

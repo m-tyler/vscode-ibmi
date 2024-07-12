@@ -1,15 +1,15 @@
 ﻿/*============================================================================   
    SPECIFIC NAME..: VSC00APC03                                                   
-   procedure NAME..: VSC_getSourceFileListCustom_SP                                        
+   PROCEDURE NAME..: VSC_getSourceFileListCustom_SP                                        
    AUTHOR.........: Matt Tyler                                                   
    DATE...........: 09/22/2022                                                   
    PCR #..........: XXXXX 00                                                     
-   procedure/DESC..: Return list of source files for VS Code                      
+   PROCEDURE/DESC..: Return list of source files for VS Code                      
                                                                                  
   ----------------------------------------------------------------------------   
      MODIFICATIONS:                                                              
   ----------------------------------------------------------------------------   
-   MOD#  PCR     PGMR   DATE   DESCRIPTION                                       
+   MOD#  PCR     PGMR   DATE   DESCRIPTION                                        
   ============================================================================*/ 
 /*NOTE: Change the qualifier library on SP call below */
 

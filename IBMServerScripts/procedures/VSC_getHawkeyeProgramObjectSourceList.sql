@@ -1,16 +1,16 @@
-﻿/*============================================================================*/ 
-/* SPECIFIC NAME..: VSC00APC83                                                */ 
-/* FUNCTION NAME..: VSC_getHawkeyeProgramObjectSourceList                    */ 
-/* AUTHOR.........: Matt Tyler                                                */ 
-/* DATE...........: 10/13/2022                                                */ 
-/* PCR #..........: 19700 00                                                  */ 
-/* FUNCTION/DESC..: HWK - Return actual source for some SQL DB items          */ 
-/*                                                                            */ 
-/*----------------------------------------------------------------------------*/ 
-/*   MODIFICATIONS:                                                           */ 
-/*----------------------------------------------------------------------------*/ 
-/* MOD#  PCR     PGMR   DATE   DESCRIPTION                                    */ 
-/*============================================================================*/ 
+﻿/*============================================================================ 
+   SPECIFIC NAME..: VSC00APC83                                                 
+   PROCEDURE NAME.: VSC_getHawkeyeProgramObjectSourceList                      
+   AUTHOR.........: Matt Tyler                                                 
+   DATE...........: 10/13/2022                                                 
+   PCR #..........: 19700 00                                                   
+   PROCEDURE/DESC.: HWK - Return actual source for some SQL DB items           
+                                                                               
+  ---------------------------------------------------------------------------- 
+     MODIFICATIONS:                                                            
+  ---------------------------------------------------------------------------- 
+   MOD#  PCR     PGMR   DATE   DESCRIPTION                                     
+  ============================================================================*/ 
 set path *libl ; 
 create or replace procedure VSC_getHawkeyeProgramObjectSourceList
 ( 

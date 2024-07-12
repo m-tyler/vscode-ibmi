@@ -1,4 +1,17 @@
-﻿;cl:chgcurlib ILEDITOR;
+﻿/*============================================================================ 
+   SPECIFIC NAME..: VSC00AFN83                                                 
+   FUNCTION NAME..: VSC_getHawkeyeProgramObjectsList                                          
+   AUTHOR.........: Matt Tyler                                                 
+   DATE...........: 06/07/2022                                                 
+   PCR #..........: XXXXX 00                                                   
+   FUNCTION/DESC..: 
+                                                                               
+  ---------------------------------------------------------------------------- 
+     MODIFICATIONS:                                                            
+  ---------------------------------------------------------------------------- 
+   MOD#  PCR     PGMR   DATE   DESCRIPTION                                     
+  ============================================================================*/
+;cl:chgcurlib ILEDITOR;
 ;set current path ILEDITOR, SYSTEM PATH
 -- ;cl:chgcurlib [USER];
 -- ;set path [USER]

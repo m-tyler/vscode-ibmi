@@ -1,3 +1,16 @@
+/*============================================================================ 
+   SPECIFIC NAME..: VSC00AFN80                                                 
+   FUNCTION NAME..: VSC_getHawkeyeCrossRefList                                          
+   AUTHOR.........: Matt Tyler                                                 
+   DATE...........: 06/07/2022                                                 
+   PCR #..........: XXXXX 00                                                   
+   FUNCTION/DESC..:              
+                                                                               
+  ---------------------------------------------------------------------------- 
+     MODIFICATIONS:                                                            
+  ---------------------------------------------------------------------------- 
+   MOD#  PCR     PGMR   DATE   DESCRIPTION                                     
+  ============================================================================*/
 ;cl:chgcurlib ILEDITOR;
 ;set current path ILEDITOR, SYSTEM PATH
 -- ;cl:chgcurlib [USER];

@@ -1,11 +1,11 @@
 ﻿/*============================================================================ 
    SPECIFIC NAME..: VSC00APC11                                                 
-   procedure NAME..: VSC_getMemberListCustom                                  
+   PROCEDURE NAME..: VSC_getMemberListCustom                                  
    AUTHOR.........: Matt Tyler                                                
    DATE...........: 09/22/2022                                                
    PCR #..........: XXXXX 00                                                  
-   procedure/DESC..: Return list of source members for VS Code - Custom Code  
-                                                                               
+   PROCEDURE/DESC..: Return list of source members for VS Code - Custom Code  
+                                                                                
   ---------------------------------------------------------------------------- 
      MODIFICATIONS:                                                            
   ---------------------------------------------------------------------------- 

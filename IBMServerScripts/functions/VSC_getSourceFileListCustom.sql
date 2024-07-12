@@ -4,7 +4,7 @@
    AUTHOR.........: Matt Tyler
    DATE...........: 09/22/2022
    PCR #..........: XXXXX 00
-   FUNCTION/DESC..: Return list of source files for VS Code
+   FUNCTION/DESC..: Return list of source files for VS Code 
 
   ----------------------------------------------------------------------------
      MODIFICATIONS:

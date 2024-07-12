@@ -1,16 +1,16 @@
-﻿/*============================================================================*/ 
-/* SPECIFIC NAME..: VSC00APC83                                                */ 
-/* FUNCTION NAME..: VSC_getHawkeyeProgramObjectSourceListTF                   */ 
-/* AUTHOR.........: Matt Tyler                                                */ 
-/* DATE...........: 10/13/2022                                                */ 
-/* PCR #..........: 19700 00                                                  */ 
-/* FUNCTION/DESC..: HWK - Return actual source for some SQL DB items          */ 
-/*                                                                            */ 
-/*----------------------------------------------------------------------------*/ 
-/*   MODIFICATIONS:                                                           */ 
-/*----------------------------------------------------------------------------*/ 
-/* MOD#  PCR     PGMR   DATE   DESCRIPTION                                    */ 
-/*============================================================================*/ 
+﻿/*============================================================================ 
+   SPECIFIC NAME..: VSC00APC83                                                 
+   FUNCTION NAME..: VSC_getHawkeyeProgramObjectSourceListTF                    
+   AUTHOR.........: Matt Tyler                                                 
+   DATE...........: 10/13/2022                                                 
+   PCR #..........: 19700 00                                                   
+   FUNCTION/DESC..: HWK - Return actual source for some SQL DB items           
+                                                                               
+  ---------------------------------------------------------------------------- 
+     MODIFICATIONS:                                                            
+  ---------------------------------------------------------------------------- 
+   MOD#  PCR     PGMR   DATE   DESCRIPTION                                     
+  ============================================================================*/ 
 ;cl:chgcurlib ILEDITOR;
 ;set current path ILEDITOR, SYSTEM PATH
 -- ;cl:chgcurlib [USER];

@@ -1,10 +1,10 @@
-﻿/*============================================================================
+﻿/*============================================================================ 
    SPECIFIC NAME..: VSC00AFN01
    FUNCTION NAME..: VSC_getMemberListCustom
    AUTHOR.........: Matt Tyler
    DATE...........: 09/22/2022
    PCR #..........: XXXXX 00
-   FUNCTION/DESC..: Return list of source members for VS Code - Custom Code
+   FUNCTION/DESC..: Return list of source members for VS Code - Custom Code 
 
   ----------------------------------------------------------------------------
      MODIFICATIONS:

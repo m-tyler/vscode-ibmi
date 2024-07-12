@@ -1,4 +1,17 @@
-﻿;cl:chgcurlib ILEDITOR;
+﻿/*============================================================================ 
+   SPECIFIC NAME..: VCS000FN10                                                 
+   FUNCTION NAME..: VSC_getCopyMemberLocation                                          
+   AUTHOR.........: Matt Tyler                                                 
+   DATE...........: 06/07/2022                                                 
+   PCR #..........: XXXXX 00                                                   
+   FUNCTION/DESC..: Return list of objects checked out to PCR                  
+                                                                               
+  ---------------------------------------------------------------------------- 
+     MODIFICATIONS:                                                            
+  ---------------------------------------------------------------------------- 
+   MOD#  PCR     PGMR   DATE   DESCRIPTION                                     
+  ============================================================================*/
+;cl:chgcurlib ILEDITOR;
 ;set current path ILEDITOR, SYSTEM PATH
 -- ;cl:chgcurlib [USER];
 -- ;set path [USER]
