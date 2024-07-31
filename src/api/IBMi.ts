@@ -1089,7 +1089,6 @@ export default class IBMi {
       vscode.commands.executeCommand("code-for-ibmi.refreshObjectBrowser"),
       vscode.commands.executeCommand("code-for-ibmi.refreshLibraryListView"),
       vscode.commands.executeCommand("code-for-ibmi.refreshIFSBrowser")
-      ,vscode.commands.executeCommand("code-for-ibmi.refreshSPLFBrowser-o")
     ]);
 
     instance.setConnection(undefined);

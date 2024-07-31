@@ -120,7 +120,6 @@ export async function activate(context: ExtensionContext): Promise<CodeForIBMi> 
       commands.executeCommand("code-for-ibmi.refreshLibraryListView"),
       commands.executeCommand("code-for-ibmi.refreshIFSBrowser"),
       commands.executeCommand("code-for-ibmi.refreshProfileView")
-      // ,commands.executeCommand("code-for-ibmi.refreshSPLFBrowser-o")
     ]);
   });
 
