@@ -63,7 +63,7 @@ export default class IBMiContent {
   }
 
   private async convertToUTF8(iconv: string, from: string, to: string, ccsid: string) {
-    const result = await this.ibmi.sendCommand({ command: `${iconv} -f IBM-${ccsid} -t UTF-8 "${from}" > ${to}` });
+    const result = await this.ibmi.sendCommand({ command: `${iconv} -f IBM-${ccsid} -t UTF-8 ${Tools.escapePath(from)} > ${Tools.escapePath(to)}` });
     if (result.code === 0) {
       return result.stdout;
     }
@@ -154,7 +154,7 @@ export default class IBMiContent {
     member = this.ibmi.upperCaseName(member);
 
     let retry = false;
-    let path = Tools.qualifyPath(library, sourceFile, member, asp);
+    let path = Tools.qualifyPath(library, sourceFile, member, asp, true);
     const tempRmt = this.getTempRemote(path);
     while (true) {
       let copyResult: CommandResult;
@@ -227,7 +227,7 @@ export default class IBMiContent {
     let retry = false;
     try {
       await writeFileAsync(tmpobj, content, `utf8`);
-      let path = Tools.qualifyPath(library, sourceFile, member, asp);
+      let path = Tools.qualifyPath(library, sourceFile, member, asp, true);
       const tempRmt = this.getTempRemote(path);
       await client.putFile(tmpobj, tempRmt);
 
@@ -487,6 +487,7 @@ export default class IBMiContent {
    */
   async getObjectList(filters: { library: string; object?: string; types?: string[]; filterType?: FilterType; member?: string; memberType?: string; }, sortOrder?: SortOrder): Promise<IBMiObject[]> {
     const library = this.ibmi.upperCaseName(filters.library);
+    const americanLibrary = this.ibmi.sysNameInAmerican(library);
     if (!await this.checkObject({ library: "QSYS", name: library, type: "*LIB" })) {
       throw new Error(`Library ${library} does not exist.`);
     }
@@ -494,7 +495,7 @@ export default class IBMiContent {
     const singleEntry = filters.filterType !== 'regex' ? singleGenericName(filters.object) : undefined;
     const nameFilter = parseFilter(filters.object, filters.filterType);
     const objectFilter = filters.object && (nameFilter.noFilter || singleEntry) && filters.object !== `*` ? this.ibmi.upperCaseName(filters.object) : undefined;
-    const objectNameLike = () => objectFilter ? ` and t.SYSTEM_TABLE_NAME ${(objectFilter.includes('*') ? ` like ` : ` = `)} '${objectFilter.replace('*', '%')}'` : '';
+    const objectNameLike = () => objectFilter ? ` and t.SYSTEM_TABLE_NAME ${(objectFilter.includes('*') ? ` like ` : ` = `)} '${this.ibmi.sysNameInAmerican(objectFilter).replace('*', '%')}'` : '';
     const objectName = () => objectFilter ? `, OBJECT_NAME => '${objectFilter}'` : '';
     
     const member = (filters.member ? filters.member.toUpperCase() : filters.member);
@@ -527,7 +528,7 @@ export default class IBMiContent {
           `  1                   as IS_SOURCE,`,
           `  t.ROW_LENGTH        as SOURCE_LENGTH `,
           `from QSYS2.SYSTABLES as t`,
-          `where t.table_schema = '${library}' and t.file_type = 'S'${objectNameLike()}`,
+          `where t.table_schema = '${americanLibrary}' and t.file_type = 'S'${objectNameLike()}`,
         ];
       }
     } else if (!withSourceFiles) {
@@ -553,14 +554,14 @@ export default class IBMiContent {
       createOBJLIST = [
         `with SRCPF as (`,
         `  select `,
-        `    t.SYSTEM_TABLE_NAME as NAME,`,
+        `    Replace(Replace(Replace(t.SYSTEM_TABLE_NAME, '${this.ibmi.variantChars.american[2]}','${this.ibmi.variantChars.local[2]}'), '${this.ibmi.variantChars.american[1]}', '${this.ibmi.variantChars.local[1]}'), '${this.ibmi.variantChars.american[0]}', '${this.ibmi.variantChars.local[0]}') as NAME,`,
         `    '*FILE'             as TYPE,`,
         `    'PF'                as ATTRIBUTE,`,
         `    t.TABLE_TEXT        as TEXT,`,
         `    1                   as IS_SOURCE,`,
         `    t.ROW_LENGTH        as SOURCE_LENGTH`,
         `  from QSYS2.SYSTABLES as t`,
-        `  where t.table_schema = '${library}' and t.file_type = 'S'${objectNameLike()}`,
+        `  where t.table_schema = '${americanLibrary}' and t.file_type = 'S'${objectNameLike()}`,
         `), OBJD as (`,
         `  select `,
         `    OBJNAME           as NAME,`,
@@ -597,7 +598,7 @@ export default class IBMiContent {
 
     return objects.map(object => ({
       library,
-      name: this.ibmi.sysNameInLocal(String(object.NAME)),
+      name: sourceFilesOnly ? this.ibmi.sysNameInLocal(String(object.NAME)) : String(object.NAME),
       type: String(object.TYPE),
       attribute: String(object.ATTRIBUTE),
       text: String(object.TEXT || ""),
@@ -672,10 +673,10 @@ export default class IBMiContent {
               b.table_name = a.table_name
       )
       Select * From MEMBERS
-      Where LIBRARY = '${library}'
-        ${sourceFile !== `*ALL` ? `And SOURCE_FILE = '${sourceFile}'` : ``}
-        ${singleMember ? `And NAME Like '${singleMember}'` : ''}
-        ${singleMemberExtension ? `And TYPE Like '${singleMemberExtension}'` : ''}
+      Where LIBRARY = '${this.ibmi.sysNameInAmerican(library)}'
+        ${sourceFile !== `*ALL` ? `And SOURCE_FILE = '${this.ibmi.sysNameInAmerican(sourceFile)}'` : ``}
+        ${singleMember ? `And NAME Like '${this.ibmi.sysNameInAmerican(singleMember)}'` : ''}
+        ${singleMemberExtension ? `And TYPE Like '${this.ibmi.sysNameInAmerican(singleMemberExtension)}'` : ''}
       Order By ${sort.order === 'name' ? 'NAME' : 'CHANGED'} ${!sort.ascending ? 'DESC' : 'ASC'}`;
     }
     let results: Tools.DB2Row[];
@@ -686,9 +687,9 @@ export default class IBMiContent {
       return results.map(result => ({
         asp,
         library,
-        file: String(result.SOURCE_FILE),
-        name: String(result.NAME),
-        extension: String(result.TYPE),
+        file: this.ibmi.sysNameInLocal(String(result.SOURCE_FILE)),
+        name: this.ibmi.sysNameInLocal(String(result.NAME)),
+        extension: this.ibmi.sysNameInLocal(String(result.TYPE)),
         recordLength: Number(result.RECORD_LENGTH) - 12,
         text: `${result.TEXT || ``}${sourceFile === `*ALL` ? ` (${result.SOURCE_FILE})` : ``}`.trim(),
         lines: Number(result.LINES),
@@ -950,7 +951,7 @@ export default class IBMiContent {
    */
   async isDirectory(remotePath: string) {
     return (await this.ibmi.sendCommand({
-      command: `cd ${remotePath}`
+      command: `cd ${Tools.escapePath(remotePath)}`
     })).code === 0;
   }
 
@@ -1011,7 +1012,7 @@ export default class IBMiContent {
     return cl;
   }
   async getAttributes(path: string | (QsysPath & { member?: string }), ...operands: AttrOperands[]) {
-    const target = (path = typeof path === 'string' ? path : Tools.qualifyPath(path.library, path.name, path.member, path.asp));
+    const target = (path = typeof path === 'string' ? Tools.escapePath(path) : Tools.qualifyPath(path.library, path.name, path.member, path.asp));
     const result = await this.ibmi.sendCommand({ command: `${this.ibmi.remoteFeatures.attr} -p ${target} ${operands.join(" ")}` });
     if (result.code === 0) {
       return result.stdout
@@ -1029,7 +1030,7 @@ export default class IBMiContent {
   }
 
   async countFiles(directory: string) {
-    return Number((await this.ibmi.sendCommand({ command: `cd ${directory} && (ls | wc -l)` })).stdout.trim());
+    return Number((await this.ibmi.sendCommand({ command: `cd "${directory}" && (ls | wc -l)` })).stdout.trim());
   }
 
   objectToToolTip(path: string, object: IBMiObject) {

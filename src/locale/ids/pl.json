@@ -360,6 +360,7 @@
     "objectBrowser.uploadAndReplaceMemberAsFile.infoMessage": "Podzbiór został wysłany.",
     "offline": "Nieaktywny",
     "online": "Online",
+    "open":"Open",
     "open.service.configuration": "Otwórz konfigurację",
     "overview": "Przeglądaj",
     "overwrite": "Nadpisz",
@@ -422,5 +423,7 @@
     "USER_DIRECTORY": "Katalog użytkownika",
     "username": "Nazwa użytkownika",
     "Yes": "Tak"
-    ,"usercontent":"zawartość użytkownika"
+    ,"usercontent":"zawartość użytkownika",
+    "debug.service.config.incomplete": "Incomplete configuration",
+    "debug.service.config.incomplete.detail": "Certificate needs to be regenerated"
 }

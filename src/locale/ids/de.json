@@ -360,6 +360,7 @@
   "objectBrowser.uploadAndReplaceMemberAsFile.infoMessage": "Quelle wurde hochgeladen.",
   "offline": "Offline",
   "online": "Online",
+  "open":"Open",
   "open.service.configuration": "Konfiguration öffnen",
   "overview": "Überblick",
   "overwrite": "Überschreiben",
@@ -422,5 +423,7 @@
   "USER_DIRECTORY": "Benutzerverzeichnis",
   "username": "Nutzername",
   "Yes": "Ja"
-  ,"usercontent":" Benutzerinhalt"
+  ,"usercontent":" Benutzerinhalt",
+  "debug.service.config.incomplete": "Incomplete configuration",
+  "debug.service.config.incomplete.detail": "Certificate needs to be regenerated"
   }

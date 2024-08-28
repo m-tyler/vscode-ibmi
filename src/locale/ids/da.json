@@ -360,6 +360,7 @@
   "objectBrowser.uploadAndReplaceMemberAsFile.infoMessage": "Fil blev sendt til member.",
   "offline": "Offline",
   "online": "Online",
+  "open":"Open",
   "open.service.configuration": "Åbn konfiguration",
   "overview": "Overblik",
   "overwrite": "Erstat",
@@ -422,5 +423,7 @@
   "USER_DIRECTORY": "Bruger mappe",
   "username": "Brugernavn",
   "Yes": "Ja"
-  ,"usercontent":"Bruger Inhold"
+  ,"usercontent":"Bruger Inhold",
+  "debug.service.config.incomplete": "Ufuldstændig konfiguration",
+  "debug.service.config.incomplete.detail": "Certifikatet skal regenereres"
 }
