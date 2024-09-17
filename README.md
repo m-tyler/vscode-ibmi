@@ -5,7 +5,7 @@ Using this fork to add in Winco personalized changes to the extension.  For inst
 ## * Aldon tasks
   1. You have to create a filter that limits to one library environment.
   2. You can limit results to a certain source file by specifying a source file in the filter.
-  3. To link this filter to an Aldon project, add this pattern in the member input, `#PCR#####VV`, where ##### is the PCr number and VV is the PCR version.
+  3. To link this filter to an Aldon project, add this pattern in the member input, `#PCR#####VV`, where ##### is the PCr number and VV is the PCR version.  Alternatively, you can also tag # symbol to the front of any 10 character string and have that sting be connected to an Aldon task filter ID. 
 
 ## * Actions added
   <img src="Actions.png">
