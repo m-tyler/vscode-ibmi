@@ -1,16 +1,16 @@
-import * as node_ssh from "node-ssh";
-import * as vscode from "vscode";
-import { ConnectionConfiguration } from "./Configuration";
-
 import { parse } from 'csv-parse/sync';
 import { existsSync } from "fs";
+import * as node_ssh from "node-ssh";
 import os from "os";
-import path from 'path';
-import { ComponentId, ComponentManager } from "../components/component";
+import path, { parse as parsePath } from 'path';
+import * as vscode from "vscode";
+import { IBMiComponent, IBMiComponentType } from "../components/component";
 import { CopyToImport } from "../components/copyToImport";
+import { ComponentManager } from "../components/manager";
 import { instance } from "../instantiate";
 import { CommandData, CommandResult, ConnectionData, IBMiMember, RemoteCommand, SpecialAuthorities, WrapResult } from "../typings";
 import { CompileTools } from "./CompileTools";
+import { ConnectionConfiguration } from "./Configuration";
 import IBMiContent from "./IBMiContent";
 import { CachedServerSettings, GlobalStorage } from './Storage';
 import { Tools } from './Tools';
@@ -55,7 +55,7 @@ export default class IBMi {
   /** User default CCSID is job default CCSID */
   private userDefaultCCSID: number = 0;
 
-  private components: ComponentManager = new ComponentManager();
+  private componentManager = new ComponentManager(this);
 
   client: node_ssh.NodeSSH;
   currentHost: string = ``;
@@ -113,6 +113,10 @@ export default class IBMi {
       tar: undefined,
       ls: undefined,
       find: undefined,
+      jdk80: undefined,
+      jdk11: undefined,
+      jdk17: undefined,
+      openjdk11: undefined
     };
 
     this.variantChars = {
@@ -587,6 +591,16 @@ export default class IBMi {
                 console.log(e);
               }
             }
+
+            //Specific Java installations check
+            progress.report({
+              message: `Checking installed components on host IBM i: Java`
+            });
+            const javaCheck = async (root: string) => await this.content.testStreamFile(`${root}/bin/java`, 'x') ? root : undefined;
+            this.remoteFeatures.jdk80 = await javaCheck(`/QOpenSys/QIBM/ProdData/JavaVM/jdk80/64bit`);
+            this.remoteFeatures.jdk11 = await javaCheck(`/QOpenSys/QIBM/ProdData/JavaVM/jdk11/64bit`);
+            this.remoteFeatures.openjdk11 = await javaCheck(`/QOpensys/pkgs/lib/jvm/openjdk-11`);
+            this.remoteFeatures.jdk17 = await javaCheck(`/QOpenSys/QIBM/ProdData/JavaVM/jdk17/64bit`);
           }
 
           if (this.sqlRunnerAvailable()) {
@@ -931,7 +945,7 @@ export default class IBMi {
           }
 
           progress.report({ message: `Checking Code for IBM i components.` });
-          await this.components.startup(this);
+          await this.componentManager.startup();
 
           if (!reconnecting) {
             vscode.workspace.getConfiguration().update(`workbench.editor.enablePreview`, false, true);
@@ -1180,7 +1194,7 @@ export default class IBMi {
       }
   }
 
-  parserMemberPath(string: string): MemberParts {
+  parserMemberPath(string: string, checkExtension?: boolean): MemberParts {
     const variant_chars_local = this.variantChars.local;
     const validQsysName = new RegExp(`^[A-Z0-9${variant_chars_local}][A-Z0-9_${variant_chars_local}.]{0,9}$`);
 
@@ -1188,12 +1202,13 @@ export default class IBMi {
     const upperCasedString = this.upperCaseName(string);
     const path = upperCasedString.startsWith(`/`) ? upperCasedString.substring(1).split(`/`) : upperCasedString.split(`/`);
 
-    const basename = path[path.length - 1];
+    const parsedPath = parsePath(upperCasedString);
+    const name = parsedPath.name;
     const file = path[path.length - 2];
     const library = path[path.length - 3];
     const asp = path[path.length - 4];
 
-    if (!library || !file || !basename) {
+    if (!library || !file || !name) {
       throw new Error(`Invalid path: ${string}. Use format LIB/SPF/NAME.ext`);
     }
     if (asp && !validQsysName.test(asp)) {
@@ -1206,12 +1221,10 @@ export default class IBMi {
       throw new Error(`Invalid Source File name: ${file}`);
     }
 
-    //Having a blank extension is allowed but the . in the path is required
-    if (!basename.includes(`.`)) {
+    //Having a blank extension is allowed but the . in the path is required if checking the extension
+    if (checkExtension && !parsedPath.ext) {
       throw new Error(`Source Type extension is required.`);
     }
-    const name = basename.substring(0, basename.lastIndexOf(`.`));
-    const extension = basename.substring(basename.lastIndexOf(`.`) + 1).trim();
 
     if (!validQsysName.test(name)) {
       throw new Error(`Invalid Source Member name: ${name}`);
@@ -1221,6 +1234,7 @@ export default class IBMi {
     // the existing RegExp because result.extension is everything after
     // the final period (so we know it won't contain a period).
     // But, a blank extension is valid.
+    const extension = parsedPath.ext.substring(1);
     if (extension && !validQsysName.test(extension)) {
       throw new Error(`Invalid Source Member Extension: ${extension}`);
     }
@@ -1229,7 +1243,7 @@ export default class IBMi {
       library,
       file,
       extension,
-      basename,
+      basename: parsedPath.base,
       name,
       asp
     };
@@ -1353,8 +1367,8 @@ export default class IBMi {
     }
   }
 
-  getComponent<T>(id: ComponentId) {
-    return this.components.get<T>(id);
+  getComponent<T extends IBMiComponent>(type: IBMiComponentType<T>, ignoreState?: boolean): T | undefined {
+    return this.componentManager.get<T>(type, ignoreState);
   }
 
   /**
@@ -1384,7 +1398,7 @@ export default class IBMi {
 
         if (lastStmt) {
           if ((asUpper?.startsWith(`SELECT`) || asUpper?.startsWith(`WITH`))) {
-            const copyToImport = this.getComponent<CopyToImport>(`CopyToImport`);
+            const copyToImport = this.getComponent<CopyToImport>(CopyToImport);
             if (copyToImport) {
               returningAsCsv = copyToImport.wrap(lastStmt);
               list.push(...returningAsCsv.newStatements);
@@ -1416,10 +1430,9 @@ export default class IBMi {
             return parse(csvContent, {
               columns: true,
               skip_empty_lines: true,
-              cast: true,
               onRecord(record) {
                 for (const key of Object.keys(record)) {
-                  record[key] = record[key] === ` ` ? `` : record[key];
+                  record[key] = record[key] === ` ` ? `` : Tools.assumeType(record[key]);
                 }
                 return record;
               }
