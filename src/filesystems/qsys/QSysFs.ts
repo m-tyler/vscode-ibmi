@@ -1,5 +1,5 @@
 import { parse as parsePath } from "path";
-import { ParsedUrlQueryInput, parse, stringify } from "querystring";
+import { parse, ParsedUrlQueryInput, stringify } from "querystring";
 import vscode, { FilePermission, FileSystemError } from "vscode";
 import { onCodeForIBMiConfigurationChange } from "../../api/Configuration";
 import IBMi from "../../api/IBMi";
@@ -7,6 +7,7 @@ import { Tools } from "../../api/Tools";
 import { instance } from "../../instantiate";
 import { IBMiMember, QsysFsOptions, QsysPath } from "../../typings";
 import { ExtendedIBMiContent } from "./extendedContent";
+import { reconnectFS } from "./FSUtils";
 import { SourceDateHandler } from "./sourceDateHandler";
 
 export function getMemberUri(member: IBMiMember, options?: QsysFsOptions) {
@@ -172,7 +173,7 @@ export class QSysFS implements vscode.FileSystemProvider {
             let memberContent;
             try {
                 memberContent = this.extendedMemberSupport ?
-                    await this.extendedContent.downloadMemberContentWithDates(asp, library, file, member) :
+                    await this.extendedContent.downloadMemberContentWithDates(uri) :
                     await contentApi.downloadMemberContent(asp, library, file, member);
             }
             catch (error) {
@@ -196,8 +197,12 @@ export class QSysFS implements vscode.FileSystemProvider {
                 throw new FileSystemError("Not connected to IBM i");
             }
             else {
-                await vscode.commands.executeCommand(`code-for-ibmi.connectToPrevious`);
-                return this.readFile(uri, true);
+                if (await reconnectFS(uri)) {
+                    return this.readFile(uri, true);
+                }
+                else {
+                    return Buffer.alloc(0);
+                }
             }
         }
     }
@@ -223,7 +228,7 @@ export class QSysFS implements vscode.FileSystemProvider {
             else {
                 this.savedAsMembers.delete(uri.path);
                 this.extendedMemberSupport ?
-                    await this.extendedContent.uploadMemberContentWithDates(asp, library, file, member, content.toString()) :
+                    await this.extendedContent.uploadMemberContentWithDates(uri, content.toString()) :
                     await contentApi.uploadMemberContent(asp, library, file, member, content);
             }
         }
