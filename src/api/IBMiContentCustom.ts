@@ -1,8 +1,7 @@
 import { FilterType } from './Filter';
 import { instance } from "../instantiate";
-// import { default as IBMi } from './IBMi';
 import { Tools } from './Tools';
-import { t } from "../locale";
+import vscode from "vscode";
 
 
 export type SortOrder = `name` | `type`;
@@ -21,7 +20,7 @@ function getConnection() {
     return connection;
   }
   else {
-    throw new Error(t('not.connected'));
+    throw new Error(vscode.l10n.t('not.connected'));
   }
 }
 function getContent() {
@@ -30,7 +29,7 @@ function getContent() {
     return content;
   }
   else {
-    throw new Error(t('not.connected'));
+    throw new Error(vscode.l10n.t('not.connected'));
   }
 }
 

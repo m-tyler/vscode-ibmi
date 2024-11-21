@@ -875,6 +875,252 @@
 							],
 							"name": "Call program",
 							"command": "?CALL &LIBRARY/&NAME"
+						},
+						{
+							"type": "member",
+							"extensions": [
+								"SQL",
+								"DSPF",
+								"PRTF",
+								"RPGLE",
+								"SQLRPGLE",
+								"CLLE",
+								"CLP",
+								"PF",
+								"LF",
+								"CMD"
+							],
+							"environment": "ile",
+							"name": "WBUILD: - Prompt💬",
+							"command": "WBUILD OBJ(${OBJL|Object Libray|&OPENLIB}/${OBJN|Object Name|&OPENMBR}) SRCFILE(&OPENLIB/&OPENSPF) SRCMBR(&OPENMBR) DBGVIEW(*SOURCE) OPTION(*EVENTF) USECMS(${USECMS|Create using CMS product|*NO,*YES})",
+							"refresh": "no",
+							"runOnProtected": true
+						},
+						{
+							"type": "member",
+							"extensions": [
+								"GLOBAL"
+							],
+							"environment": "ile",
+							"name": "🚀ACMS: 🔼Check In :",
+							"command": "ACMSPROMOT OBJ((&OPENSPF (&OPENMBR))) IDLIB(&LMI_REL_IDLIB) ENV(DVP) COMMENT('') FAILURE(*STOP)",
+							"refresh": "browser",
+							"runOnProtected": false
+						},
+						{
+							"type": "member",
+							"extensions": [
+								"GLOBAL"
+							],
+							"environment": "ile",
+							"name": "🚀ACMS: 🔽Check Out : - Prompt 💬",
+							"command": "ACMSCHKOUT OBJ((&OPENSPF (${MBR|Check out member|&OPENMBR}))) IDLIB(${IDLIB|Identifying Relase LIbrary|&LMI_REL_IDLIBS,}) PROJECT(${PCR|Pcr Project|&PCR}) DVP(${DVPR|Check out developer|&CURLIB}) SBMJOB(*IFONLINE) REPLACE(${REPLACE|Replace existing source/object(*NO or *YES)|*NO,*YES}) EMGCHK(${EMGCHK|Emergency checkout(*NO or *YES)|*NO,*YES})",
+							"refresh": "filter",
+							"runOnProtected": true
+						},
+						{
+							"type": "member",
+							"extensions": [
+								"GLOBAL"
+							],
+							"environment": "ile",
+							"name": "🚀ACMS: 🔽Check Out : Project - Prompt 💬",
+							"command": "ACMSCHKOUT OBJ(((${OBJ|Objects to be checked out|*PROJECT}))) IDLIB(${IDLIB|Identifying Relase LIbrary|&LMI_REL_IDLIBS,}) PROJECT(${PCR|Pcr Project|&PCR}) DVP(${DVPR|Check out developer|&CURLIB}) SBMJOB(*IFONLINE) REPLACE(${REPLACE|Replace existing source/object(*NO or *YES)|*NO,*YES}) EMGCHK(${EMGCHK|Emergency checkout(*NO or *YES)|*NO,*YES})",
+							"refresh": "browser",
+							"runOnProtected": true
+						},
+						{
+							"type": "member",
+							"extensions": [
+								"GLOBAL"
+							],
+							"environment": "ile",
+							"name": "🚀ACMS: 🔼Check In : - Prompt💬",
+							"command": "ACMSPROMOT OBJ((${SRCF|Source file|&OPENSPF} (${SRCM|Source member|&OPENMBR}))) IDLIB(${IDLIB|Identifying Library|&LMI_REL_IDLIBS}) PROJECT(${PCR|Pcr Project|&PCR}) ENV(${ENV|From Environment|DVP,ITG,QUA,PDN}) COMMENT(${CMT|Comment|''}) FAILURE(${FAILURE|Stop on failure(*STOP or *CONT)|*STOP,*CONT}) LEAVERES(${LEAVRRES|Leave resident|*NONE,*DEP,*ALL})",
+							"refresh": "no",
+							"runOnProtected": true
+						},
+						{
+							"type": "member",
+							"extensions": [
+								"GLOBAL"
+							],
+							"environment": "ile",
+							"name": "🚀ACMS: ⏫Push to (Q) environment - Prompt💬",
+							"command": "ACMSPROMOT OBJ((${SRCF|Source file|&OPENSPF} (${SRCM|Source member|&OPENMBR}))) IDLIB(${IDLIB|Identifying Library|&LMI_REL_IDLIBS}) PROJECT(${PCR|Pcr Project|&PCR}) ENV(${ENV|From Environment|ITG,DVP,QUA,PDN}) COMMENT(${CMT|Comment|''}) FAILURE(${FAILURE|Stop on failure(*STOP or *CONT)|*STOP,*CONT}) ",
+							"refresh": "browser",
+							"runOnProtected": true
+						},
+						{
+							"type": "member",
+							"extensions": [
+								"GLOBAL"
+							],
+							"environment": "ile",
+							"name": "🚀ACMS: ⏺Create : Object - Prompt 💬",
+							"command": "ACMSCREATE OBJ((&OPENSPF (${MBR|Check out member|&OPENMBR}))) IDLIB(${IDLIB|Identifying Relase LIbrary|&LMI_REL_IDLIBS,}) PROJECT(${PCR|Pcr Project|&PCR}) ENV(${ENV|From Environment|DVP,ITG,QUA,PDN}) SBMJOB(${SBMJOB|Submit Create action|*NO,*YES}) FAILURE(${FAILURE|Stop on failure(*STOP or *CONT)|*STOP,*CONT})",
+							"refresh": "no",
+							"runOnProtected": true
+						},
+						{
+							"type": "member",
+							"extensions": [
+								"GLOBAL"
+							],
+							"environment": "ile",
+							"name": "🚀ACMS: 🔼Check In : Project - Prompt💬",
+							"command": "ACMSPROMOT OBJ((*PROJECT)) IDLIB(${IDLIB|Identifying Library|&LMI_REL_IDLIBS}) PROJECT(${PCR|Pcr Project|&PCR}) ENV(${ENV|From Environment|DVP,ITG,QUA,PDN}) COMMENT(${CMT|Comment|''}) FAILURE(${FAILURE|Stop on failure(*STOP or *CONT)|*STOP,*CONT}) LEAVERES(${LEAVRRES|Leave resident|*NONE,*DEP,*ALL})",
+							"refresh": "filter",
+							"runOnProtected": true
+						},
+						{
+							"type": "object",
+							"extensions": [
+								"GLOBAL"
+							],
+							"environment": "ile",
+							"name": "🚀ACMS: 🔼Check In : Project - Prompt💬",
+							"command": "ACMSPROMOT OBJ((*PROJECT)) IDLIB(${IDLIB|Identifying Library|&LMI_REL_IDLIBS}) PROJECT(${PCR|Pcr Project|&PCR}) ENV(${ENV|From Environment|DVP,ITG,QUA,PDN}) COMMENT(${CMT|Comment|''}) FAILURE(${FAILURE|Stop on failure(*STOP or *CONT)|*STOP,*CONT}) LEAVERES(${LEAVRRES|Leave resident|*NONE,*DEP,*ALL})",
+							"refresh": "filter",
+							"runOnProtected": true
+						},
+						{
+							"type": "object",
+							"extensions": [
+								"GLOBAL"
+							],
+							"environment": "ile",
+							"name": "🚀ACMS: ⏺Create : Project - Prompt 💬",
+							"command": "ACMSCREATE OBJ(${PROJECT|Create objects for project|*PROJECT})  IDLIB(${IDLIB|Identifying Relase LIbrary|&LMI_REL_IDLIBS,}) PROJECT(${PCR|Pcr Project|&PCR}) ENV(${ENV|From Environment|DVP,ITG,QUA,PDN}) SBMJOB(${SBMJOB|Submit Create action|*NO,*YES}) FAILURE(${FAILURE|Stop on failure(*STOP or *CONT)|*STOP,*CONT})",
+							"refresh": "no",
+							"runOnProtected": true
+						},
+						{
+							"type": "member",
+							"extensions": [
+								"GLOBAL"
+							],
+							"environment": "ile",
+							"name": "🚀ACMS: ❌ CANCEL Check out - Prompt💬",
+							"command": "ACMSDLTOBJ REL(${GRP|Product Group|WAREMART,WINCO}/${APP|Application|GENERAL,DATATECH,CONVERSION,DEVELOP,SYSTEM,TEST }/${REL|Application Release|&REL,BASE,BASE30,CVTBASE,DEVBASE,D1CVT,D1DTS,D1SYS,D1WFI,D2CVT,D2DTS,D2SYS,D2WFI,EXITS,RIMS,SYSBASE,TEST}) OBJNAME(&OPENMBR) OBJTYPE(&OPENSPF) ENV(${DVP|Delete from Environment|DVP,ITG,QUA})   ",
+							"refresh": "no",
+							"runOnProtected": true
+						},
+						{
+							"type": "member",
+							"extensions": [
+								"GLOBAL"
+							],
+							"environment": "ile",
+							"name": "🚀ACMS:✅➕ Add Object - Prompt💬",
+							"command": "ACMSADDOBJ OBJNAME(${OBJ|Object Name|&OPENMBR}) OBJTYPE(${OBJTYPE|Object Type|,*PGM,*FILE,*SRCMBR,*FUNCTN,*PROC,*TABLE,*VIEW,*INDEX,*ALIAS,*VAR,*SEQUENC,*TRIGGER,*TYPE,*CMD}) OBJATTR(${OBJATR|Object Attribute|&EXT}) OBJEXTA(${EXTATR|Extended Attributes|,ILE,BND,SQL,EXT,OPM}) OBJTEXT('${OBJTXT|Object Text|}') IDLIB(${IBLIB|Identifying Library|&LMI_REL_IDLIBS,*NONE}) SRCFNAME(${SRCPF|Source file|&OPENSPF,*NONE}) SRCMNAME(${SRCM|Object Name|&OPENMBR,*OBJNAME}) REQEXIST(${REQEXIST|Require existence|*NO,*YES}) DVP(${DVPR|Developer|&USERNAME,*USERDFT}) PROJECT(${PRJ|Project (PCR#####VV,*NONE,*USRDFT)|&PCR}) SOURCEOPT(${SRCOPT|Source based object|*YES, *NO, *PSEUDO}) FUNCNAME(${SQLFNC|SQL Function (name,*OBJNAME)|}) PROCNAME(${SQLPRC|SQL Procedure (name,*OBJNAME)|})"
+						},
+						{
+							"type": "member",
+							"extensions": [
+								"GLOBAL"
+							],
+							"environment": "ile",
+							"name": "TAA: MOVM - Prompt💬",
+							"command": "MOVM FROMFILE(${FL|From library|&OPENLIB}/${FF|From source file|&OPENSPF})  TOFILE(${TL|To library|&OPENLIB}/${TF|To source file|&OPENSPF}) FROMMBR(&OPENMBR) TOMBR(${TM|To Member name|*FROMMBR,&OPENMBR}) REPLACE(${RPLC|Replace existing TOMBR|*NO,*YES})  ALWLONGTO(${ALWLNG|Allow longer to source files|*YES,*NO})"
+						},
+						{
+							"type": "member",
+							"extensions": [
+								"RPGLE",
+								"RPG"
+							],
+							"environment": "ile",
+							"name": "VERIFY: Create Bound RPG Program (CRTBNDRPG)",
+							"command": "?CRTBNDRPG PGM(ILEDITOR/&OPENMBR) SRCFILE(&OPENLIB/&OPENSPF) OPTION(*EVENTF) DBGVIEW(*SOURCE)",
+							"deployFirst": false
+						},
+						{
+							"type": "member",
+							"extensions": [
+								"SQLRPGLE"
+							],
+							"environment": "ile",
+							"name": "Create SQL ILE RPG `MODULE` (CRTSQLRPGI)",
+							"command": "?CRTSQLRPGI OBJ(&OPENLIB/&OPENMBR) SRCFILE(&OPENLIB/&OPENSPF) OBJTYPE(*MODULE) CLOSQLCSR(*ENDMOD) OPTION(*EVENTF) DBGVIEW(*SOURCE)  "
+						},
+						{
+							"type": "member",
+							"extensions": [
+								"GLOBAL"
+							],
+							"environment": "ile",
+							"name": "W: ADD Mod Mark",
+							"command": "WADDMODMRK SRCFILE(${SRCL|LIbrary|&OPENLIB}/${SRCPF|Source file|&OPENSPF}) MBR(${MBR|Member|&OPENMBR}) PCR(${PCR|PCR Number|&NUMPCR}) DESC(${DESC|Description|*PCR,*ALDON,})"
+						},
+						{
+							"type": "member",
+							"extensions": [
+								"RPGLE",
+								"RPG"
+							],
+							"environment": "ile",
+							"name": "🪀JCRCMDS: Extract PRTF from O-SPECS",
+							"command": "SBMJOB CMD(PGMT#2/JCRPRTF RPGMBR(&OPENMBR) RPGSRCFIL(&OPENLIB/&OPENSPF) PRTFMBR(&OPENMBRPR) PRTFSRCFIL(&OPENLIB/QDDSSRC) ) JOB(JCRPRTF) ",
+							"refresh": "no",
+							"runOnProtected": true
+						},
+						{
+							"type": "member",
+							"extensions": [
+								"GLOBAL"
+							],
+							"environment": "ile",
+							"name": "🚚 SNDNETF to production",
+							"command": "?SNDNETF FILE(&OPENLIB/&OPENSPF) TOUSRID((&USERNAME BOISE01)) MBR(&OPENMBR)",
+							"refresh": "no",
+							"runOnProtected": true
+						},
+						{
+							"type": "object",
+							"extensions": [
+								"GLOBAL"
+							],
+							"environment": "ile",
+							"name": "🚚 SAVRSTOBJ TO BOISE01",
+							"command": "?SAVRSTOBJ OBJ(&NAME) LIB(&LIBRARY) OBJTYPE(*&TYPE) RMTLOCNAME(BOISE01)",
+							"refresh": "no",
+							"runOnProtected": true
+						},
+						{
+							"type": "member",
+							"extensions": [
+								"RPGLE",
+								"RPG",
+								"SQLRPGLE"
+							],
+							"environment": "ile",
+							"name": "🚧 ⏺ CREATE SP OBJECT",
+							"command": "? call &OPENMBRu PARM(&OPENLIB)",
+							"refresh": "no",
+							"runOnProtected": true
+						},
+						{
+							"type": "member",
+							"extensions": [
+								"GLOBAL"
+							],
+							"environment": "ile",
+							"name": "DSPLIBL",
+							"command": "DSPLIBL",
+							"refresh": "no",
+							"runOnProtected": false
+						},
+						{
+							"type": "member",
+							"extensions": [
+								"SQL"
+							],
+							"environment": "ile",
+							"name": "Create SQL Object",
+							"command": "RUNSQLSTM SRCFILE(&OPENLIB/&OPENSPF) SRCMBR(&OPENMBR) COMMIT(*NONE) MARGINS(*SRCFILE)",
+							"refresh": "no",
+							"runOnProtected": false
 						}
 					]
 				}
