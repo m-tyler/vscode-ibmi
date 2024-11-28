@@ -470,7 +470,7 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
             const selectionSplit = connection!.upperCaseName(selection).split('/')
             if (selectionSplit.length === 3 || selection.startsWith(`/`)) {
 
-              const infoComponent = connection?.getComponent<GetMemberInfo>(GetMemberInfo);
+              const infoComponent = connection?.getComponent<GetMemberInfo>(GetMemberInfo.ID);
 
               // When selection is QSYS path
               if (!selection.startsWith(`/`) && infoComponent && connection) {
@@ -478,7 +478,7 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
                 const file = selectionSplit[1];
                 const member = path.parse(selectionSplit[2]);
                 member.ext = member.ext.substring(1);
-                const memberInfo = await infoComponent.getMemberInfo(library, file, member.name);
+                const memberInfo = await infoComponent.getMemberInfo(connection, library, file, member.name);
                 if (!memberInfo) {
                   vscode.window.showWarningMessage(`Source member ${library}/${file}/${member.base} does not exist.`);
                   return;
@@ -532,7 +532,7 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
       quickPick.show();
 
     }),
-    vscode.commands.registerCommand(`code-for-ibmi.runAction`, async (target: vscode.TreeItem | BrowserItem | vscode.Uri, group?: any, action?: Action, method?: DeploymentMethod) => {
+    vscode.commands.registerCommand(`code-for-ibmi.runAction`, async (target: vscode.TreeItem | BrowserItem | vscode.Uri, group?: any, action?: Action, method?: DeploymentMethod, workspaceFolder?: vscode.WorkspaceFolder) => {
       const editor = vscode.window.activeTextEditor;
       let uri;
       let browserItem;
@@ -578,7 +578,7 @@ export async function loadAllofExtension(context: vscode.ExtensionContext) {
           }
 
           if (canRun && [`member`, `streamfile`, `file`, 'object'].includes(uri.scheme)) {
-            return await CompileTools.runAction(instance, uri, action, method, browserItem);
+            return await CompileTools.runAction(instance, uri, action, method, browserItem, workspaceFolder);
           }
         }
         else {

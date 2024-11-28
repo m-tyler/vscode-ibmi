@@ -17,6 +17,7 @@ import { parseErrors } from "./api/errors/parser";
 import { DeployTools } from "./api/local/deployTools";
 import { Deployment } from "./api/local/deployment";
 import { CopyToImport } from "./components/copyToImport";
+import { CustomQSh } from "./components/cqsh";
 import { GetMemberInfo } from "./components/getMemberInfo";
 import { GetNewLibl } from "./components/getNewLibl";
 import { extensionComponentRegistry } from "./components/manager";
@@ -127,9 +128,10 @@ export async function activate(context: ExtensionContext): Promise<CodeForIBMi> 
       commands.executeCommand("code-for-ibmi.refreshProfileView");
     });
 
-  extensionComponentRegistry.registerComponent(context, GetNewLibl);
-  extensionComponentRegistry.registerComponent(context, GetMemberInfo);
-  extensionComponentRegistry.registerComponent(context, CopyToImport);
+  extensionComponentRegistry.registerComponent(context, new CustomQSh());
+  extensionComponentRegistry.registerComponent(context, new GetNewLibl);
+  extensionComponentRegistry.registerComponent(context, new GetMemberInfo());
+  extensionComponentRegistry.registerComponent(context, new CopyToImport());
 
   return {
     instance, customUI: () => new CustomUI(),
