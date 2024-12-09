@@ -478,7 +478,13 @@ export default class IBMiContent {
   }
 
   async getLibraries(filters: { library: string; filterType?: FilterType }) {
-    return this.getObjectList({ library: "QSYS", object: filters.library, types: ["*LIB"], filterType: filters.filterType });
+    const libraries: IBMiObject[] = [];
+    for (const library of filters.library.split(",")) {
+      (await this.getObjectList({ library: "QSYS", object: library.trim(), types: ["*LIB"], filterType: filters.filterType }))
+        .filter(lib => !libraries.find(l => l.name === lib.name))
+        .forEach(lib => libraries.push(lib));
+    }
+    return libraries;
   }
 
   /**
@@ -1017,11 +1023,11 @@ export default class IBMiContent {
 
     if (assumeMember) {
       target = IBMi.escapeForShell(target);
-      result = await this.ibmi.sendQsh({ command: `${this.ibmi.remoteFeatures.attr} -p ${target} ${operands.join(" ")}`});
+      result = await this.ibmi.sendQsh({ command: `${this.ibmi.remoteFeatures.attr} -p ${target} ${operands.join(" ")}` });
     } else {
       target = Tools.escapePath(target, true);
       // Take {DOES_THIS_WORK: `YESITDOES`} away, and all of a sudden names with # aren't found.
-      result = await this.ibmi.sendCommand({ command: `${this.ibmi.remoteFeatures.attr} -p "${target}" ${operands.join(" ")}`, env: {DOES_THIS_WORK: `YESITDOES`}});
+      result = await this.ibmi.sendCommand({ command: `${this.ibmi.remoteFeatures.attr} -p "${target}" ${operands.join(" ")}`, env: { DOES_THIS_WORK: `YESITDOES` } });
     }
 
     if (result.code === 0) {
