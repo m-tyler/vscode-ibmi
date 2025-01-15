@@ -1121,6 +1121,15 @@
 							"command": "RUNSQLSTM SRCFILE(&OPENLIB/&OPENSPF) SRCMBR(&OPENMBR) COMMIT(*NONE) MARGINS(*SRCFILE)",
 							"refresh": "no",
 							"runOnProtected": false
+						},
+						{
+							"type": "member",
+							"extensions": [
+								"GLOBAL"
+							],
+							"environment": "ile",
+							"name": "🚸HAWKEYE: Print RPG Report spacing",
+							"command": "?PRTRPGPRT SRCFILE(&OPENLIB/&OPENSPF) SRCMBR(&OPENMBR) SUMMARY(*NO) OUTPUT(*PRINT) PRTFILE(qsysprt)"
 						}
 					]
 				}
