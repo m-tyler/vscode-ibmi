@@ -4,12 +4,13 @@ import vscode from "vscode";
 import { TestSuite } from ".";
 import { CompileTools } from "../api/CompileTools";
 import { Tools } from "../api/Tools";
-import { LocalLanguageActions } from "../api/local/LocalLanguageActions";
-import { DeployTools } from "../api/local/deployTools";
-import { getEnvConfig } from "../api/local/env";
+import { LocalLanguageActions } from "../filesystems/local/LocalLanguageActions";
+import { DeployTools } from "../filesystems/local/deployTools";
+import { getEnvConfig } from "../filesystems/local/env";
 import { getMemberUri, getUriFromPath } from "../filesystems/qsys/QSysFs";
 import { instance } from "../instantiate";
 import { Action, IBMiObject } from "../typings";
+import { runAction } from "../ui/actions";
 import { File, Folder, createFolder } from "./deployTools";
 
 export const helloWorldProject: Folder = {
@@ -92,7 +93,7 @@ export const ActionSuite: TestSuite = {
           name: `Create Display File (CRTDSPF)`,
         };
 
-        const success = await CompileTools.runAction(instance, uri, action, `all`);
+        const success = await runAction(instance, uri, action, `all`);
         console.log(success);
         assert.ok(success);
       }
@@ -121,7 +122,7 @@ export const ActionSuite: TestSuite = {
         const tempLib = config!.tempLibrary;
 
         await connection!.runCommand({ command: `ADDPFM FILE(${tempLib}/QRPGLESRC) MBR(HELLO) SRCTYPE(RPGLE)` });
-        await content!.uploadMemberContent(undefined, tempLib, 'QRPGLESRC', 'HELLO', helloWorldProject.files![0].content.join('\n'));
+        await content!.uploadMemberContent(tempLib, 'QRPGLESRC', 'HELLO', helloWorldProject.files![0].content.join('\n'));
         const action: Action = {
           "name": "Create Bound RPG Program (CRTBNDRPG)",
           "command": "CRTBNDRPG PGM(&OPENLIB/&OPENMBR) SRCFILE(&OPENLIB/&OPENSPF) OPTION(*EVENTF) DBGVIEW(*SOURCE) TGTRLS(*CURRENT)",
@@ -145,7 +146,7 @@ export const ActionSuite: TestSuite = {
         const tempLib = config!.tempLibrary;
 
         await connection!.runCommand({ command: `ADDPFM FILE(${tempLib}/QRPGLESRC) MBR(THEBADONE) SRCTYPE(RPGLE)` });
-        await content!.uploadMemberContent(undefined, tempLib, 'QRPGLESRC', 'THEBADONE', helloWorldProject.files![1].content.join('\n'));
+        await content!.uploadMemberContent(tempLib, 'QRPGLESRC', 'THEBADONE', helloWorldProject.files![1].content.join('\n'));
         const action: Action = {
           "name": "Create Bound RPG Program (CRTBNDRPG)",
           "command": "CRTBNDRPG PGM(&OPENLIB/&OPENMBR) SRCFILE(&OPENLIB/&OPENSPF) OPTION(*EVENTF) DBGVIEW(*SOURCE) TGTRLS(*CURRENT)",
@@ -157,7 +158,7 @@ export const ActionSuite: TestSuite = {
           ],
         };
         const uri = getMemberUri({ library: tempLib, file: 'QRPGLESRC', name: 'THEBADONE', extension: 'RPGLE' })
-        const success = await CompileTools.runAction(instance, uri, action, `all`);
+        const success = await runAction(instance, uri, action, `all`);
         assert.strictEqual(success, false);
       }
     }
@@ -165,7 +166,7 @@ export const ActionSuite: TestSuite = {
 };
 
 async function testHelloWorldProgram(uri: vscode.Uri, action: Action, library: string) {
-  const actionRan = await CompileTools.runAction(instance, uri, action, `all`);
+  const actionRan = await runAction(instance, uri, action, `all`);
   assert.ok(actionRan);
 
   const keysToCompare = [`library`, `name`, `type`, `text`, `attribute`, `sourceFile`, `memberCount`];
