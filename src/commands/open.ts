@@ -1,15 +1,16 @@
+import path from "path";
 import { commands, Disposable, l10n, QuickInputButton, QuickPickItem, QuickPickItemButtonEvent, QuickPickItemKind, Range, TextDocument, TextDocumentShowOptions, ThemeIcon, Uri, window } from "vscode";
+import Instance from "../Instance";
 import IBMi from "../api/IBMi";
-import { MemberItem, OpenEditableOptions, WithPath } from "../typings";
-import Instance from "../api/Instance";
 import { Tools } from "../api/Tools";
 import { getUriFromPath, parseFSOptions } from "../filesystems/qsys/QSysFs";
-import { DefaultOpenMode, GlobalConfiguration } from "../api/Configuration";
-import path from "path";
-import { GetMemberInfo } from "../components/getMemberInfo";
+import { DefaultOpenMode, MemberItem, QsysFsOptions, WithPath } from "../typings";
+import { VscodeTools } from "../ui/Tools";
 
 const CLEAR_RECENT = `$(trash) Clear recently opened`;
 const CLEAR_CACHED = `$(trash) Clear cached`;
+
+export type OpenEditableOptions = QsysFsOptions & { position?: Range };
 
 export function registerOpenCommands(instance: Instance): Disposable[] {
 
@@ -34,7 +35,7 @@ export function registerOpenCommands(instance: Instance): Disposable[] {
 
       const uri = getUriFromPath(path, options);
 
-      const existingUri = Tools.findExistingDocumentUri(uri);
+      const existingUri = VscodeTools.findExistingDocumentUri(uri);
 
       if (existingUri) {
         const existingOptions = parseFSOptions(existingUri);
@@ -54,7 +55,7 @@ export function registerOpenCommands(instance: Instance): Disposable[] {
         }
 
         // Add file to front of recently opened files list.
-        const recentLimit = GlobalConfiguration.get<number>(`recentlyOpenedFilesLimit`);
+        const recentLimit = IBMi.connectionManager.get<number>(`recentlyOpenedFilesLimit`);
         const storage = instance.getStorage();
         if (recentLimit) {
           const recent = storage!.getRecentlyOpenedFiles();
@@ -79,7 +80,7 @@ export function registerOpenCommands(instance: Instance): Disposable[] {
     }),
 
     commands.registerCommand("code-for-ibmi.openWithDefaultMode", (item: WithPath, overrideMode?: DefaultOpenMode, position?: Range) => {
-      const readonly = (overrideMode || GlobalConfiguration.get<DefaultOpenMode>("defaultOpenMode")) === "browse";
+      const readonly = (overrideMode || IBMi.connectionManager.get<DefaultOpenMode>("defaultOpenMode")) === "browse";
       commands.executeCommand(`code-for-ibmi.openEditable`, item.path, { readonly, position } as OpenEditableOptions);
     }),
 
@@ -87,7 +88,7 @@ export function registerOpenCommands(instance: Instance): Disposable[] {
     commands.registerCommand("code-for-ibmi.refreshFile", async (uri?: Uri) => {
       let doc: TextDocument | undefined;
       if (uri) {
-        doc = Tools.findExistingDocument(uri);
+        doc = VscodeTools.findExistingDocument(uri);
       } else {
         const editor = window.activeTextEditor;
         doc = editor?.document;
@@ -129,7 +130,7 @@ export function registerOpenCommands(instance: Instance): Disposable[] {
       let list: string[] = [];
 
       // Get recently opened files - cut if limit has been reduced.
-      const recentLimit = GlobalConfiguration.get(`recentlyOpenedFilesLimit`) as number;
+      const recentLimit = IBMi.connectionManager.get(`recentlyOpenedFilesLimit`) as number;
       const recent = storage!.getRecentlyOpenedFiles();
       if (recent.length > recentLimit) {
         recent.splice(recentLimit);
@@ -366,10 +367,14 @@ export function registerOpenCommands(instance: Instance): Disposable[] {
             window.showInformationMessage(`Cleared cached files.`);
           } else {
             const selectionSplit = connection!.upperCaseName(selection).split('/')
-            if (selectionSplit.length === 3 || selection.startsWith(`/`)) {
+            if ([3,4].includes(selectionSplit.length) || selection.startsWith(`/`)) {
 
               // When selection is QSYS path
               if (!selection.startsWith(`/`) && connection) {
+                if(selectionSplit.length === 4){
+                  //Remove the iASP part
+                  selectionSplit.shift();
+                }
                 const library = selectionSplit[0];
                 const file = selectionSplit[1];
                 const member = path.parse(selectionSplit[2]);
@@ -418,7 +423,7 @@ export function registerOpenCommands(instance: Instance): Disposable[] {
           const editor = window.activeTextEditor;
           if (editor) {
             currentFile = editor.document.uri;
-            commands.executeCommand(`diff`, currentFile, path);
+            commands.executeCommand(`vscode.diff`, currentFile, path);
             quickPick.hide();
           }
         }

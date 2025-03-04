@@ -1,0 +1,36 @@
+on:
+  pull_request:
+    paths:
+      - 'src/api/**'
+  push: 
+    branches: 
+      - master
+    paths:
+      - 'src/api/**'
+    
+jobs:
+  tester:
+    environment: testing_environment
+    name: Test runner
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - run: npm ci
+
+      - name: Type checker
+        run: npm run typings
+
+      # This step won't run when coming from a fork
+      - name: Test suite
+        run: npm run test
+        if: contains(env.VITE_SERVER, '.')
+        env:
+          VITE_SERVER: ${{ secrets.VITE_SERVER }}
+          VITE_DB_USER: ${{ secrets.VITE_DB_USER }}
+          VITE_DB_PASS: ${{ secrets.VITE_DB_PASS }}
+          VITE_DB_PORT: ${{ secrets.VITE_DB_PORT }}
