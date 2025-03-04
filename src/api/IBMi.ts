@@ -71,6 +71,7 @@ export default class IBMi {
   static readonly CCSID_NOCONVERSION = 65535;
   static readonly CCSID_SYSVAL = -2;
   static readonly bashShellPath = '/QOpenSys/pkgs/bin/bash';
+  static readonly locale = 'LC_ALL=EN_US.UTF-8';
 
   private systemVersion: number = 0;
   private qccsid: number = IBMi.CCSID_NOCONVERSION;
@@ -111,6 +112,7 @@ export default class IBMi {
    * @deprecated Will be replaced with {@link IBMi.getAllIAsps} in v3.0.0
    */
   public get aspInfo(): { [id: number]: string } {
+    console.warn("[Code for IBM i] Deprecation warning: you are using IBMi::aspInfo which is deprecated and will be removed in v3.0.0. Please use IBMi::getAllIAsps instead.");
     const result: { [id: number]: string } = {};
 
     this.iAspInfo.forEach(asp => {
@@ -1074,7 +1076,7 @@ export default class IBMi {
 
     return this.sendCommand({
       ...options,
-      command: qshExecutable
+      command: `${IBMi.locale} ${qshExecutable}`
     });
   }
 
@@ -1335,13 +1337,13 @@ export default class IBMi {
       // CHGJOB not required here. It will use the job CCSID, or the runtime CCSID.
       let input = Tools.fixSQL(`${possibleChangeCommand}${statements}`, true);
       let returningAsCsv: WrapResult | undefined;
-      let command = `LC_ALL=EN_US.UTF-8 system "call QSYS/QZDFMDB2 PARM('-d' '-i' '-t')"`
+      let command = `${IBMi.locale} system "call QSYS/QZDFMDB2 PARM('-d' '-i' '-t')"`
       let useCsv = options.forceSafe;
 
       // Use custom QSH if available
       if (this.canUseCqsh) {
         const customQsh = this.getComponent<CustomQSh>(CustomQSh.ID)!;
-        command = `${customQsh.installPath} -c "system \\"call QSYS/QZDFMDB2 PARM('-d' '-i' '-t')\\""`;
+        command = `${IBMi.locale} ${customQsh.installPath} -c "system \\"call QSYS/QZDFMDB2 PARM('-d' '-i' '-t')\\""`;
       }
 
       if (this.requiresTranslation) {
@@ -1529,6 +1531,7 @@ export default class IBMi {
    * @deprecated Use {@link IBMiContent.uploadFiles} instead.
    */
   uploadFiles(files: { local: EditorPath, remote: string }[], options?: node_ssh.SSHPutFilesOptions) {
+    console.warn(`[Code for IBM i] uploadFiles is deprecated and will be removed by 4.0.0. Use IBMiContent.uploadFiles instead.`);
     return this.content.uploadFiles(files, options);
   }
 
@@ -1536,6 +1539,7 @@ export default class IBMi {
    * @deprecated Use {@link IBMiContent.downloadFiles} instead.
    */
   downloadFile(localFile: EditorPath, remoteFile: string) {
+    console.warn(`[Code for IBM i] downloadFile is deprecated and will be removed by 4.0.0. Use IBMiContent.downloadFile instead.`);
     return this.content.downloadFile(localFile, remoteFile);
   }
 
@@ -1543,6 +1547,7 @@ export default class IBMi {
    * @deprecated Use {@link IBMiContent.uploadDirectory} instead.
    */
   uploadDirectory(localDirectory: EditorPath, remoteDirectory: string, options?: node_ssh.SSHGetPutDirectoryOptions) {
+    console.warn(`[Code for IBM i] uploadDirectory is deprecated and will be removed by 4.0.0. Use IBMiContent.uploadDirectory instead.`);
     return this.content.uploadDirectory(localDirectory, remoteDirectory, options);
   }
 
@@ -1550,6 +1555,7 @@ export default class IBMi {
    * @deprecated Use {@link IBMiContent.downloadDirectory} instead.
    */
   downloadDirectory(localDirectory: EditorPath, remoteDirectory: string, options?: node_ssh.SSHGetPutDirectoryOptions) {
+    console.warn(`[Code for IBM i] downloadDirectory is deprecated and will be removed by 4.0.0. Use IBMiContent.downloadDirectory instead.`);
     return this.content.downloadDirectory(localDirectory, remoteDirectory, options);
   }
 }
