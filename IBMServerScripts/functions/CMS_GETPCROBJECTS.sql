@@ -11,8 +11,14 @@
   ---------------------------------------------------------------------------- 
    MOD#  PCR     PGMR   DATE   DESCRIPTION                                     
   ============================================================================*/ 
-set path *libl ; 
-create or replace function ILEDITOR.CMS_GETPCROBJECTS
+/*NOTE: Change the qualifier library on SP call below */
+
+;cl:chgcurlib ILEDITOR;
+;set current path ILEDITOR, SYSTEM PATH
+-- ;cl:chgcurlib [USER];
+-- ;set path [USER]
+-- ;select * from LIBRARY_LIST_INFO
+create or replace function CMS_GETPCROBJECTS
 ( IN_TASK char(10) default '*NA' -- *USERDFT, *NA, *ANY, *NOT
                                       -- ,generic*, task name
  ,IN_OBJ_TYPE char(10) default '*ALL'
@@ -23,7 +29,7 @@ create or replace function ILEDITOR.CMS_GETPCROBJECTS
  ,IN_REL char(10) default '*USERDFT' -- *ALL, *USERDFT, name*
  ,IN_ENV char(04) default '*NA' -- *NA, *ACT, D/I/Q/P
  ,IN_PRJ_NUM varchar(5) default '*ALL' 
-       ) 
+) 
 returns table ( 
   ENH CHAR(10)
  ,SRCF char(10)

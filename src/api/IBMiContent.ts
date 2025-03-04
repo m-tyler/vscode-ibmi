@@ -124,10 +124,10 @@ export default class IBMiContent {
     if (ccsid && features.iconv) {
       // Upload our file to the same temp file, then write convert it back to the original ccsid
       const tempFile = this.getTempRemote(originalPath);
-      await client.putFile(tmpobj, tempFile); //TODO: replace with uploadFiles
+      await client!.putFile(tmpobj, tempFile); //TODO: replace with uploadFiles
       return await this.convertToUTF8(features.iconv, tempFile, originalPath, ccsid);
     } else {
-      return client.putFile(tmpobj, originalPath);
+      return client!.putFile(tmpobj, originalPath);
     }
   }
 
@@ -225,7 +225,7 @@ export default class IBMiContent {
       await writeFileAsync(tmpobj, content, `utf8`);
       let path = Tools.qualifyPath(library, sourceFile, member, asp, true);
       const tempRmt = this.getTempRemote(path);
-      await client.putFile(tmpobj, tempRmt);
+      await client!.putFile(tmpobj, tempRmt);
 
       while (true) {
         let copyResult: CommandResult;
@@ -519,7 +519,6 @@ export default class IBMiContent {
 
     let createOBJLIST: string[];
     if (sourceFilesOnly) {
-      // createOBJLIST = await this.getCustomObjectListQuery(filters);
       createOBJLIST = await getCustomObjectListQuery({
         library: localLibrary,
         object: objectFilter,
@@ -1151,19 +1150,19 @@ export default class IBMiContent {
   }
 
   async uploadFiles(files: { local: string | Uri, remote: string }[], options?: node_ssh.SSHPutFilesOptions) {
-    await this.ibmi.client.putFiles(files.map(f => { return { local: Tools.fileToPath(f.local), remote: f.remote } }), options);
+    await this.ibmi.client!.putFiles(files.map(f => { return { local: Tools.fileToPath(f.local), remote: f.remote } }), options);
   }
 
   async downloadFile(localFile: string | Uri, remoteFile: string) {
-    await this.ibmi.client.getFile(Tools.fileToPath(localFile), remoteFile);
+    await this.ibmi.client!.getFile(Tools.fileToPath(localFile), remoteFile);
   }
 
   async uploadDirectory(localDirectory: string | Uri, remoteDirectory: string, options?: node_ssh.SSHGetPutDirectoryOptions) {
-    await this.ibmi.client.putDirectory(Tools.fileToPath(localDirectory), remoteDirectory, options);
+    await this.ibmi.client!.putDirectory(Tools.fileToPath(localDirectory), remoteDirectory, options);
   }
 
   async downloadDirectory(localDirectory: string | Uri, remoteDirectory: string, options?: node_ssh.SSHGetPutDirectoryOptions) {
-    await this.ibmi.client.getDirectory(Tools.fileToPath(localDirectory), remoteDirectory, options);
+    await this.ibmi.client!.getDirectory(Tools.fileToPath(localDirectory), remoteDirectory, options);
   }
 }
 
