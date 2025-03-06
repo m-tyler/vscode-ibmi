@@ -111,7 +111,7 @@ async function compareCurrentFile(node: any, scheme: `streamfile` | `file` | `me
         compareWith = `/${compareWith}`;
       }
       let uri = Uri.parse(`${scheme}:${compareWith}`);
-      commands.executeCommand(VSCODE_DIFF_COMMAND, currentFile, uri);
+      commands.executeCommand(VSCODE_DIFF_COMMAND, uri, currentFile);
     }
   } else {
     window.showInformationMessage(l10n.t(`No file is open or selected`));
