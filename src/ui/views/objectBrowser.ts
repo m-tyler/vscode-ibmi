@@ -627,7 +627,7 @@ export function initializeObjectBrowser(context: vscode.ExtensionContext) {
         const error = await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: vscode.l10n.t(`Creating member {0}...`, fullPath.toUpperCase()) }, async (progress) => {
           try {
             const checkResult = await connection.runCommand({
-              command: `CHKOBJ OBJ(${memberPath.library}/${memberPath.file}) OBJTYPE(*FILE) MBR(${memberPath.name})`,
+              command: ` CHKOBJ          OBJ(${memberPath.library}/${memberPath.file}) OBJTYPE(*FILE) MBR(${memberPath.name})`,
               noLibList: true
             })
 
