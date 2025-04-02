@@ -1,10 +1,10 @@
 import path from "path";
 import { commands, l10n, window } from "vscode";
-import { instance } from "../instantiate";
-import { CustomUI } from "../webviews/CustomUI";
 import IBMi from "../api/IBMi";
 import { Tools } from "../api/Tools";
 import { DEBUG_CONFIG_FILE, DebugConfiguration, getDebugServiceDetails, ORIGINAL_DEBUG_CONFIG_FILE } from "../api/configuration/DebugConfiguration";
+import { instance } from "../instantiate";
+import { CustomUI } from "../webviews/CustomUI";
 
 export type DebugJob = {
   name: string
@@ -21,13 +21,15 @@ export async function isSEPSupported(connection: IBMi) {
 
 export async function startService(connection: IBMi) {
   const checkAuthority = async (user?: string) => {
+    if (user && !await connection.getContent().checkObject({ library: "QSYS", name: user, type: "*USRPRF" }, ["*USE"])) {
+      throw new Error(`You don't have *USE authority on user profile ${user}`);
+    }
     if (!(await connection.getContent().checkUserSpecialAuthorities(["*ALLOBJ"], user)).valid) {
       throw new Error(`User ${user || connection.currentUser} doesn't have *ALLOBJ special authority`);
     }
   };
 
   try {
-    await checkAuthority();
     const debugServiceVersion = (await getDebugServiceDetails(connection)).semanticVersion();
     const prestartCommand = (debugServiceVersion.major >= 2 && debugServiceVersion.patch >= 1) ?
       `export DEBUG_SERVICE_EXTERNAL_CONFIG_FILE=${DEBUG_CONFIG_FILE}` :
@@ -44,6 +46,9 @@ export async function startService(connection: IBMi) {
       const submitUser = /USER\(([^)]+)\)/.exec(submitOptions)?.[1]?.toLocaleUpperCase();
       if (submitUser && submitUser !== "*CURRENT") {
         await checkAuthority(submitUser);
+      }
+      else {
+        await checkAuthority();
       }
       const command = `SBMJOB CMD(STRQSH CMD('${connection.remoteFeatures[`bash`]} -c ''${prestartCommand}; /QIBM/ProdData/IBMiDebugService/bin/startDebugService.sh''')) JOB(DBGSVCE) ${submitOptions}`
       const submitResult = await connection.runCommand({ command, cwd: debugConfig.getRemoteServiceWorkDir(), noLibList: true });
@@ -117,7 +122,7 @@ export async function stopService(connection: IBMi) {
 export async function getDebugServiceJob() {
   const connection = instance.getConnection();
   if (connection) {
-    const rows = await connection.runSQL(`select job_name, local_port from qsys2.netstat_job_info j where job_name = (select job_name from qsys2.netstat_job_info j where local_port = ${connection.config?.debugPort || 8005} and remote_address = '0.0.0.0' fetch first row only) and remote_address = '0.0.0.0'`);
+    const rows = await connection.runSQL(`select job_name, local_port from qsys2.netstat_job_info j where job_name = (select job_name from qsys2.netstat_job_info j where local_port = ${connection.getConfig().debugPort || 8005} and remote_address = '0.0.0.0' fetch first row only) and remote_address = '0.0.0.0'`);
     if (rows && rows.length) {
       return {
         name: String(rows[0].JOB_NAME),

@@ -61,7 +61,7 @@ export class CopyToImport implements IBMiComponent {
       newStatements.push(`CREATE TABLE ${library}.${table} AS (${statement}) WITH DATA`);
     }
 
-    newStatements.push(`Call QSYS2.QCMDEXC('` + connection.content.toCl(`CPYTOIMPF`, {
+    newStatements.push(`Call QSYS2.QCMDEXC('` + connection.getContent().toCl(`CPYTOIMPF`, {
       FROMFILE: `${library!}/${table!} *FIRST`,
       TOSTMF: outStmf,
       MBROPT: `*REPLACE`,
@@ -71,7 +71,9 @@ export class CopyToImport implements IBMiComponent {
       RMVBLANK: `*TRAILING`,
       ADDCOLNAM: `*SQL`,
       FLDDLM: `','`,
-      DECPNT: `*PERIOD`
+      DECPNT: `*PERIOD`,
+      STRDLM: `*DBLQUOTE`,
+      STRESCCHR: `*STRDLM`
     }).replaceAll(`'`, `''`) + `')`);
 
     return {
