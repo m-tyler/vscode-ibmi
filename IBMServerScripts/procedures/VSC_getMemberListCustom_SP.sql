@@ -21,7 +21,7 @@
 
 ;create or replace procedure VSC_getMemberListCustom_SP
 (
-  IN_LIB  char(10) default nullif(expression, expression)
+  IN_LIB  char(10) default ' '
  ,IN_SRCF char(10) default '*'
  ,IN_MBR  varchar(1200) default '*'
  ,IN_MBR_TYPE char(10) default '*'
@@ -153,7 +153,7 @@ begin
         ,PCR.SRCF MBFILE
         ,PCR.SRCM as MBNAME
         ,TP.SOURCE_TYPE as MBSEU2
-        ,varchar(ifnull(TP.PARTITION_TEXT,'')) as MBMTXT
+        ,varchar(ifnull(TP.TEXT_DESCRIPTION,'')) as MBMTXT
         ,TP.NUMBER_ROWS as MBNRCD
         ,extract(epoch from (TP.CREATE_TIMESTAMP))*1000 as CREATED
         ,extract(epoch from (TP.LAST_SOURCE_UPDATE_TIMESTAMP))*1000 as CHANGED
@@ -161,7 +161,7 @@ begin
         overlay( overlay( overlay( overlay( '    ' ,max(ENVD) ,1,1) ,max(ENVI) ,2,1) ,max(ENVQ) ,3,1) ,max(ENVP) ,4,1)||']' as MBUCNTXT
         from table ( CMS_GETPCROBJECTS( IN_TASK => FILTER_STRING_M ) ) PCR
         inner join QSYS2.SYSTABLES ST on ST.TABLE_SCHEMA = LIBRARY_ and ST.TABLE_NAME = SRCF
-        inner join QSYS2.SYSPARTITIONSTAT as TP on TP.TABLE_SCHEMA = ST.TABLE_SCHEMA and TP.TABLE_NAME = ST.TABLE_NAME
+        inner join QSYS2.SYSMEMBERSTAT as TP on TP.TABLE_SCHEMA = ST.TABLE_SCHEMA and TP.TABLE_NAME = ST.TABLE_NAME
                     and TP.SYSTEM_TABLE_MEMBER = PCR.SRCM
         where ( PCR.LIBRARY_ = IN_LIB )
           and FILTER_STYLE_M = 3
@@ -174,7 +174,7 @@ begin
              or FILTER_STYLE_MT = 1 and PCR.OBJATTR like FILTER_STRING_MT
              )
 
-        group by avgrowsize,iasp_number,LIBRARY_,SRCF,SRCM,SOURCE_TYPE,PARTITION_TEXT,GRP,PRD,REL
+        group by avgrowsize,iasp_number,LIBRARY_,SRCF,SRCM,SOURCE_TYPE,TEXT_DESCRIPTION,GRP,PRD,REL
                 , OBJFMLY, TP.NUMBER_ROWS, TP.CREATE_TIMESTAMP,TP.LAST_SOURCE_UPDATE_TIMESTAMP
     ) select CMS.*
             ,FILTER_STRING_F as OUT_FILE , FILTER_STYLE_F as OUT_FILTER_STYLE_F
@@ -196,7 +196,7 @@ begin
         ,PCR.SRCF MBFILE
         ,PCR.SRCM as MBNAME
         ,TP.SOURCE_TYPE as MBSEU2
-        ,varchar(ifnull(TP.PARTITION_TEXT,'') ||' (of '||grp||'/'||prd||'/'||rel||') ['||
+        ,varchar(ifnull(TP.TEXT_DESCRIPTION,'') ||' (of '||grp||'/'||prd||'/'||rel||') ['||
         overlay( overlay( overlay( overlay( '    ' ,max(ENVD) ,1,1) ,max(ENVI) ,2,1) ,max(ENVQ) ,3,1) ,max(ENVP) ,4,1)||']') as MBMTXT
         ,TP.NUMBER_ROWS as MBNRCD
         ,extract(epoch from (TP.CREATE_TIMESTAMP))*1000 as CREATED
@@ -208,7 +208,7 @@ begin
         ,FILTER_STRING_MT as OUT_TYPE , FILTER_STYLE_MT as OUT_FILTER_STYLE_MT
         from table ( CMS_GETPCROBJECTS( IN_PRJ_NUM => FILTER_STRING_M) ) PCR
         inner join QSYS2.SYSTABLES ST on ST.TABLE_SCHEMA = LIBRARY_ and ST.TABLE_NAME = SRCF
-        inner join QSYS2.SYSPARTITIONSTAT as TP on TP.TABLE_SCHEMA = ST.TABLE_SCHEMA and TP.TABLE_NAME = ST.TABLE_NAME
+        inner join QSYS2.SYSMEMBERSTAT as TP on TP.TABLE_SCHEMA = ST.TABLE_SCHEMA and TP.TABLE_NAME = ST.TABLE_NAME
                     and TP.SYSTEM_TABLE_MEMBER = PCR.SRCM
         where ( IN_LIB = PCR.LIBRARY_ )
           and FILTER_STYLE_M = 4
@@ -221,7 +221,7 @@ begin
              or FILTER_STYLE_MT = 1 and PCR.OBJATTR like FILTER_STRING_MT
              )
 
-        group by avgrowsize,iasp_number,LIBRARY_,SRCF,SRCM,SOURCE_TYPE,PARTITION_TEXT,GRP,PRD,REL
+        group by avgrowsize,iasp_number,LIBRARY_,SRCF,SRCM,SOURCE_TYPE,TEXT_DESCRIPTION,GRP,PRD,REL
                 , OBJFMLY, TP.NUMBER_ROWS, TP.CREATE_TIMESTAMP,TP.LAST_SOURCE_UPDATE_TIMESTAMP
     ) select * from CUSTOM_FILTER_CMS_BY_PROJECT;
 
@@ -239,7 +239,7 @@ begin
         ,TP.SYSTEM_TABLE_NAME as MBFILE
         ,TP.SYSTEM_TABLE_MEMBER as MBNAME
         ,TP.SOURCE_TYPE as MBSEU2
-        ,varchar(ifnull(PARTITION_TEXT,'') || case when TP.SYSTEM_TABLE_SCHEMA like 'PG%' and TP.SYSTEM_TABLE_SCHEMA <> 'PGMT'
+        ,varchar(ifnull(TEXT_DESCRIPTION,'') || case when TP.SYSTEM_TABLE_SCHEMA like 'PG%' and TP.SYSTEM_TABLE_SCHEMA <> 'PGMT'
                                                    then ' ('||TP.SYSTEM_TABLE_SCHEMA||')' else '' end) as MBMTXT
         ,TP.NUMBER_ROWS as MBNRCD
         ,extract(epoch from (TP.CREATE_TIMESTAMP))*1000 as CREATED
@@ -249,7 +249,7 @@ begin
         ,FILTER_STRING_M as OUT_MBR , FILTER_STYLE_M as OUT_FILTER_STYLE_M
         ,FILTER_STRING_MT as OUT_TYPE , FILTER_STYLE_MT as OUT_FILTER_STYLE_MT
         from QSYS2.SYSTABLES as ST
-        left join QSYS2.SYSPARTITIONSTAT as TP on TP.TABLE_SCHEMA=ST.TABLE_SCHEMA and TP.TABLE_NAME=ST.TABLE_NAME
+        left join QSYS2.SYSMEMBERSTAT as TP on TP.TABLE_SCHEMA=ST.TABLE_SCHEMA and TP.TABLE_NAME=ST.TABLE_NAME
               and TP.SOURCE_TYPE is not null
         where FILTER_STYLE_M = 2 and TP.TABLE_SCHEMA = IN_LIB
           and ( FILTER_STYLE_F = 0 and ( FILTER_STRING_F is null or FILTER_STRING_F = TP.SYSTEM_TABLE_NAME )
@@ -277,7 +277,7 @@ begin
         ,TP.SYSTEM_TABLE_NAME as MBFILE
         ,TP.SYSTEM_TABLE_MEMBER as MBNAME
         ,TP.SOURCE_TYPE as MBSEU2
-        ,varchar(ifnull(PARTITION_TEXT,'') || case when TP.SYSTEM_TABLE_SCHEMA like 'PG%' and TP.SYSTEM_TABLE_SCHEMA <> 'PGMT'
+        ,varchar(ifnull(TEXT_DESCRIPTION,'') || case when TP.SYSTEM_TABLE_SCHEMA like 'PG%' and TP.SYSTEM_TABLE_SCHEMA <> 'PGMT'
                                                    then ' ('||trim(TP.SYSTEM_TABLE_SCHEMA)||')' else '' end) as MBMTXT
         ,TP.NUMBER_ROWS as MBNRCD
         ,extract(epoch from (TP.CREATE_TIMESTAMP))*1000 as CREATED
@@ -287,7 +287,7 @@ begin
         ,FILTER_STRING_M as OUT_MBR , FILTER_STYLE_M as OUT_FILTER_STYLE_M
         ,FILTER_STRING_MT as OUT_TYPE , FILTER_STYLE_MT as OUT_FILTER_STYLE_MT
         from QSYS2.SYSTABLES as A
-        left join QSYS2.SYSPARTITIONSTAT as TP on TP.TABLE_SCHEMA=A.TABLE_SCHEMA and TP.TABLE_NAME=A.TABLE_NAME
+        left join QSYS2.SYSMEMBERSTAT as TP on TP.TABLE_SCHEMA=A.TABLE_SCHEMA and TP.TABLE_NAME=A.TABLE_NAME
               and TP.SOURCE_TYPE is not null
         where TP.TABLE_SCHEMA = IN_LIB
           and ( FILTER_STYLE_F = 1 and TP.TABLE_NAME      like (replace(trim(FILTER_STRING_F),'*','%'))

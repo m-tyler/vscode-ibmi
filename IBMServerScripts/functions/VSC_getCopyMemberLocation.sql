@@ -41,13 +41,14 @@ begin
     return
     ( select PT.TABLE_SCHEMA
 --     ,PT.SYSTEM_TABLE_NAME,PT.SYSTEM_TABLE_MEMBER 
-    from QSYS2.SYSPARTITIONSTAT PT 
+    from QSYS2.SYSMEMBERSTAT PT 
     inner join QSYS2.LIBRARY_LIST_INFO LL on LL.SCHEMA_NAME = PT.TABLE_SCHEMA 
     and PT.SYSTEM_TABLE_NAME= ucase(IN_FILE) and PT.SYSTEM_TABLE_MEMBER = ucase(IN_MBR)
     order by ORDINAL_POSITION
     limit 1
     );
 end;
+stop;
 
 /* Testing scripts
 ; values VSC_getCopyMemberLocation('QCPYSRC','HRM65ORGPR')

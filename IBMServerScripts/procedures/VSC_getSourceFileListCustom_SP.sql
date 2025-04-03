@@ -159,7 +159,7 @@ begin
               ,min(ROW_LENGTH)  as PHMXRL
 
             from table( CMS_GETPCROBJECTS( IN_TASK => FILTER_STRING_M ,IN_ENV => '*NA' ) ) PCR
-            left join QSYS2.SYSPARTITIONSTAT as TP on TP.TABLE_SCHEMA = PCR.LIBRARY_ and TP.TABLE_NAME = PCR.SRCF
+            left join QSYS2.SYSMEMBERSTAT as TP on TP.TABLE_SCHEMA = PCR.LIBRARY_ and TP.TABLE_NAME = PCR.SRCF
                     and PCR.SRCM = TP.TABLE_PARTITION
             left join QSYS2.SYSTABLES as ST  on TP.SYSTEM_TABLE_SCHEMA = ST.SYSTEM_TABLE_SCHEMA and TP.SYSTEM_TABLE_NAME = ST.SYSTEM_TABLE_NAME
                     and TP.SRCTYPE is not null
@@ -192,7 +192,7 @@ begin
                 ,min(ROW_LENGTH)   as PHMXRL
 
             from table( CMS_GETPCROBJECTS( IN_PRJ_NUM => FILTER_STRING_M ,IN_ENV => '*NA' ) ) PCR
-            left join QSYS2.SYSPARTITIONSTAT as TP on TP.TABLE_SCHEMA = PCR.LIBRARY_ and TP.TABLE_NAME = PCR.SRCF
+            left join QSYS2.SYSMEMBERSTAT as TP on TP.TABLE_SCHEMA = PCR.LIBRARY_ and TP.TABLE_NAME = PCR.SRCF
                     and PCR.SRCM = TP.TABLE_PARTITION
             left join QSYS2.SYSTABLES as ST  on TP.SYSTEM_TABLE_SCHEMA = ST.SYSTEM_TABLE_SCHEMA and TP.SYSTEM_TABLE_NAME = ST.SYSTEM_TABLE_NAME
                     and TP.SRCTYPE is not null
@@ -221,7 +221,7 @@ begin
             ,length(('('||count(TP.SRCTYPE)||')')) as PHNOMB_T_LEN
             ,min(ROW_LENGTH)              as PHMXRL
             from QSYS2.SYSTABLES as ST
-            left join QSYS2.SYSPARTITIONSTAT as TP on TP.SYSTEM_TABLE_SCHEMA = ST.SYSTEM_TABLE_SCHEMA and TP.SYSTEM_TABLE_NAME = ST.SYSTEM_TABLE_NAME
+            left join QSYS2.SYSMEMBERSTAT as TP on TP.SYSTEM_TABLE_SCHEMA = ST.SYSTEM_TABLE_SCHEMA and TP.SYSTEM_TABLE_NAME = ST.SYSTEM_TABLE_NAME
                     and TP.SRCTYPE is not null
             where ST.SYSTEM_TABLE_SCHEMA = IN_LIB
               and ST.FILE_TYPE = 'S'
@@ -253,7 +253,7 @@ begin
             , length(('('||count(TP.SRCTYPE)||')')) as PHNOMB_T_LEN
             ,min(ROW_LENGTH)              as PHMXRL
             from QSYS2.SYSTABLES as ST
-            left join QSYS2.SYSPARTITIONSTAT as TP on TP.SYSTEM_TABLE_SCHEMA = ST.SYSTEM_TABLE_SCHEMA and TP.SYSTEM_TABLE_NAME = ST.SYSTEM_TABLE_NAME
+            left join QSYS2.SYSMEMBERSTAT as TP on TP.SYSTEM_TABLE_SCHEMA = ST.SYSTEM_TABLE_SCHEMA and TP.SYSTEM_TABLE_NAME = ST.SYSTEM_TABLE_NAME
                     and TP.SRCTYPE is not null
             where ST.SYSTEM_TABLE_SCHEMA = IN_LIB
               and ST.FILE_TYPE = 'S'
@@ -318,6 +318,7 @@ end;
 
 comment on specific procedure VSC00APC03 is 'Return list of source files for VS Code';
   label on specific procedure VSC00APC03 is 'Return list of source files for VS Code';
+STOP;  
 /* Tests
  */
 ;call VSC_GETSOURCEFILELISTCUSTOM_SP(IN_SRCF => '*ALL' ,IN_MBR => '*', IN_LIB => 'PGDR' ,IN_DEBUG_PARMS=>'Y' ) /* C4 */

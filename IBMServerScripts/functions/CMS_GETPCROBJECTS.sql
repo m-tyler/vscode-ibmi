@@ -18,7 +18,7 @@
 -- ;cl:chgcurlib [USER];
 -- ;set path [USER]
 -- ;select * from LIBRARY_LIST_INFO
-create or replace function CMS_GETPCROBJECTS
+;create or replace function CMS_GETPCROBJECTS
 ( IN_TASK char(10) default '*NA' -- *USERDFT, *NA, *ANY, *NOT
                                       -- ,generic*, task name
  ,IN_OBJ_TYPE char(10) default '*ALL'
@@ -288,6 +288,7 @@ order by OBJNAME, OBJTYPE, ENVSEQ
 end; 
 comment on specific function CMS00AFN01 is 'Return list of objects checked out to PCR'; 
   label on specific function CMS00AFN01 is 'Return list of objects checked out to PCR'; 
+STOP;  
 /* Testing query 
  */
 select  *
@@ -340,8 +341,8 @@ and SRCF like 'Q%'
 ,PCR.SRCF MBFILE
 ,PCR.SRCM as MBNAME
 ,TP.SOURCE_TYPE as MBSEU2
-,TP.PARTITION_TEXT as MBMTXT
-,TP.PARTITION_TEXT ||' (of '||grp||'/'||prd||'/'||rel||') ['||
+,TP.TEXT_DESCRIPTION as MBMTXT
+,TP.TEXT_DESCRIPTION ||' (of '||grp||'/'||prd||'/'||rel||') ['||
 overlay( overlay( overlay( overlay( '    ' ,max(ENVD) ,1,1) ,max(ENVI) ,2,1) ,max(ENVQ) ,3,1) ,max(ENVP) ,4,1)||']' as MBMTXT
 -- ,
 ,PCR.GRP
@@ -352,10 +353,10 @@ overlay( overlay( overlay( overlay( '    ' ,max(ENVD) ,1,1) ,max(ENVI) ,2,1) ,ma
 -- ,PCR.*
   from table ( CMS_GETPCROBJECTS( IN_TASK => 'PCR1976200' ) ) PCR
   inner join QSYS2.SYSTABLES ST on ST.TABLE_SCHEMA = LIBRARY_ and ST.TABLE_NAME = SRCF
-  inner join QSYS2.SYSPARTITIONSTAT as TP on TP.TABLE_SCHEMA = ST.TABLE_SCHEMA and TP.TABLE_NAME = ST.TABLE_NAME and TP.SYSTEM_TABLE_MEMBER = PCR.SRCM
+  inner join QSYS2.SYSMEMBERSTAT as TP on TP.TABLE_SCHEMA = ST.TABLE_SCHEMA and TP.TABLE_NAME = ST.TABLE_NAME and TP.SYSTEM_TABLE_MEMBER = PCR.SRCM
 --   where SRCF = 'QRPGSRC'
-  group by avgrowsize,iasp_number,SRCF,SRCM,SOURCE_TYPE,PARTITION_TEXT,GRP,PRD,REL, OBJFMLY
-  order by iasp_number,SRCF,SRCM,SOURCE_TYPE,PARTITION_TEXT,REL
+  group by avgrowsize,iasp_number,SRCF,SRCM,SOURCE_TYPE,TEXT_DESCRIPTION,GRP,PRD,REL, OBJFMLY
+  order by iasp_number,SRCF,SRCM,SOURCE_TYPE,TEXT_DESCRIPTION,REL
 
 
 
@@ -378,11 +379,11 @@ select
 select (TP.avgrowsize - 12) as MBMXRL
 ,ST.iasp_number as MBASP
 ,MBLIB,MBFILE,MBNAME,MBSEU2
-,ifnull(nullif(MBMTXT,' '),TP.PARTITION_TEXT) ||' (of '||gpr||') ['||ENVSTS||']' as MBMTXT
-,ifnull(nullif(MBMTXT,' '),TP.PARTITION_TEXT) as MBMTXT2
+,ifnull(nullif(MBMTXT,' '),TP.TEXT_DESCRIPTION) ||' (of '||gpr||') ['||ENVSTS||']' as MBMTXT
+,ifnull(nullif(MBMTXT,' '),TP.TEXT_DESCRIPTION) as MBMTXT2
 from T1
   inner join QSYS2.SYSTABLES ST on ST.TABLE_SCHEMA = MBLIB and ST.TABLE_NAME = MBFILE
-  inner join QSYS2.SYSPARTITIONSTAT as TP on TP.TABLE_SCHEMA = ST.TABLE_SCHEMA and TP.TABLE_NAME = ST.TABLE_NAME and TP.SYSTEM_TABLE_MEMBER = MBNAME
+  inner join QSYS2.SYSMEMBERSTAT as TP on TP.TABLE_SCHEMA = ST.TABLE_SCHEMA and TP.TABLE_NAME = ST.TABLE_NAME and TP.SYSTEM_TABLE_MEMBER = MBNAME
 -- where MBLIB = 'D2WFIINTG'
 -- and MBFILE = 'QRPGSRC'
 

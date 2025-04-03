@@ -288,7 +288,7 @@ export function registerOpenCommands(instance: Instance): Disposable[] {
 
               resultSet = await connection.runSQL(`
                 select cast( SYSTEM_TABLE_MEMBER as char( 10 ) for bit data ) as SYSTEM_TABLE_MEMBER
-                     , ifnull( PARTITION_TEXT, '' ) as PARTITION_TEXT
+                     , ifnull( TEXT_DESCRIPTION, '' ) as PARTITION_TEXT
                      , ifnull( SOURCE_TYPE, '' ) as SOURCE_TYPE
                   from QSYS2.SYSPARTITIONSTAT
                  where SYSTEM_TABLE_SCHEMA = '${connection!.sysNameInAmerican(selectionSplit[0])}'
