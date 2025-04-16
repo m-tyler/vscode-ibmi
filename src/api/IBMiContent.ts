@@ -769,7 +769,7 @@ export default class IBMiContent {
           extract(epoch from (b.CREATE_TIMESTAMP))*1000 as CREATED,
           extract(epoch from (b.LAST_SOURCE_UPDATE_TIMESTAMP))*1000 as CHANGED
         from QSYS2.SYSTABLES as a
-          join QSYS2.SYSMEMBERSTAT as b
+          join QSYS2.SYSPARTITIONSTAT as b
             on ( b.SYSTEM_TABLE_SCHEMA, b.SYSTEM_TABLE_NAME ) = ( a.SYSTEM_TABLE_SCHEMA, a.SYSTEM_TABLE_NAME )
       )
       select * from MEMBERS
