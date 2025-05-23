@@ -341,8 +341,8 @@ and SRCF like 'Q%'
 ,PCR.SRCF MBFILE
 ,PCR.SRCM as MBNAME
 ,TP.SOURCE_TYPE as MBSEU2
-,TP.TEXT_DESCRIPTION as MBMTXT
-,TP.TEXT_DESCRIPTION ||' (of '||grp||'/'||prd||'/'||rel||') ['||
+,TP.PARTITION_TEXT as MBMTXT
+,TP.PARTITION_TEXT ||' (of '||grp||'/'||prd||'/'||rel||') ['||
 overlay( overlay( overlay( overlay( '    ' ,max(ENVD) ,1,1) ,max(ENVI) ,2,1) ,max(ENVQ) ,3,1) ,max(ENVP) ,4,1)||']' as MBMTXT
 -- ,
 ,PCR.GRP
@@ -355,8 +355,8 @@ overlay( overlay( overlay( overlay( '    ' ,max(ENVD) ,1,1) ,max(ENVI) ,2,1) ,ma
   inner join QSYS2.SYSTABLES ST on ST.TABLE_SCHEMA = LIBRARY_ and ST.TABLE_NAME = SRCF
   inner join QSYS2.SYSPARTITIONSTAT as TP on TP.TABLE_SCHEMA = ST.TABLE_SCHEMA and TP.TABLE_NAME = ST.TABLE_NAME and TP.SYSTEM_TABLE_MEMBER = PCR.SRCM
 --   where SRCF = 'QRPGSRC'
-  group by avgrowsize,iasp_number,SRCF,SRCM,SOURCE_TYPE,TEXT_DESCRIPTION,GRP,PRD,REL, OBJFMLY
-  order by iasp_number,SRCF,SRCM,SOURCE_TYPE,TEXT_DESCRIPTION,REL
+  group by avgrowsize,iasp_number,SRCF,SRCM,SOURCE_TYPE,PARTITION_TEXT,GRP,PRD,REL, OBJFMLY
+  order by iasp_number,SRCF,SRCM,SOURCE_TYPE,PARTITION_TEXT,REL
 
 
 
@@ -379,8 +379,8 @@ select
 select (TP.avgrowsize - 12) as MBMXRL
 ,ST.iasp_number as MBASP
 ,MBLIB,MBFILE,MBNAME,MBSEU2
-,ifnull(nullif(MBMTXT,' '),TP.TEXT_DESCRIPTION) ||' (of '||gpr||') ['||ENVSTS||']' as MBMTXT
-,ifnull(nullif(MBMTXT,' '),TP.TEXT_DESCRIPTION) as MBMTXT2
+,ifnull(nullif(MBMTXT,' '),TP.PARTITION_TEXT) ||' (of '||gpr||') ['||ENVSTS||']' as MBMTXT
+,ifnull(nullif(MBMTXT,' '),TP.PARTITION_TEXT) as MBMTXT2
 from T1
   inner join QSYS2.SYSTABLES ST on ST.TABLE_SCHEMA = MBLIB and ST.TABLE_NAME = MBFILE
   inner join QSYS2.SYSPARTITIONSTAT as TP on TP.TABLE_SCHEMA = ST.TABLE_SCHEMA and TP.TABLE_NAME = ST.TABLE_NAME and TP.SYSTEM_TABLE_MEMBER = MBNAME
