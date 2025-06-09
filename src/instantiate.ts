@@ -60,7 +60,6 @@ export async function safeDisconnect(): Promise<boolean> {
 export async function loadAllofExtension(context: vscode.ExtensionContext) {
   // No connection when the extension is first activated
   vscode.commands.executeCommand(`setContext`, `code-for-ibmi:connected`, false);
-  vscode.workspace.getConfiguration().update(`workbench.editor.enablePreview`, false, true);
 
   instance = new Instance(context);
   context.subscriptions.push(
@@ -110,7 +109,7 @@ async function updateConnectedBar() {
       `[$(settings-gear) Settings](command:code-for-ibmi.showAdditionalSettings)`,
       `[$(file-binary) Actions](command:code-for-ibmi.showActionsMaintenance)`,
       `[$(terminal) Terminals](command:code-for-ibmi.launchTerminalPicker)`,
-      debugPTFInstalled() ?
+      debugPTFInstalled(connection) ?
         `[$(${debugRunning ? "bug" : "debug"}) Debugger ${((await getDebugServiceDetails(connection)).version)} (${debugRunning ? "on" : "off"})](command:ibmiDebugBrowser.focus)`
         :
         `[$(debug) No debug PTF](https://codefori.github.io/docs/developing/debug/#required-ptfs)`

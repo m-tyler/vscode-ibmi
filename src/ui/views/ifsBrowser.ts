@@ -8,12 +8,10 @@ import { SortOptions } from "../../api/IBMiContent";
 import { Search } from "../../api/Search";
 import { Tools } from "../../api/Tools";
 import { instance } from "../../instantiate";
-import { FocusOptions, IFSFile, IFS_BROWSER_MIMETYPE, OBJECT_BROWSER_MIMETYPE, SearchHit, SearchResults, WithPath } from "../../typings";
+import { FocusOptions, IFSFile, IFS_BROWSER_MIMETYPE, OBJECT_BROWSER_MIMETYPE, SearchHit, SearchResults, URI_LIST_MIMETYPE, URI_LIST_SEPARATOR, WithPath } from "../../typings";
 import { VscodeTools } from "../Tools";
 import { BrowserItem, BrowserItemParameters } from "../types";
 
-const URI_LIST_MIMETYPE = "text/uri-list";
-const URI_LIST_SEPARATOR = "\r\n";
 const PROTECTED_DIRS = /^(\/|\/QOpenSys|\/QSYS\.LIB|\/QDLS|\/QOPT|\/QNTC|\/QFileSvr\.400|\/QIBM|\/QSR|\/QTCPTMM|\/bin|\/dev|\/home|\/tmp|\/usr|\/var)$/i;
 const ALWAYS_SHOW_FILES = /^(\.gitignore|\.vscode|\.deployignore)$/i;
 type DragNDropAction = "move" | "copy";
@@ -158,7 +156,8 @@ class IFSDirectoryItem extends IFSItem {
 
   async getChildren(): Promise<BrowserItem[]> {
     const connection = instance.getConnection();
-    if (connection) {;
+    if (connection) {
+      ;
       const content = connection.getContent();
       const config = connection.getConfig();
       try {
@@ -209,7 +208,7 @@ class IFSBrowserDragAndDrop implements vscode.TreeDragAndDropController<IFSItem>
       .join(URI_LIST_SEPARATOR)));
   }
 
-  async handleDrop(target: IFSItem | undefined, dataTransfer: vscode.DataTransfer, token: vscode.CancellationToken) {
+  handleDrop(target: IFSItem | undefined, dataTransfer: vscode.DataTransfer, token: vscode.CancellationToken) {
     if (target) {
       const toDirectory = (target.file.type === "streamfile" ? target.parent : target) as IFSDirectoryItem;
       const ifsBrowserItems = dataTransfer.get(IFS_BROWSER_MIMETYPE);
@@ -220,7 +219,7 @@ class IFSBrowserDragAndDrop implements vscode.TreeDragAndDropController<IFSItem>
         const explorerItems = dataTransfer.get(URI_LIST_MIMETYPE);
         if (explorerItems?.value) {
           //URI_LIST_MIMETYPE Mime type is a string with `toString()`ed Uris separated by `\r\n`.
-          const uris = (await explorerItems.asString()).split(URI_LIST_SEPARATOR).map(uri => vscode.Uri.parse(uri));
+          const uris = String(explorerItems.value).split(URI_LIST_SEPARATOR).map(uri => vscode.Uri.parse(uri));
           if (uris.at(0)?.scheme === "member") {
             this.copyMembers(uris, toDirectory)
           }
@@ -252,13 +251,15 @@ class IFSBrowserDragAndDrop implements vscode.TreeDragAndDropController<IFSItem>
 
       if (action) {
         let result;
+        const froms = ifsBrowserItems.map(item => item.path);
+        const to = toDirectory.path;
         switch (action) {
           case "copy":
-            result = await connection.sendCommand({ command: `cp -r ${ifsBrowserItems.map(item => Tools.escapePath(item.path)).join(" ")} ${Tools.escapePath(toDirectory.path)}` });
+            result = await connection.getContent().copy(froms, to);
             break;
 
           case "move":
-            result = await connection.sendCommand({ command: `mv ${ifsBrowserItems.map(item => Tools.escapePath(item.path)).join(" ")} ${Tools.escapePath(toDirectory.path)}` });
+            result = await await connection.getContent().move(froms, to);
             ifsBrowserItems.map(item => item.parent)
               .filter(Tools.distinct)
               .forEach(folder => folder?.refresh?.());
@@ -469,18 +470,17 @@ export function initializeIFSBrowser(context: vscode.ExtensionContext) {
         });
 
         if (fullName) {
-          try {
-            vscode.window.showInformationMessage(l10n.t(`Creating streamfile {0}.`, fullName));
-            await content.createStreamFile(fullName);
-            vscode.commands.executeCommand(`code-for-ibmi.openEditable`, fullName);
-            if (IBMi.connectionManager.get(`autoRefresh`)) {
-              ifsBrowser.refresh(node);
+          if (!await content.testStreamFile(fullName, "e") || await vscode.window.showWarningMessage(l10n.t("Streamfile {0} already exists. Do you want to overwrite it?", fullName), { modal: true }, l10n.t("Overwrite"))) {
+            try {
+              await content.createStreamFile(fullName);
+              vscode.commands.executeCommand(`code-for-ibmi.openEditable`, fullName);
+              vscode.window.showInformationMessage(l10n.t(`Created streamfile {0}.`, fullName));
+              if (IBMi.connectionManager.get(`autoRefresh`)) {
+                ifsBrowser.refresh(node);
+              }
+            } catch (e: any) {
+              vscode.window.showErrorMessage(l10n.t(`Error creating new streamfile! {0}`, e));
             }
-            else {
-              throw new Error("")
-            }
-          } catch (e: any) {
-            vscode.window.showErrorMessage(l10n.t(`Error creating new streamfile! {0}`, e));
           }
         }
       }
@@ -654,7 +654,7 @@ Please type "{0}" to confirm deletion.`, dirName);
         if (target) {
           const targetPath = path.posix.isAbsolute(target) ? target : path.posix.join(homeDirectory, target);
           try {
-            const moveResult = await connection.sendCommand({ command: `mv ${Tools.escapePath(node.path)} ${Tools.escapePath(targetPath)}` });
+            const moveResult = await connection.runCommand({ command: `mv ${Tools.escapePath(node.path)} ${Tools.escapePath(targetPath)}`, environment: "qsh" });
             if (moveResult.code !== 0) {
               throw moveResult.stderr;
             }
@@ -704,7 +704,10 @@ Please type "{0}" to confirm deletion.`, dirName);
         if (target) {
           const targetPath = target.startsWith(`/`) ? target : homeDirectory + `/` + target;
           try {
-            await connection.sendCommand({ command: `cp -r ${Tools.escapePath(node.path)} ${Tools.escapePath(targetPath)}` });
+            const result = await connection.getContent().copy(node.path, targetPath);
+            if (result.code !== 0) {
+              throw result.stderr;
+            }
             if (IBMi.connectionManager.get(`autoRefresh`)) {
               ifsBrowser.refresh();
             }
@@ -718,18 +721,28 @@ Please type "{0}" to confirm deletion.`, dirName);
       }
     }),
 
-    vscode.commands.registerCommand(`code-for-ibmi.searchIFS`, async (node?: IFSItem) => {
+    vscode.commands.registerCommand(`code-for-ibmi.searchIFS`, async (node?: IFSItem, nodes?: IFSItem[]) => {
       const connection = instance.getConnection();
 
       if (connection && connection.remoteFeatures.grep) {
         const config = connection.getConfig();
-        const searchPath = node?.path || await vscode.window.showInputBox({
-          value: config.homeDirectory,
-          prompt: l10n.t(`Enter IFS directory to search`),
-          title: l10n.t(`Search directory`)
-        });
+        const searchPaths: string[] = [];
+        if (node) {
+          (nodes || [node]).forEach(n => searchPaths.push(n.path));
+        }
+        else {
+          const path = await vscode.window.showInputBox({
+            value: config.homeDirectory,
+            prompt: l10n.t(`Enter IFS directory to search`),
+            title: l10n.t(`Search directory`)
+          });
 
-        if (searchPath) {
+          if (path) {
+            searchPaths.push(path);
+          }
+        }
+
+        if (searchPaths.length) {
           const list = IBMi.GlobalStorage.getPreviousSearchTerms();
           const items: vscode.QuickPickItem[] = list.map(term => ({ label: term }));
           const listHeader = [
@@ -741,7 +754,7 @@ Please type "{0}" to confirm deletion.`, dirName);
           const quickPick = vscode.window.createQuickPick();
           quickPick.items = items.length ? [...items, ...clearListArray] : [];
           quickPick.placeholder = items.length ? l10n.t(`Enter search term or select one of the previous search terms.`) : l10n.t("Enter search term.");
-          quickPick.title = l10n.t(`Search {0}`, searchPath);
+          quickPick.title = l10n.t(`Search`);
 
           quickPick.onDidChangeValue(() => {
             if (!quickPick.value) {
@@ -765,7 +778,7 @@ Please type "{0}" to confirm deletion.`, dirName);
               } else {
                 quickPick.hide();
                 IBMi.GlobalStorage.addPreviousSearchTerm(searchTerm);
-                await doSearchInStreamfiles(searchTerm, searchPath);
+                await doSearchInStreamfiles(searchTerm, searchPaths);
               }
             }
           });
@@ -778,18 +791,27 @@ Please type "{0}" to confirm deletion.`, dirName);
       }
     }),
 
-    vscode.commands.registerCommand(`code-for-ibmi.ifs.find`, async (node?: IFSItem) => {
+    vscode.commands.registerCommand(`code-for-ibmi.ifs.find`, async (node?: IFSItem, nodes?: IFSItem[]) => {
       const connection = instance.getConnection();
 
       if (connection && connection.remoteFeatures.find) {
         const config = connection.getConfig();
-        const findPath = node?.path || await vscode.window.showInputBox({
-          value: config.homeDirectory,
-          prompt: l10n.t(`Enter IFS directory to find files in`),
-          title: l10n.t(`Find in directory`)
-        });
+        const findPaths: string[] = [];
+        if (node) {
+          (nodes || [node]).forEach(n => findPaths.push(n.path));
+        }
+        else {
+          const path = await vscode.window.showInputBox({
+            value: config.homeDirectory,
+            prompt: l10n.t(`Enter IFS directory to find files in`),
+            title: l10n.t(`Find in directory`)
+          });
+          if (path) {
+            findPaths.push(path);
+          }
+        }
 
-        if (findPath) {
+        if (findPaths.length) {
           const list = IBMi.GlobalStorage.getPreviousFindTerms();
           const items: vscode.QuickPickItem[] = list.map(term => ({ label: term }));
           const listHeader = [
@@ -801,7 +823,7 @@ Please type "{0}" to confirm deletion.`, dirName);
           const quickPick = vscode.window.createQuickPick();
           quickPick.items = items.length ? [...items, ...clearListArray] : [];
           quickPick.placeholder = items.length ? l10n.t(`Enter find term or select one of the previous find terms.`) : l10n.t("Enter find term.");
-          quickPick.title = l10n.t(`Find {0}`, findPath);
+          quickPick.title = l10n.t(`Find {0}`, findPaths);
 
           quickPick.onDidChangeValue(() => {
             if (!quickPick.value) {
@@ -825,7 +847,7 @@ Please type "{0}" to confirm deletion.`, dirName);
               } else {
                 quickPick.hide();
                 IBMi.GlobalStorage.addPreviousFindTerm(findTerm);
-                await doFindStreamfiles(findTerm, findPath);
+                await doFindStreamfiles(findTerm, findPaths);
               }
             }
           });
@@ -942,55 +964,83 @@ function storeIFSList(path: string, list: string[]) {
   }
 }
 
-async function doSearchInStreamfiles(searchTerm: string, searchPath: string) {
+async function doSearchInStreamfiles(searchTerm: string, searchPaths: string[]) {
   try {
-    await vscode.window.withProgress({
+    const total = await vscode.window.withProgress({
       location: vscode.ProgressLocation.Notification,
-      title: l10n.t(`Searching`),
-    }, async progress => {
-      progress.report({
-        message: l10n.t(`"{0}" in {1}.`, searchTerm, searchPath)
-      });
-      const results = await Search.searchIFS(instance.getConnection()!, searchPath, searchTerm);
-      if (results?.hits.length) {
-        openIFSSearchResults(searchPath, results);
-      } else {
-        vscode.window.showInformationMessage(l10n.t(`No results found searching for "{0}" in {1}.`, searchTerm, searchPath));
+      title: l10n.t(`Searching "{0}" in `, searchTerm),
+    }, async (progress, cancel) => {
+      const increment = 100 / searchPaths.length;
+      let total = 0;
+      let append = false;
+      for (const searchPath of searchPaths) {
+        if (cancel.isCancellationRequested) {
+          return total;
+        }
+        progress.report({
+          message: searchPath,
+          increment
+        });
+        const results = await Search.searchIFS(instance.getConnection()!, searchPath, searchTerm);
+        if (results) {
+          total += results.hits.length;
+          openIFSSearchResults(searchPath, results, append);
+          append = true;
+        }
       }
+
+      return total;
     });
 
+    if (!total) {
+      vscode.window.showInformationMessage(l10n.t(`No results found searching for "{0}".`, searchTerm));
+    }
   } catch (e) {
     vscode.window.showErrorMessage(l10n.t(`Error searching streamfiles.`));
   }
 }
 
-async function doFindStreamfiles(findTerm: string, findPath: string) {
+async function doFindStreamfiles(findTerm: string, findPaths: string[]) {
   try {
-    await vscode.window.withProgress({
+    const total = await vscode.window.withProgress({
       location: vscode.ProgressLocation.Notification,
-      title: l10n.t(`Finding`),
-    }, async progress => {
-      progress.report({
-        message: l10n.t(`Finding filenames with "{0}" in {1}.`, findTerm, findPath)
-      });
-      const results = (await Search.findIFS(instance.getConnection()!, findPath, findTerm));
-      if (results?.hits.length) {
-        openIFSSearchResults(findPath, results);
-      } else {
-        vscode.window.showInformationMessage(l10n.t(`No results found finding filenames with "{0}" in {1}.`, findTerm, findPath));
+      title: l10n.t(`Finding filenames with "{0}" in`, findTerm),
+    }, async (progress, cancel) => {
+      const increment = 100 / findPaths.length;
+      let total = 0;
+      let append = false;
+      for (const findPath of findPaths) {
+        if (cancel.isCancellationRequested) {
+          return total;
+        }
+        progress.report({
+          message: findPath,
+          increment
+        });
+        const results = (await Search.findIFS(instance.getConnection()!, findPath, findTerm));
+        if (results) {
+          total += results.hits.length;
+          openIFSSearchResults(findPath, results, append);
+          append = true;
+        }
       }
+
+      return total;
     });
 
+    if (!total) {
+      vscode.window.showInformationMessage(l10n.t(`No results found finding filenames with "{0}".`, findTerm));
+    }
   } catch (e) {
     vscode.window.showErrorMessage(l10n.t(`Error finding filenames.`));
   }
 }
 
-function openIFSSearchResults(searchPath: string, searchResults: SearchResults) {
+function openIFSSearchResults(searchPath: string, searchResults: SearchResults, appendResults: boolean) {
   searchResults.hits =
     searchResults.hits.map(a => ({ ...a, label: path.posix.relative(searchPath, a.path) }) as SearchHit)
       .sort((a, b) => a.path.localeCompare(b.path));
-  vscode.commands.executeCommand(`code-for-ibmi.setSearchResults`, searchResults);
+  vscode.commands.executeCommand(`code-for-ibmi.setSearchResults`, searchResults, appendResults);
 }
 
 async function showOpenDialog() {
