@@ -3,7 +3,7 @@
 	"icon": "icon.png",
 	"displayName": "Code for IBM i",
 	"description": "Maintain your RPGLE, CL, COBOL, C/CPP on IBM i right from Visual Studio Code.",
-	"version": "2.16.3-dev.0",
+	"version": "2.16.4-dev.0",
 	"keywords": [
 		"ibmi",
 		"rpgle",
@@ -50,6 +50,12 @@
 					".vscode/actions.json"
 				],
 				"url": "./schemas/actions.json"
+			},
+			{
+				"fileMatch": [
+					"/etc/vscode/settings.json"
+				],
+				"url": "./schemas/settings.json"
 			}
 		],
 		"configuration": {
@@ -362,6 +368,11 @@
 								"type": "boolean",
 								"default": false,
 								"description": "Tells the debug service to send more data to the client. Only useful for debugging issues in the service."
+							},
+							"readOnlyMode": {
+								"type": "boolean",
+								"default": false,
+								"description": "Always open source members and IFS files in read-only mode."
 							}
 						}
 					}
@@ -1268,7 +1279,7 @@
 				"icon": "$(symbol-file)"
 			},
 			{
-				"command": "code-for-ibmi.renameMember",
+				"command": "code-for-ibmi.renameQSYS",
 				"enablement": "code-for-ibmi:connected",
 				"title": "Rename...",
 				"category": "IBM i",
@@ -1553,13 +1564,6 @@
 				"icon": "$(symbol-file)"
 			},
 			{
-				"command": "code-for-ibmi.renameObject",
-				"enablement": "code-for-ibmi:connected",
-				"title": "Rename...",
-				"category": "IBM i",
-				"icon": "$(symbol-file)"
-			},
-			{
 				"command": "code-for-ibmi.moveObject",
 				"enablement": "code-for-ibmi:connected",
 				"title": "Move...",
@@ -1756,6 +1760,16 @@
 				"command": "code-for-ibmi.objectBrowser.delete",
 				"key": "delete",
 				"when": "focusedView === objectBrowser && listHasSelectionOrFocus"
+			},
+			{
+				"command": "code-for-ibmi.moveIFS",
+				"key": "f2",
+				"when": "focusedView === ifsBrowser && listHasSelectionOrFocus && !listMultiSelection && !(viewItem =~ /^.*_protected$/)"
+			},
+			{
+				"command": "code-for-ibmi.renameQSYS",
+				"key": "f2",
+				"when": "focusedView === objectBrowser && listHasSelectionOrFocus && !listMultiSelection"
 			}
 		],
 		"viewsContainers": {
@@ -2134,7 +2148,7 @@
 					"when": "never"
 				},
 				{
-					"command": "code-for-ibmi.renameMember",
+					"command": "code-for-ibmi.renameQSYS",
 					"when": "never"
 				},
 				{
@@ -2155,10 +2169,6 @@
 				},
 				{
 					"command": "code-for-ibmi.copyObject",
-					"when": "never"
-				},
-				{
-					"command": "code-for-ibmi.renameObject",
 					"when": "never"
 				},
 				{
@@ -2728,8 +2738,8 @@
 					"group": "2_memberStuff@4"
 				},
 				{
-					"command": "code-for-ibmi.renameMember",
-					"when": "view == objectBrowser && !listMultiSelection && viewItem == member",
+					"command": "code-for-ibmi.renameQSYS",
+					"when": "view == objectBrowser && !listMultiSelection && viewItem =~ /(member|object)/  && !(viewItem =~ /^.*_readonly$/)",
 					"group": "2_memberStuff@3"
 				},
 				{
@@ -2906,11 +2916,6 @@
 					"command": "code-for-ibmi.objectBrowser.delete",
 					"when": "view == objectBrowser && viewItem =~ /^object/",
 					"group": "1_objActions@5"
-				},
-				{
-					"command": "code-for-ibmi.renameObject",
-					"when": "view == objectBrowser && !listMultiSelection && viewItem =~ /^object/",
-					"group": "1_objActions@3"
 				},
 				{
 					"command": "code-for-ibmi.moveObject",
