@@ -24,7 +24,7 @@ function getConnection() {
   }
 }
 function getContent() {
-  const content = instance.getContent();
+  const content = getConnection().getContent();
   if (content) {
     return content;
   }
@@ -37,13 +37,12 @@ export async function whereisCustomFunc(): Promise<funcInfo> {
   // Look for the custom function somewhere
   let currentUser = '';
   const connection = getConnection();
-  const content = getContent();
   if (connection) {
     currentUser = connection.currentUser;
   }
   let funcLookupRS: Tools.DB2Row[];
   let statement = `select SPECIFIC_SCHEMA,SPECIFIC_NAME from QSYS2.SYSFUNCS SF inner join table( values(1,'${currentUser}'),(2,'ILEDITOR') ) LL (Pos, ASCHEMA) on ASCHEMA = SPECIFIC_SCHEMA where ROUTINE_NAME = 'VSC_GETSOURCEFILELISTCUSTOM' limit 1`;
-  funcLookupRS = await getContent().runSQL(statement);
+  funcLookupRS = await connection.runSQL(statement);
   let aReturn: funcInfo = { funcSysLib: '', funcSysName: '' };
   if (funcLookupRS.length > 0) {
     aReturn = {
