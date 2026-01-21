@@ -337,7 +337,7 @@ export default class IBMiContent {
     const copyResult = await this.ibmi.runCommand({
       command: `QSYS/CPYTOIMPF FROMFILE(${library}/${file} ${member}) ` +
         `TOSTMF('${tempRmt}') ` +
-        `MBROPT(*REPLACE) STMFCCSID(1208) RCDDLM(*CRLF) DTAFMT(*DLM) RMVBLANK(*TRAILING) ADDCOLNAM(*SQL) FLDDLM(',') DECPNT(*PERIOD)`,
+        `MBROPT(*REPLACE) STMFCCSID(1208) STMFCODPAG(*STMF) RCDDLM(*CRLF) DTAFMT(*DLM) RMVBLANK(*TRAILING) ADDCOLNAM(*SQL) FLDDLM(',') DECPNT(*PERIOD)`,
       noLibList: true
     });
 
@@ -480,7 +480,7 @@ export default class IBMiContent {
       lines.forEach(line => {
         const isNotFound = line.includes(`CPF2110`);
         if (isNotFound) {
-          const libraryReference = sanitized.find(lib => line.includes(lib));
+          const libraryReference = sanitized.find(library => line.includes(` ${library} `));
 
           // If there is an error about the library, remove it
           if (libraryReference) {

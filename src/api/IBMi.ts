@@ -76,6 +76,7 @@ interface ConnectionOptions {
 
 interface ConnectionConfigFiles {
   settings: ConfigFile<RemoteConfigFile>;
+  [key: string]: ConfigFile<any>;
 }
 
 export default class IBMi {
@@ -165,8 +166,37 @@ export default class IBMi {
     this.disconnectedCallback = callback;
   }
 
+  /**
+   * getConfigFile can return pre-defined configuration files,
+   * but can lazy load new configuration files as well.
+   * 
+   * This does not load the configuration file from the server,
+   * it only returns a ConfigFile instance. You should check the
+   * state of the ConfigFile instance to see if it has been loaded,
+   * and if not, call `loadFromServer()` on it.
+   */
   getConfigFile<T>(id: keyof ConnectionConfigFiles) {
-    return this.configFiles[id] as ConfigFile<T>;
+    if (!this.configFiles[id]) {
+      this.configFiles[id] = new ConfigFile<T>(this, id as string, {} as T);
+    }
+
+    const configFile = this.configFiles[id] as ConfigFile<T>;
+
+    return configFile;
+  }
+
+  async loadRemoteConfigs() {
+    for (const configFile in this.configFiles) {
+      const currentConfig = this.configFiles[configFile as keyof ConnectionConfigFiles];
+      
+      currentConfig.reset();
+
+      try {
+        await currentConfig.loadFromServer();
+      } catch (e) { }
+
+      this.appendOutput(`${configFile} config state: ` + JSON.stringify(currentConfig.getState()) + `\n`);
+    }
   }
 
   get canUseCqsh() {
@@ -526,7 +556,7 @@ export default class IBMi {
       await this.loadRemoteConfigs();
 
       const remoteConnectionConfig = this.getConfigFile<RemoteConfigFile>(`settings`);
-      if (remoteConnectionConfig.getState().server === `ok`) {
+      if (remoteConnectionConfig.getState() === `ok`) {
         const remoteConfig = await remoteConnectionConfig.get();
 
         if (remoteConfig.codefori) {
@@ -684,7 +714,7 @@ export default class IBMi {
                 message: `Checking /QOpenSys/pkgs/bin in $PATH.`
               });
 
-              if ((!quickConnect || !cachedServerSettings?.pathChecked)) {
+              if ((!quickConnect() || !cachedServerSettings?.pathChecked)) {
                 const currentPaths = (await this.sendCommand({ command: "echo $PATH" })).stdout.split(":");
                 const bashrcFile = `${defaultHomeDir}/.bashrc`;
                 let bashrcExists = (await this.sendCommand({ command: `test -e ${bashrcFile}` })).code === 0;
@@ -772,13 +802,13 @@ export default class IBMi {
       }
 
       let debugConfigLoaded = false
-      if ((!quickConnect || !cachedServerSettings?.debugConfigLoaded)) {
+      if ((!quickConnect() || !cachedServerSettings?.debugConfigLoaded)) {
         if (this.debugPTFInstalled()) {
           try {
             const debugServiceConfig = await new DebugConfiguration(this).load();
             delete this.config.debugCertDirectory;
-            this.config.debugPort = debugServiceConfig.getOrDefault("DBGSRV_SECURED_PORT", "8005");
-            this.config.debugSepPort = debugServiceConfig.getOrDefault("DBGSRV_SEP_DAEMON_PORT", "8008");
+            this.config.debugPort = debugServiceConfig.getRemoteServiceSecuredPort();
+            this.config.debugSepPort = debugServiceConfig.getRemoteServiceSepDaemonPort();
             debugConfigLoaded = true;
           }
           catch (error) {
@@ -787,7 +817,7 @@ export default class IBMi {
         }
       }
 
-      if ((!quickConnect || !cachedServerSettings?.maximumArgsLength)) {
+      if ((!quickConnect() || !cachedServerSettings?.maximumArgsLength)) {
         //Compute the maximum admited length of a command's arguments. Source: Googling and https://www.in-ulm.de/~mascheck/various/argmax/#effectively_usable
         this.maximumArgsLength = Number((await this.sendCommand({ command: "/QOpenSys/usr/bin/expr `/QOpenSys/usr/bin/getconf ARG_MAX` - `env|wc -c` - `env|wc -l` \\* 4 - 2048" })).stdout);
       }
@@ -1098,20 +1128,6 @@ export default class IBMi {
 
   usingBash() {
     return this.shell === IBMi.bashShellPath;
-  }
-
-  async loadRemoteConfigs() {
-    for (const configFile in this.configFiles) {
-      const currentConfig = this.configFiles[configFile as keyof ConnectionConfigFiles];
-
-      this.configFiles[configFile as keyof ConnectionConfigFiles].reset();
-
-      try {
-        await this.configFiles[configFile as keyof ConnectionConfigFiles].loadFromServer();
-      } catch (e) { }
-
-      this.appendOutput(`${configFile} config state: ` + JSON.stringify(currentConfig.getState()) + `\n`);
-    }
   }
 
   /**
