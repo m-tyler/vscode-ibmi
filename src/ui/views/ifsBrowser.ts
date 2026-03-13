@@ -1,11 +1,11 @@
 import os from "os";
 import path, { dirname, extname } from "path";
-import vscode, { CancellationToken, Event, FileDecoration, FileDecorationProvider, FileType, l10n, ProviderResult, ThemeColor, Uri, window } from "vscode";
+import vscode, { CancellationToken, FileDecoration, FileDecorationProvider, FileType, l10n, ProviderResult, ThemeColor, Uri, window } from "vscode";
 
 import { existsSync, mkdirSync, rmdirSync } from "fs";
 import IBMi from "../../api/IBMi";
 import { SortOptions } from "../../api/IBMiContent";
-import { Search } from "../../api/Search";
+import { SearchTools } from "../../api/SearchTools";
 import { Tools } from "../../api/Tools";
 import { instance } from "../../instantiate";
 import { FocusOptions, IFS_BROWSER_MIMETYPE, IFSFile, OBJECT_BROWSER_MIMETYPE, SearchHit, SearchResults, URI_LIST_MIMETYPE, URI_LIST_SEPARATOR, WithPath } from "../../typings";
@@ -111,7 +111,7 @@ class IFSItem extends BrowserItem implements WithPath {
     else {
       this.sort.ascending = !this.sort.ascending
     }
-    this.description = `(sort: ${sort.order} ${sort.ascending ? `🔼` : `🔽`})`;
+    this.description = `(sort: ${this.sort.order} ${this.sort.ascending ? `🔼` : `🔽`})`;
     this.reveal({ expand: true });
     this.refresh();
   }
@@ -901,11 +901,11 @@ Please type "{0}" to confirm deletion.`, dirName);
             canSelectMany: false,
             canSelectFiles: false,
             canSelectFolders: true,
-            defaultUri: vscode.Uri.file(ibmi.getLastDownloadLocation())
+            defaultUri: vscode.Uri.file(IBMi.GlobalStorage.getLastDownloadLocation())
           }))?.[0];
         }
         else {
-          const remoteFilepath = path.join(ibmi.getLastDownloadLocation(), path.basename(node.path));
+          const remoteFilepath = path.join(IBMi.GlobalStorage.getLastDownloadLocation(), path.basename(node.path));
           downloadLocationURI = (await vscode.window.showSaveDialog({
             defaultUri: vscode.Uri.file(remoteFilepath),
             filters: { 'Streamfile': [extname(node.path).substring(1) || '*'] }
@@ -914,7 +914,7 @@ Please type "{0}" to confirm deletion.`, dirName);
 
         if (downloadLocationURI) {
           const downloadLocation = downloadLocationURI.path;
-          await ibmi.setLastDownloadLocation(saveIntoDirectory ? downloadLocation : dirname(downloadLocation));
+          await IBMi.GlobalStorage.setLastDownloadLocation(saveIntoDirectory ? downloadLocation : dirname(downloadLocation));
           const increment = 100 / items.length;
           window.withProgress({ title: l10n.t(`Downloading`), location: vscode.ProgressLocation.Notification }, async (task) => {
             try {
@@ -1012,7 +1012,7 @@ async function doSearchInStreamfiles(searchTerm: string, searchPaths: string[]) 
           message: searchPath,
           increment
         });
-        const results = await Search.searchIFS(instance.getConnection()!, searchPath, searchTerm);
+        const results = await SearchTools.searchIFS(instance.getConnection()!, searchPath, searchTerm);
         if (results) {
           total += results.hits.length;
           openIFSSearchResults(searchPath, results, append);
@@ -1048,7 +1048,7 @@ async function doFindStreamfiles(findTerm: string, findPaths: string[]) {
           message: findPath,
           increment
         });
-        const results = (await Search.findIFS(instance.getConnection()!, findPath, findTerm));
+        const results = (await SearchTools.findIFS(instance.getConnection()!, findPath, findTerm));
         if (results) {
           total += results.hits.length;
           openIFSSearchResults(findPath, results, append);

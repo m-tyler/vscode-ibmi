@@ -5,7 +5,7 @@ import vscode, { commands, DataTransferItem, l10n, Uri } from "vscode";
 import { parseFilter, singleGenericName } from "../../api/Filter";
 import IBMi, { MemberParts } from "../../api/IBMi";
 import { SortOptions, SortOrder } from "../../api/IBMiContent";
-import { Search } from "../../api/Search";
+import { SearchTools } from "../../api/SearchTools";
 import { Tools } from "../../api/Tools";
 import { getMemberUri } from "../../filesystems/qsys/QSysFs";
 import { instance } from "../../instantiate";
@@ -894,12 +894,12 @@ export function initializeObjectBrowser(context: vscode.ExtensionContext) {
           canSelectMany: false,
           canSelectFiles: false,
           canSelectFolders: true,
-          defaultUri: vscode.Uri.file(connection.getLastDownloadLocation())
+          defaultUri: vscode.Uri.file(IBMi.GlobalStorage.getLastDownloadLocation())
         }))?.[0];
       }
       else {
         downloadLocationURI = (await vscode.window.showSaveDialog({
-          defaultUri: vscode.Uri.file(path.join(connection.getLastDownloadLocation(), members[0].name)),
+          defaultUri: vscode.Uri.file(path.join(IBMi.GlobalStorage.getLastDownloadLocation(), members[0].name)),
           filters: { 'Source member': [members[0].extension || '*'] }
         }));
       }
@@ -916,7 +916,7 @@ export function initializeObjectBrowser(context: vscode.ExtensionContext) {
         }
 
         const downloadLocation = saveIntoDirectory ? downloadLocationURI.path : dirname(downloadLocationURI.path);
-        await connection.setLastDownloadLocation(downloadLocation);
+        await IBMi.GlobalStorage.setLastDownloadLocation(downloadLocation);
 
         //Ask what do to with existing files in the target directory
         if (saveIntoDirectory) {
@@ -956,12 +956,11 @@ Do you want to replace it?`, item.name), { modal: true }, skipAllLabel, overwrit
               task.report({ message: vscode.l10n.t(`copying to streamfiles`), increment: -1 })
               const copyToStreamFiles = toBeDownloaded
                 .filter(item => item.copy)
-                .map(item =>
+                .flatMap(item =>
                   [
-                    `@QSYS/CPYF FROMFILE(${item.member.library}/${item.member.file}) TOFILE(QTEMP/QTEMPSRC) FROMMBR(${item.member.name}) TOMBR(TEMPMBR) MBROPT(*REPLACE) CRTFILE(*YES);`,
-                    `@QSYS/CPYTOSTMF FROMMBR('${Tools.qualifyPath("QTEMP", "QTEMPSRC", "TEMPMBR")}') TOSTMF('${directory}/${item.name.toLocaleLowerCase()}') STMFOPT(*REPLACE) STMFCCSID(1208) DBFCCSID(${config.sourceFileCCSID});`
-                  ].join("\n"))
-                .join("\n");
+                    `@QSYS/CPYF FROMFILE(${item.member.library}/${item.member.file}) TOFILE(QTEMP/QTEMPSRC) FROMMBR(${item.member.name}) TOMBR(TEMPMBR) MBROPT(*REPLACE) CRTFILE(*YES)`,
+                    `@QSYS/CPYTOSTMF FROMMBR('${Tools.qualifyPath("QTEMP", "QTEMPSRC", "TEMPMBR")}') TOSTMF('${directory}/${item.name.toLocaleLowerCase()}') STMFOPT(*REPLACE) STMFCCSID(1208) DBFCCSID(${config.sourceFileCCSID})`
+                  ]);
               await connection.runSQL(copyToStreamFiles);
 
               task.report({ message: vscode.l10n.t(`getting streamfiles`), increment: -1 })
@@ -1484,7 +1483,7 @@ async function doSearch(searchTerm: string, parameters: SearchParameters[]) {
         }
 
         const [library, sourceFile] = path.split(`/`);
-        const results = await Search.searchMembers(instance.getConnection()!, library, sourceFile, searchTerm, memberFilter, filter?.protected);
+        const results = await SearchTools.searchMembers(instance.getConnection()!, library, sourceFile, searchTerm, memberFilter, filter?.protected);
         clearInterval(messageTimeout);
         if (cancel.isCancellationRequested) {
           return;
