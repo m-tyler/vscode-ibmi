@@ -62,6 +62,7 @@ begin
                 ,case when substring(IN_MBR_TYPE, 1,4) = '$HWK' then 9 -- CUSTOM FILTERING - HAWKEYE
                     when substring(IN_MBR, 1,7) = '#PCRPRJ' then 4 -- CUSTOM FILTERING - CMS BY PROJECT
                     when substring(IN_MBR, 1,4) = '#PCR' then 3 -- CUSTOM FILTERING - CMS
+                    when substring(IN_MBR, 1,4) = '#STR' then 3 -- CUSTOM FILTERING - CMS
                     when substring(IN_MBR, 1,1) = '#'    then 3 -- CUSTOM FILTERING - CMS
                     when substring(IN_MBR, 1,1) = '^'    then 2 -- REGEXP_LIKE
                     when locate('*',IN_MBR)     > 0      then 1 -- GENERICS
@@ -71,6 +72,7 @@ begin
                 ,case when substring(IN_MBR_TYPE, 1,4) = '$HWK' then 9 -- CUSTOM FILTERING - HAWKEYE
                     when substring(IN_MBR_TYPE, 1,7) = '#PCRPRJ' then 4 -- CUSTOM FILTERING - CMS BY PROJECT
                     when substring(IN_MBR_TYPE, 1,4) = '#PCR' then 3 -- CUSTOM FILTERING - CMS
+                    when substring(IN_MBR_TYPE, 1,4) = '#STR' then 3 -- CUSTOM FILTERING - CMS
                     when substring(IN_MBR_TYPE, 1,1) = '#'    then 3 -- CUSTOM FILTERING - CMS
                     when substring(IN_MBR_TYPE, 1,1) = '^'    then 2 -- REGEXP_LIKE
                     when locate('*',IN_MBR_TYPE)     > 0      then 1 -- GENERICS
@@ -354,8 +356,9 @@ comment on specific procedure VSC00APC11 is 'Return list of source members for V
 ;call VSC_GETMEMBERLISTCUSTOM_SP(IN_LIB => 'D2WFIINTG' ,IN_SRCF => '*' ,IN_MBR =>  '#PCRPRJ00101' ,IN_DEBUG_PARMS=>'Y')
 ;call VSC_GETMEMBERLISTCUSTOM_SP(IN_LIB => 'WFIQUAL' ,IN_SRCF => 'Q*' ,IN_MBR => '^......FN..' ,IN_DEBUG_PARMS=>'Y')
 ;call VSC_GETMEMBERLISTCUSTOM_SP(IN_LIB => 'WFIQUAL' ,IN_SRCF => 'Q*' ,IN_MBR => '^KRN...FN..' ,IN_DEBUG_PARMS=>'Y')
-;call VSC_GETMEMBERLISTCUSTOM_SP(IN_LIB => 'WFIQUAL' ,IN_SRCF => 'Q*' ,IN_MBR => '#PCR2066900' ,IN_DEBUG_PARMS=>'Y')
+;call VSC_GETMEMBERLISTCUSTOM_SP(IN_LIB => 'D1WFIQUAL' ,IN_SRCF => 'Q*' ,IN_MBR => '#PCR2234300' ,IN_DEBUG_PARMS=>'Y')
 ;call VSC_GETMEMBERLISTCUSTOM_SP(IN_LIB => 'WFIQUAL' ,IN_SRCF => 'Q*' ,IN_MBR => '#PCRPRJ00120' ,IN_DEBUG_PARMS=>'Y')
+;call VSC_GETMEMBERLISTCUSTOM_SP(IN_LIB => 'D1WFIQUAL' ,IN_SRCF => 'Q*' ,IN_MBR => '#STR0010739' ,IN_DEBUG_PARMS=>'Y')
 ;call VSC_GETMEMBERLISTCUSTOM_SP(IN_LIB => 'PGMT'    ,IN_SRCF => 'Q*' ,IN_MBR => '#TESTITCHGS' ,IN_DEBUG_PARMS=>'Y')
 ;call VSC_GETMEMBERLISTCUSTOM_SP(IN_LIB => 'WFISRC'  ,IN_SRCF => 'QRPGSRC'   ,IN_MBR => 'WFIOBJ/EML10ACL' , IN_MBR_TYPE => '$HWK$DPO' ,IN_DEBUG_PARMS=>'Y') /* C9_ */
 ;call VSC_GETMEMBERLISTCUSTOM_SP(IN_LIB => 'WFISRC'  ,IN_SRCF => 'QRPGSRC'   ,IN_MBR => 'WFIOBJ/PRP03ZRG' , IN_MBR_TYPE => '$HWK$DPO' ,IN_DEBUG_PARMS=>'Y') /* C9_ */

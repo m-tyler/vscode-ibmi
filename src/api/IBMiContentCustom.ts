@@ -58,7 +58,7 @@ export async function getCustomObjectListQuery(filters: { library: string; objec
   let theStatement: string[];
   let funcInfo: funcInfo = await whereisCustomFunc();
   let sqlFuncExist = await getContent().checkObject({ library: funcInfo.funcSysLib, name: funcInfo.funcSysName, type: "*SRVPGM" });
-  let specialMember = (/^(#PCR|\$HWK|#)/.test(filters.member!));
+  let specialMember = (/^(#PCR|#STR|\$HWK|#)/.test(filters.member!));
   if (!filters.object) { filters.object = '*' }
   if (funcInfo && sqlFuncExist && specialMember
   ) {
@@ -87,7 +87,7 @@ export async function getCustomMemberListQuery(filter: { library: string, source
   let funcInfo: funcInfo = await whereisCustomFunc();
   if (funcInfo) {
     let sqlFuncExist = await getContent().checkObject({ library: funcInfo.funcSysLib, name: funcInfo.funcSysName, type: "*SRVPGM" });
-    let specialMember = (/^(#PCR|\$HWK|#)/.test(filter.members!));
+    let specialMember = (/^(#PCR|#STR|\$HWK|#)/.test(filter.members!));
 
     if (sqlFuncExist && specialMember
     ) {

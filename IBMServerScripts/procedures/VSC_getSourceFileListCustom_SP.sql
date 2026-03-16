@@ -62,6 +62,7 @@ begin
                 ,case when substring(IN_MBR_TYPE, 1,4) = '$HWK' then 9 -- CUSTOM FILTERING - HAWKEYE
                     when substring(IN_MBR, 1,7) = '#PCRPRJ' then 4 -- CUSTOM FILTERING - CMS BY PROJECT
                     when substring(IN_MBR, 1,4) = '#PCR' then 3 -- CUSTOM FILTERING - CMS
+                    when substring(IN_MBR, 1,4) = '#STR' then 3 -- CUSTOM FILTERING - CMS
                     when substring(IN_MBR, 1,1) = '#'    then 3 -- CUSTOM FILTERING - CMS
                     when substring(IN_MBR, 1,1) = '^'    then 2 -- REGEXP_LIKE
                     when locate('*',IN_MBR)     > 0      then 1 -- GENERICS
@@ -71,6 +72,7 @@ begin
                 ,case when substring(IN_MBR_TYPE, 1,4) = '$HWK' then 9 -- CUSTOM FILTERING - HAWKEYE
                     when substring(IN_MBR_TYPE, 1,7) = '#PCRPRJ' then 4 -- CUSTOM FILTERING - CMS BY PROJECT
                     when substring(IN_MBR_TYPE, 1,4) = '#PCR' then 3 -- CUSTOM FILTERING - CMS
+                    when substring(IN_MBR_TYPE, 1,4) = '#STR' then 3 -- CUSTOM FILTERING - CMS
                     when substring(IN_MBR_TYPE, 1,1) = '#'    then 3 -- CUSTOM FILTERING - CMS
                     when substring(IN_MBR_TYPE, 1,1) = '^'    then 2 -- REGEXP_LIKE
                     when locate('*',IN_MBR_TYPE)     > 0      then 1 -- GENERICS
