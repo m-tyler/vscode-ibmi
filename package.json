@@ -2091,13 +2091,11 @@
 			},
 			{
 				"command": "editor.action.deleteLines",
-				"key": "alt+d",
-				"mac": "alt+d"
+				"key": "alt+d"
 			},
 			{
 				"command": "editor.action.joinLines",
-				"key": "alt+j",
-				"mac": "alt+j"
+				"key": "alt+j"
 			},
 			{
 				"command": "editor.action.transformToTitlecase",
@@ -2117,7 +2115,7 @@
 			},
 			{
 				"command": "outline.focus",
-				"key": "ctrl+alt+o"
+				"key": "shift+alt+o"
 			},
 			{
 				"command": "code-for-ibmi.deleteConnection",

@@ -60,8 +60,8 @@ export async function getCustomObjectListQuery(filters: { library: string; objec
   let sqlFuncExist = await getContent().checkObject({ library: funcInfo.funcSysLib, name: funcInfo.funcSysName, type: "*SRVPGM" });
   let specialMember = (/^(#PCR|#STR|\$HWK|#)/.test(filters.member!));
   if (!filters.object) { filters.object = '*' }
-  if (funcInfo && sqlFuncExist && specialMember
-  ) {
+  if (funcInfo && sqlFuncExist && specialMember) 
+  {
     theStatement = [`select PHFILE name,`,
       `'*FILE' as type,`,
       `'PF'    as ATTRIBUTE,`,
@@ -89,8 +89,8 @@ export async function getCustomMemberListQuery(filter: { library: string, source
     let sqlFuncExist = await getContent().checkObject({ library: funcInfo.funcSysLib, name: funcInfo.funcSysName, type: "*SRVPGM" });
     let specialMember = (/^(#PCR|#STR|\$HWK|#)/.test(filter.members!));
 
-    if (sqlFuncExist && specialMember
-    ) {
+    if (sqlFuncExist && specialMember) 
+    {
       theStatement = `\n select MBLIB LIBRARY,MBMXRL RECORD_LENGTH,MBASP ASP,MBFILE SOURCE_FILE,MBNAME NAME,MBSEU2 TYPE,MBMTXT TEXT,MBNRCD LINES,CREATED CREATED,CHANGED CHANGED,USERCONTENT from table (${funcInfo.funcSysLib}.VSC_getMemberListCustom(IN_LIB => '${filter.library}' 
         ${filter.sourceFile ? `,IN_SRCF => '${filter.sourceFile}'` : ""}
         ${filter.members ? `,IN_MBR =>  '${filter.members}'` : ""} 
