@@ -10,8 +10,8 @@ import { Tools } from './Tools';
 import { GetMemberInfo } from './components/getMemberInfo';
 import { ObjectTypes } from './import/Objects';
 import { AttrOperands, CommandResult, EditorPath, IBMiError, IBMiMember, IBMiObject, IFSFile, ModuleExport, ProgramExportImportInfo, QsysPath, SpecialAuthorities } from './types';
-import { getCustomObjectListQuery, getCustomMemberListQuery } from './IBMiContentCustom';
-import * as vscode from "vscode";
+import { getCustomObjectListQuery, getCustomMemberListQuery } from './IBMiContentCustom'; // NOTE: CUSTOM WINCO ADDITION
+
 const tmpFile = util.promisify(tmp.file);
 const readFileAsync = util.promisify(fs.readFile);
 const writeFileAsync = util.promisify(fs.writeFile);
@@ -24,10 +24,6 @@ export type SortOrder = `name` | `type`;
 export type SortOptions = {
   order: "name" | "date"
   ascending?: boolean
-}
-interface funcInfo {
-  funcSysLib: string
-  funcSysName: string
 }
 export default class IBMiContent {
   constructor(readonly ibmi: IBMi) { }
@@ -508,7 +504,8 @@ export default class IBMiContent {
    * @param sortOrder
    * @returns an array of IBMiObject
    */
-  async getObjectList(filters: { library: string; object?: string; types?: string[]; filterType?: FilterType; member?: string; memberType?: string; }, sortOrder?: SortOrder): Promise<IBMiObject[]> {
+  // async getObjectList(filters: { library: string; object?: string; types?: string[]; filterType?: FilterType }, sortOrder?: SortOrder): Promise<IBMiObject[]> {
+  async getObjectList(filters: { library: string; object?: string; types?: string[]; filterType?: FilterType; member?: string; memberType?: string; }, sortOrder?: SortOrder): Promise<IBMiObject[]> { // NOTE: CUSTOM WINCO ADDITIONs
     const localLibrary = this.ibmi.upperCaseName(filters.library);
     
     if (!await this.checkObject({ library: "QSYS", name: localLibrary, type: "*LIB" })) {
@@ -521,8 +518,10 @@ export default class IBMiContent {
     const objectNameLike = () => objectFilter ? ` and t.SYSTEM_TABLE_NAME ${(objectFilter.includes('*') ? ` like ` : ` = `)} '${this.ibmi.sysNameInAmerican(objectFilter).replace('*', '%')}'` : '';
     const objectName = () => objectFilter ? `, OBJECT_NAME => '${objectFilter}'` : '';
 
+    // NOTE: CUSTOM WINCO ADDITION
     const member = (filters.member ? filters.member.toUpperCase() : filters.member);
     const mbrtype = (filters.memberType ? filters.memberType.toUpperCase() : filters.memberType);
+    // NOTE: CUSTOM WINCO ADDITION
 
     const type = filters.types && filters.types.length === 1 && filters.types[0] !== '*' ? filters.types[0] : '*ALL';
 
@@ -538,6 +537,7 @@ export default class IBMiContent {
 
     let createOBJLIST: string[];
     if (sourceFilesOnly) {
+        // NOTE: CUSTOM WINCO ADDITION
       createOBJLIST = await getCustomObjectListQuery({
         library: localLibrary,
         object: objectFilter,
@@ -546,8 +546,9 @@ export default class IBMiContent {
         member: member,
         memberType: mbrtype
       });
+        // NOTE: CUSTOM WINCO ADDITION
       //DSPFD only
-      if (createOBJLIST.length == 0) {
+      if (createOBJLIST.length == 0) {// NOTE: CUSTOM WINCO ADDITION, if condition
         createOBJLIST = [
           `with SRCFILES as (`,
           `  select `,
@@ -739,7 +740,7 @@ export default class IBMiContent {
 
     let statement = ``;
 
-    // statement = await this.getCustomMemberListQuery({
+      // NOTE: CUSTOM WINCO ADDITION
     statement = await getCustomMemberListQuery({
       library: library,
       sourceFile: sourceFile,
@@ -748,7 +749,7 @@ export default class IBMiContent {
       filterType: undefined,
       sort: sort
     });
-    if (!statement) {
+    if (!statement) { // NOTE: CUSTOM WINCO ADDITION
       statement =
         `With MEMBERS As (
         SELECT
@@ -789,7 +790,7 @@ export default class IBMiContent {
         lines: Number(result.LINES),
         created: new Date(result.CREATED ? Number(result.CREATED) : 0),
         changed: new Date(result.CHANGED ? Number(result.CHANGED) : 0)
-        , usercontent: String(result.USERCONTENT)
+        , usercontent: String(result.USERCONTENT) // NOTE: CUSTOM WINCO ADDITION
       } as IBMiMember))
         .filter(member => memberFilter.test(member.name))
         .filter(member => memberExtensionFilter.test(member.extension));
